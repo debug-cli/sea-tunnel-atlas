@@ -42,7 +42,7 @@
   function text(tag, value) { const e = document.createElement(tag); e.textContent = value; return e; }
   function render() {
     points.clearLayers();
-    features.filter(f => state.showLower || f.properties.confidence === 'high').forEach(f => {
+    features.filter(f => f.geometry && (state.showLower || f.properties.confidence === 'high')).forEach(f => {
       const p = f.properties, el = document.createElement('div');
       el.append(text('h3',p.name));
       for (const [label,value] of [['Type',p.type.replaceAll('_',' ')],['Public location',p.public_location],['Confidence',p.confidence],['Verified',p.verified]]) el.append(text('p',`${label}: ${value}`));
@@ -52,7 +52,7 @@
       const path=marker.getElement(); if(path){path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',p.name);path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();marker.openPopup();}});}
     });
   }
-  fetch('data/egress.geojson').then(r => {if(!r.ok) throw Error(r.status); return r.json();}).then(data => {features=data.features; render(); document.querySelector('#status').textContent=`${features.length} surface records loaded`;}).catch(() => {document.querySelector('#status').textContent='Could not load records. Serve this site over HTTP and check the data file.';});
+  fetch('data/egress.geojson').then(r => {if(!r.ok) throw Error(r.status); return r.json();}).then(data => {features=data.features; render(); document.querySelector('#status').textContent=`${features.length} surface records loaded${features.some(f=>!f.geometry)?`, ${features.filter(f=>!f.geometry).length} without a public location`:''}`;}).catch(() => {document.querySelector('#status').textContent='Could not load records. Serve this site over HTTP and check the data file.';});
   const notice=document.querySelector('#notice'); if (!state.acknowledged) notice.showModal(); notice.addEventListener('close',()=>{if(notice.returnValue==='acknowledge'){state.acknowledged=true;save();} else notice.showModal();});
   const settings=document.querySelector('#settings'); document.querySelector('#settings-open').addEventListener('click',()=>settings.showModal());
   const medium=document.querySelector('#medium'), remember=document.querySelector('#remember'); medium.checked=state.showLower; remember.checked=state.rememberView;

@@ -2,7 +2,7 @@
   "type": "FeatureCollection",
   "name": "sea-tunnel-atlas egress points",
   "metadata": {
-    "generated": "2026-11-10",
+    "generated": "2026-11-11",
     "crs": "EPSG:4326",
     "coordinate_precision": "4 decimals (~11 m), never finer than the source",
     "scope": "Public record only. Surface structures. No cross passages, no security systems, no access details.",
@@ -26,18 +26,18 @@
       },
       "properties": {
         "id": "dstt-n00",
-        "name": "Pine Street Ventilation Facility (N00)",
+        "name": "Pine Street Ventilation Facility (N00), also Pine St. Substation N00",
         "type": "vent_facility",
         "tunnel": "DSTT / University Link",
         "owner": "Sound Transit",
         "public_location": "Pine St near 9th Ave, lot beside the Paramount Theatre",
         "visible_from_street": "yes",
         "precision": "block-level",
-        "confidence": "high",
-        "source_title": "Sound Transit Equipment and Facilities Numbering Standard Rev 4 (Aug 2021); University Link tunnel, Wikipedia",
-        "source_url": "https://en.wikipedia.org/wiki/University_Link_tunnel",
-        "verified": "2026-11-10",
-        "notes": "Only standalone vent for the U-Link tunnel. Point is block-level, placed at the Paramount Theatre address."
+        "confidence": "medium",
+        "source_title": "Sound Transit Equipment and Facilities Numbering Standard Rev 4 (Aug 2021); Sound Transit Quarterly Look Ahead (Oct 2026); King County Ordinance 19513 (2022)",
+        "source_url": "https://www.soundtransit.org/sites/default/files/documents/st-equipment-and-facilities-numbering-standard-rev-4-august-2021.pdf",
+        "verified": "2026-11-11",
+        "notes": "Name and N00 code confirmed by Sound Transit records. King County Ordinance 19513 calls it Pine St. Substation N00. The placement beside the Paramount Theatre rests on leads (Wikipedia, the public artwork artist's site). No primary address or parcel found. Point is block-level at the theatre address, not the facility."
       }
     },
     {
@@ -130,8 +130,8 @@
       },
       "properties": {
         "id": "dstt-idc",
-        "name": "International District/Chinatown Station and south portal",
-        "type": "station_portal",
+        "name": "International District/Chinatown Station",
+        "type": "station_egress",
         "tunnel": "DSTT",
         "owner": "Sound Transit",
         "public_location": "5th Ave S & S Jackson St",
@@ -140,8 +140,28 @@
         "confidence": "medium",
         "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
         "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
-        "verified": "2026-11-10",
-        "notes": "Report puts the DSTT south portal here. Exact portal point not separately verified."
+        "verified": "2026-11-11",
+        "notes": "Station point only. The DSTT south portal is a separate record."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dstt-south-portal",
+      "geometry": null,
+      "properties": {
+        "id": "dstt-south-portal",
+        "name": "DSTT South Portal (formerly the Merge Zone)",
+        "type": "portal",
+        "tunnel": "DSTT",
+        "owner": "WSDOT (land), Sound Transit (operations)",
+        "public_location": "Limited access area from the DSTT south to S Royal Brougham Way",
+        "visible_from_street": "unknown",
+        "precision": "corridor-level, unmapped",
+        "confidence": "low",
+        "source_title": "King County Ordinance 19513 (2022)",
+        "source_url": "https://aqua.kingcounty.gov/council/clerk/OldOrdsMotions/Ordinance%2019513.pdf",
+        "verified": "2026-11-11",
+        "notes": "Ordinance: the portion of the WSDOT limited access area that extends from the DSTT south to Royal Brougham Way, where light rail vehicles enter the DSTT from the south. No primary address or coordinates found, so geometry is null."
       }
     },
     {

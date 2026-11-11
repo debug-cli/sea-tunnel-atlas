@@ -30,14 +30,14 @@
         "type": "vent_facility",
         "tunnel": "DSTT / University Link",
         "owner": "Sound Transit",
-        "public_location": "Pine St near 9th Ave, lot beside the Paramount Theatre",
+        "public_location": "Pine St east of 9th Ave, beside the Paramount Theatre",
         "visible_from_street": "yes",
         "precision": "block-level",
         "confidence": "medium",
-        "source_title": "Sound Transit Equipment and Facilities Numbering Standard Rev 4 (Aug 2021); Sound Transit Quarterly Look Ahead (Oct 2026); King County Ordinance 19513 (2022)",
-        "source_url": "https://www.soundtransit.org/sites/default/files/documents/st-equipment-and-facilities-numbering-standard-rev-4-august-2021.pdf",
+        "source_title": "Downtown Seattle Transit Tunnel partner site, What's new in the tunnel? (archived 2007); ST Equipment and Facilities Numbering Standard Rev 4 (2021); ST Quarterly Look Ahead (Oct 2026); King County Ordinance 19513 (2022)",
+        "source_url": "https://web.archive.org/web/20071217032946/http:/www.seattletunnel.org/whatsnew.asp",
         "verified": "2026-11-11",
-        "notes": "Name and N00 code confirmed by Sound Transit records. King County Ordinance 19513 calls it Pine St. Substation N00. The placement beside the Paramount Theatre rests on leads (Wikipedia, the public artwork artist's site). No primary address or parcel found. Point is block-level at the theatre address, not the facility."
+        "notes": "Partner site (2007): \"The stub tunnel includes a permanent vent shaft structure east of Ninth Avenue. This structure will be the only visible indication of the Pine Street Stub Tunnel.\" Ries Niemi's \"Eat, Drink, and Be Merry\" artwork stands at the surface. King County Ordinance 19513 calls it Pine St. Substation N00. No parcel found. The point is block-level at the theatre address."
       }
     },
     {
@@ -316,8 +316,48 @@
         "confidence": "high",
         "source_title": "Dr. Sauer & Partners, Benchmark for the Future (Beacon Hill SEM)",
         "source_url": "http://projects.dr-sauer.com/files/drsauer/public/content/file/1485/upload/benchmark-future.pdf",
-        "verified": "2026-11-10",
-        "notes": "Main shaft 181 ft deep, 46 ft ID (elevators, stairs, vents). Ancillary shaft 26 ft ID (stairs, vents). Fan issue closed station 2025-08-06."
+        "verified": "2026-11-11",
+        "notes": "Main shaft 46 ft ID, ancillary shaft 26 ft ID (Dr. Sauer). Depth conflict: Dr. Sauer gives 181 ft, the ST fact sheet gives 165 ft. Fan issue closed station 2025-08-06."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bh-west-portal",
+      "geometry": null,
+      "properties": {
+        "id": "bh-west-portal",
+        "name": "Beacon Hill Tunnel west portal",
+        "type": "portal",
+        "tunnel": "Beacon Hill Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "Under I-5, east of Airport Way",
+        "visible_from_street": "unknown",
+        "precision": "description only, unmapped",
+        "confidence": "medium",
+        "source_title": "Sound Transit, Beacon Hill Tunnel & Station fact sheet (archived 2012)",
+        "source_url": "https://web.archive.org/web/20150909225511if_/http:/www.soundtransit.org/sites/default/files/documents/pdf/archived_projects/20121130_beaconhilltunnelandstation.pdf",
+        "verified": "2026-11-11",
+        "notes": "ST: \"The tunnel's west portal, or opening, is located under I-5, east of Airport Way.\" No point given, so geometry is null."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bh-east-portal",
+      "geometry": null,
+      "properties": {
+        "id": "bh-east-portal",
+        "name": "Beacon Hill Tunnel east portal",
+        "type": "portal",
+        "tunnel": "Beacon Hill Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "East of 25th Ave S and south of S McClellan St",
+        "visible_from_street": "unknown",
+        "precision": "description only, unmapped",
+        "confidence": "medium",
+        "source_title": "Sound Transit, Beacon Hill Tunnel & Station fact sheet (archived 2012)",
+        "source_url": "https://web.archive.org/web/20150909225511if_/http:/www.soundtransit.org/sites/default/files/documents/pdf/archived_projects/20121130_beaconhilltunnelandstation.pdf",
+        "verified": "2026-11-11",
+        "notes": "ST: \"The east portal is located to the east of 25th Avenue South and south of South McClellan Street.\" No point given, so geometry is null."
       }
     },
     {
@@ -333,7 +373,7 @@
       "properties": {
         "id": "elink-eastmain",
         "name": "East Main Station (south end, Downtown Bellevue Tunnel)",
-        "type": "station_portal",
+        "type": "station_egress",
         "tunnel": "Downtown Bellevue Tunnel",
         "owner": "Sound Transit",
         "public_location": "229 112th Ave SE, Bellevue",
@@ -342,8 +382,34 @@
         "confidence": "medium",
         "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
         "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
-        "verified": "2026-11-10",
-        "notes": "Tunnel runs under 110th Ave NE between East Main and Bellevue Downtown. Portal points not separately verified. Do not map intrusion detection details."
+        "verified": "2026-11-11",
+        "notes": "Station point only. The tunnel's south portal is a separate record."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "elink-south-portal",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.1908,
+          47.61
+        ]
+      },
+      "properties": {
+        "id": "elink-south-portal",
+        "name": "Downtown Bellevue Tunnel south portal",
+        "type": "portal",
+        "tunnel": "Downtown Bellevue Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "112th Ave NE and Main St, Bellevue",
+        "visible_from_street": "yes",
+        "precision": "intersection (Census address-range geocode)",
+        "confidence": "high",
+        "source_title": "Sound Transit, Downtown Bellevue tunneling update (2017-05-05)",
+        "source_url": "https://www.soundtransit.org/get-to-know-us/news-events/project-updates/downtown-bellevue-tunneling-update",
+        "verified": "2026-11-11",
+        "notes": "ST: \"The south portal of the tunnel is located at 112th Avenue NE and Main Street.\""
       }
     },
     {
@@ -359,7 +425,7 @@
       "properties": {
         "id": "elink-bvdt",
         "name": "Bellevue Downtown Station (north end, Downtown Bellevue Tunnel)",
-        "type": "station_portal",
+        "type": "station_egress",
         "tunnel": "Downtown Bellevue Tunnel",
         "owner": "Sound Transit",
         "public_location": "594 110th Ave NE, Bellevue",
@@ -368,8 +434,34 @@
         "confidence": "medium",
         "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
         "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
-        "verified": "2026-11-10",
-        "notes": "Portal points not separately verified."
+        "verified": "2026-11-11",
+        "notes": "Station point only. The tunnel's north portal is a separate record."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "elink-north-portal",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.1937,
+          47.6155
+        ]
+      },
+      "properties": {
+        "id": "elink-north-portal",
+        "name": "Downtown Bellevue Tunnel north portal",
+        "type": "portal",
+        "tunnel": "Downtown Bellevue Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "110th Ave NE and NE 6th St, next to Bellevue City Hall",
+        "visible_from_street": "yes",
+        "precision": "intersection (Census address-range geocode)",
+        "confidence": "high",
+        "source_title": "Sound Transit, Downtown Bellevue tunneling update (2017-05-05)",
+        "source_url": "https://www.soundtransit.org/get-to-know-us/news-events/project-updates/downtown-bellevue-tunneling-update",
+        "verified": "2026-11-11",
+        "notes": "ST: \"the north portal will be adjacent to City Hall at 110 Avenue NE and NE 6th Street.\""
       }
     }
   ]

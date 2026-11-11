@@ -1,0 +1,79 @@
+ROLE
+You are a research analyst. Build a sourced inventory of the publicly documented surface structures of the Seattle-area light rail tunnels: emergency egress points, ventilation facilities, shafts, fan plants, and tunnel portals.
+
+INPUT
+The attached egress.json holds the current 18 known records (some have null geometry: no public point yet). Treat it as the current baseline, not as truth. The other attached files (if present) hold Link station points and line alignments for context.
+
+Current baseline, by tunnel:
+• DSTT: Pine Street Ventilation Facility N00 (Pine St near 9th Ave), Westlake, Symphony, Pioneer Square, International District/Chinatown with south portal
+• University Link: Capitol Hill, University of Washington
+• Northgate Link: U District, Roosevelt, Maple Leaf Portal (1st Ave NE and NE 95th St)
+• Beacon Hill Tunnel: Beacon Hill Station headhouse, main and ancillary shafts
+• Downtown Bellevue Tunnel: East Main (south end), Bellevue Downtown (north end)
+
+TASKS
+1. Verify each baseline point. For each, find a primary source that confirms its existence, function, and location. Say whether the source agrees, disagrees, or adds detail.
+2. Find missing structures. Search each tunnel end to end for portals, standalone vent buildings, shafts, and emergency exit structures the baseline lacks. Cover at least: the DSTT north portal and any DSTT vent structures outside stations, the Beacon Hill Tunnel east and west portals, the University Link and Northgate Link tunnel portals and any mid-tunnel shafts, the Downtown Bellevue Tunnel portals, and the 2 Line's use of the I-90 Mount Baker Tunnel and lid structures.
+3. Record history. Note structures that were planned and dropped (for example the Montlake mid-tunnel shaft dropped in 2007), renamed, or rebuilt, with dates.
+4. Record incidents tied to a specific structure (ventilation failures, closures, fan faults) with dates and sources.
+5. Record reuse terms. For each source, state its license or terms of use if published.
+
+SOURCE RANKING
+Use sources in this order and name the tier for each claim:
+Tier 1: Sound Transit and King County Metro documents (EIS and FEIS, final design drawings released to the public, board motions, project pages, news releases, GTFS), City of Seattle and City of Bellevue permits and land use records, WSDOT documents.
+Tier 2: Contractor and engineering firm project sheets, conference papers, technical journals.
+Tier 3: Local news with a named reporter.
+Tier 4: Wikipedia, blogs, forums. Use these as leads only. Never use a Tier 4 source as the only source for a location.
+
+LOCATION RULES
+• Give coordinates no more precise than the source supports. Label precision as one of: exact address, parcel, intersection, block, station centroid, approximate.
+• Never estimate a location from a map image alone. If a source gives only a description, give the description and set coordinates to null.
+• Use WGS84 longitude, latitude.
+
+OUTPUT
+Return three parts.
+Part A. A GeoJSON FeatureCollection of new or corrected features. Use the same property names as the attached file: id, name, type, tunnel, owner, public_location, visible_from_street, precision, confidence, source_title, source_url, verified, notes. Set verified to the date you accessed the source. Use type values from: vent_facility, station_egress, station_portal, portal, station_shaft, egress_structure. Use ids in the form <tunnel-prefix>-<short-name>.
+Part B. A verification table for the 13 baseline points: id, verdict (confirmed, corrected, unconfirmed), source title, URL, tier, exact quote supporting the verdict.
+Part C. A source list: title, publisher, date, URL, tier, license or terms, and the claims it supports.
+
+QUALITY RULES
+• Every claim needs a URL and a short exact quote from that page.
+• Do not invent URLs. If a document is cited elsewhere but you cannot open it, list it as unread.
+• Mark anything you could not confirm as UNVERIFIED. Mark your own reasoning as INFERRED.
+• Flag any source that contradicts the baseline, and quote both sides.
+• Say what you searched and found nothing for, by tunnel.
+
+SCOPE DECISIONS
+1. I-90 Mount Baker Tunnel and lids: catalog only structures that serve the 2 Line today and that a Sound Transit or WSDOT record ties to light rail operations. List WSDOT highway ventilation and egress structures as context features only, with type "highway_context" and owner WSDOT, and cite a WSDOT record. Skip any structure that is abandoned, inactive, or not in public use.
+2. History: map current structures from as-built or final design records. For dropped or renamed structures, go back to each project's Final EIS or Record of Decision. Use a Draft EIS only when a structure was named there and later dropped. Put these in a separate history table (name, project, date, status, new name, quote, URL), with no coordinates and nothing added to the GeoJSON.
+3. Incidents: include operational incidents after opening that an agency notice or established news outlet reported publicly. Include construction-phase incidents only when a public record ties them to a named shaft, portal, or vent facility. Give the ISO 8601 date, structure, one sentence, quote, and URL. Exclude trespass, vandalism, security events, and anything about access, locks, alarms, cameras, staffing, or system controls.
+
+ADDITIONAL CONTEXT (claims to verify, not facts)
+• N00 Pine St Ventilation Facility: named in Sound Transit Equipment Numbering Standard Rev 4 (Aug 2021). The current point is a block-level geocode of the Paramount Theatre address. It may relate to the "Pine Street Stub Tunnel". Find a primary record of its address or parcel.
+• DSTT south portal: the point reuses the International District/Chinatown station coordinates. It may sit south of S Jackson St, near Seattle Blvd S. Find its own location.
+• Downtown Bellevue Tunnel portals: the points reuse station coordinates. Find the actual portal locations.
+• Beacon Hill shafts: station at 2702 Beacon Ave S. A Dr. Sauer page gives the Main Shaft as 181 ft deep with a 46 ft inside diameter, and the Ancillary Shaft as 26 ft. Does either shaft have a separate surface structure?
+• Maple Leaf Portal: a Sound Transit release dated 2016-09-02 places it near 1st Ave NE and NE 95th St, east of I-5. Reject NE 60th.
+• Known conflicts to report, not resolve: the University Link cross passage count is 16, 20, or 21 depending on the source, and Northgate Link has 23. Give no cross passage locations. The Montlake vent was reportedly dropped in 2007, but the SR 520 Expert Review Panel mentions a Sound Transit ventilation shaft. Confirm its status.
+• Dated events to confirm: 2023-02-14 (Pioneer Square ventilation failure), 2024-01-29 (Westlake), 2025-08-06 (Beacon Hill), and 2025-08-15, 2025-09-20, and 2025-09-22.
+• Out of scope: West Seattle and Ballard Link vent sites, and SR 99 buildings unless they are WSDOT-cited and marked highway_context.
+• Coordinates at no more than 4 decimals. Mark address geocodes as precision "address_geocode". Keep unverifiable baseline points with verified: false.
+
+Deliver the complete report in this one response, as markdown: Part A in a ```json code block, then Part B, the history table, the incident table, and Part C as markdown tables.
+
+ALREADY VERIFIED: DO NOT REPEAT
+These findings are settled. Do not resubmit them, re-cite these sources for the same claim, or list these features again unless you have a primary source that contradicts them. Spend your effort on gaps.
+• DSTT South Portal: King County Ordinance 19513 (2022) defines it as the WSDOT-owned limited access area "from the DSTT south to Royal Brougham Way", formerly the "Merge Zone". Still missing: a primary address, parcel, or coordinates.
+• N00: named in ST Equipment Numbering Standard Rev 4 (2021) and the ST Quarterly Look Ahead (Oct 2026, "Capitol Hill Station to Pine Street Ventilation Facility 26kV Feeders"). KC Ord 19513 calls it "Pine St. Substation N00". The location next to the Paramount Theatre comes only from Wikipedia and the artist's site (riesniemi.com). Still missing: a primary address or parcel (U230 contract, SDCI permit, SEPA, 2006 FEIS).
+• Montlake vent: dropped. R2005-20 (Hop-In Market site, E Roanoke St & 22nd Ave E), M2006-78, a 2007 ST page ("a remote vent will not be needed"), and the FTA 2021 University Link Before-and-After Study all confirm this. The SR 520 ERP 2008 shaft reference is near Husky Stadium and the crossover. Do not research this further.
+• Maple Leaf Portal at 1st Ave NE & NE 95th St (ST 2016-09-02). Beacon Hill station at 2702 Beacon Ave S, with shaft dimensions from Dr. Sauer. Station locations from ST GTFS (the attached link-stations.json). Dated fan events (2023-02-14, 2024-01-29, 2025-08-06).
+• Sources already read, so do not return them as new: ST Equipment Numbering Standard Rev 4, KC Ordinance 19513, ST Quarterly Look Ahead Oct 2026, FTA University Link B&A 2021, SR 520 ERP 2008, ST R2005-20, ST M2006-78, ST GTFS, Wikipedia DSTT and Link articles, Dr. Sauer Beacon Hill page.
+Priority gaps: DSTT north portal, DSTT south portal exact location, N00 parcel, Beacon Hill portals, U-Link/Northgate Link portals and any built mid-tunnel shafts, Downtown Bellevue Tunnel portals, 2 Line structures in the I-90 Mount Baker Tunnel. In Part B, only list baseline points whose verdict changes because of a new source.
+• Added after research wave #2 (now settled and in the baseline, so do not repeat):
+  - Downtown Bellevue Tunnel portals. South portal at 112th Ave NE & Main St, north portal at 110th Ave NE & NE 6th St, next to City Hall (ST project update, 2017-05-05).
+  - Beacon Hill Tunnel portals. West portal under I-5, east of Airport Way. East portal east of 25th Ave S and south of S McClellan St (archived ST fact sheet, 2012). Still missing: a primary point or parcel for either.
+  - N00 vent shaft on Pine St east of 9th Ave (archived seattletunnel.org page, 2007; ST Motion M2004-78). Still missing: a parcel.
+  - I-90 Mount Baker Tunnel ventilation upgraded for light rail (Tunneling Online 2017). Already noted. Do not repeat it.
+  - Beacon Hill shaft depth conflict: 165 ft (ST) vs 181 ft (Dr. Sauer). Already noted.
+  - More sources already read: ST Downtown Bellevue tunneling update 2017, ST East Link Bellevue tunnel completion release 2020, ST Beacon Hill fact sheet 2012, seattletunnel.org whatsnew 2007, ST M2004-78, Tunneling Online I-90 retrofit, ST Northgate-Roosevelt tunnel release 2015.
+Updated priority gaps: a primary point for the DSTT south portal; a parcel or permit for N00; primary points for the Beacon Hill portals; the University Link and Northgate Link tunnel portals and any shafts built outside stations (the U-Link south end at the Pine stub, the Northgate Link south end at UW); whether any Link-specific egress structures exist inside the I-90 lids or the Mount Baker Tunnel (Sound Transit or WSDOT record); and any 2 Line egress structures on the Mercer Island lid. Use City of Seattle SDCI and Bellevue permit records, ST final design or as-built drawing indexes, and King County parcel records where they are public.

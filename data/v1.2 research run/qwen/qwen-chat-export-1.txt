@@ -1,0 +1,102 @@
+### USER
+ROLE
+You are a research analyst. Build a sourced inventory of the publicly documented surface structures of the Seattle-area light rail tunnels: emergency egress points, ventilation facilities, shafts, fan plants, and tunnel portals.
+
+INPUT
+The attached egress.geojson holds 13 known points. Treat it as the current baseline, not as truth. The other attached files (if present) hold Link station points and line alignments for context.
+
+Current baseline, by tunnel:
+• DSTT: Pine Street Ventilation Facility N00 (Pine St near 9th Ave), Westlake, Symphony, Pioneer Square, International District/Chinatown with south portal
+• University Link: Capitol Hill, University of Washington
+• Northgate Link: U District, Roosevelt, Maple Leaf Portal (1st Ave NE and NE 95th St)
+• Beacon Hill Tunnel: Beacon Hill Station headhouse, main and ancillary shafts
+• Downtown Bellevue Tunnel: East Main (south end), Bellevue Downtown (north end)
+
+TASKS
+1. Verify each baseline point. For each, find a primary source that confirms its existence, function, and location. Say whether the source agrees, disagrees, or adds detail.
+2. Find missing structures. Search each tunnel end to end for portals, standalone vent buildings, shafts, and emergency exit structures the baseline lacks. Cover at least: the DSTT north portal and any DSTT vent structures outside stations, the Beacon Hill Tunnel east and west portals, the University Link and Northgate Link tunnel portals and any mid-tunnel shafts, the Downtown Bellevue Tunnel portals, and the 2 Line's use of the I-90 Mount Baker Tunnel and lid structures.
+3. Record history. Note structures that were planned and dropped (for example the Montlake mid-tunnel shaft dropped in 2007), renamed, or rebuilt, with dates.
+4. Record incidents tied to a specific structure (ventilation failures, closures, fan faults) with dates and sources.
+5. Record reuse terms. For each source, state its license or terms of use if published.
+
+SOURCE RANKING
+Use sources in this order and name the tier for each claim:
+Tier 1: Sound Transit and King County Metro documents (EIS and FEIS, final design drawings released to the public, board motions, project pages, news releases, GTFS), City of Seattle and City of Bellevue permits and land use records, WSDOT documents.
+Tier 2: Contractor and engineering firm project sheets, conference papers, technical journals.
+Tier 3: Local news with a named reporter.
+Tier 4: Wikipedia, blogs, forums. Use these as leads only. Never use a Tier 4 source as the only source for a location.
+
+LOCATION RULES
+• Give coordinates no more precise than the source supports. Label precision as one of: exact address, parcel, intersection, block, station centroid, approximate.
+• Never estimate a location from a map image alone. If a source gives only a description, give the description and set coordinates to null.
+• Use WGS84 longitude, latitude.
+
+OUTPUT
+Return three parts.
+Part A. A GeoJSON FeatureCollection of new or corrected features. Use the same property names as the attached file: id, name, type, tunnel, owner, public_location, visible_from_street, precision, confidence, source_title, source_url, verified, notes. Set verified to the date you accessed the source. Use type values from: vent_facility, station_egress, station_portal, portal, station_shaft, egress_structure. Use ids in the form <tunnel-prefix>-<short-name>.
+Part B. A verification table for the 13 baseline points: id, verdict (confirmed, corrected, unconfirmed), source title, URL, tier, exact quote supporting the verdict.
+Part C. A source list: title, publisher, date, URL, tier, license or terms, and the claims it supports.
+
+QUALITY RULES
+• Every claim needs a URL and a short exact quote from that page.
+• Do not invent URLs. If a document is cited elsewhere but you cannot open it, list it as unread.
+• Mark anything you could not confirm as UNVERIFIED. Mark your own reasoning as INFERRED.
+• Flag any source that contradicts the baseline, and quote both sides.
+• Say what you searched and found nothing for, by tunnel.
+
+### ASSISTANT
+1. For the I-90 Mount Baker Tunnel and lid structures, should I include only those currently integrated into the 2 Line light rail system, or also catalog legacy highway ventilation and egress infrastructure that remains physically present but is no longer active for transit operations?
+2. Regarding historical records of dropped or renamed structures, what date range should I prioritize: the full planning history back to initial environmental reviews, or a more recent window focused on changes during final design and construction phases?
+3. For incident reporting, should I limit the scope to operational failures occurring after each tunnel segment opened to the public, or also include construction-phase incidents tied to specific shafts, portals, or ventilation facilities?
+
+### USER
+1. I-90 Mount Baker Tunnel and lids
+Catalog only structures that serve the 2 Line today: portals, vent buildings, shafts, and egress structures that a Sound Transit or WSDOT record ties to light rail operations.
+List WSDOT highway ventilation and egress structures as context features only. Set type to "highway_context", set owner to WSDOT, and cite a WSDOT record.
+Skip any structure that is abandoned, inactive, or not in public use. Do not catalog it, even if it still physically exists.
+
+2. Date range for dropped or renamed structures
+Map current structures from as-built or final design records.
+For dropped or renamed structures, go back to each project's Final EIS or Record of Decision. Use Draft EIS records only when a structure was named there and later dropped.
+Put these in a separate history table with name, project, date, status (dropped or renamed), new name if any, quote, and URL. Give them no coordinates and do not add them to the GeoJSON.
+
+3. Incidents
+Include operational incidents after each segment opened, but only those an agency notice or established news outlet reported publicly.
+Include construction-phase incidents only when a public record ties them to a named shaft, portal, or vent facility.
+For each incident, give the date in ISO 8601, the structure, one sentence of what happened, the quote, and the URL. Attach it as a note to the existing feature, with no new geometry.
+Exclude trespass, vandalism, security events, and anything describing access, locks, alarms, cameras, staffing, or system controls.
+
+### ASSISTANT
+
+
+### USER
+Additional context. Treat each item as a claim to verify, not a fact.
+
+Weak points in the 13 baseline features
+• N00 Pine St Ventilation Facility: Sound Transit Equipment Numbering Standard Rev 4 (Aug 2021) names it. The current point is a block-level geocode of the Paramount Theatre address, not a sourced location. Find a primary record of the facility's address or parcel.
+• DSTT south portal: the point currently reuses the International District/Chinatown station coordinates. Find the portal's own location.
+• Downtown Bellevue Tunnel portals: the points currently reuse the East Main and Bellevue Downtown station coordinates. Find the actual portal locations.
+• Beacon Hill shafts: the station address 2702 Beacon Ave S is confirmed. A Dr. Sauer project page gives the Main Shaft as 181 ft deep with a 46 ft inside diameter, and the Ancillary Shaft as 26 ft inside diameter. Confirm whether either shaft has a separate surface structure.
+• Maple Leaf Portal: a Sound Transit release dated 2016-09-02 places it near 1st Ave NE and NE 95th St, east of I-5. Reject any source that places it at NE 60th.
+
+Known conflicts to report, not resolve by guessing
+• The University Link cross passage count is 16, 20, or 21, depending on the source (Wikipedia and Traylor, Dr. Sauer, and TBM Magazine 2016). Northgate Link has 23. Report the counts with each source. Give no cross passage locations.
+• The Montlake mid-tunnel vent was reportedly dropped in 2007. Confirm with a primary record.
+
+Dated events to confirm
+• Pioneer Square emergency ventilation failure: 2023-02-14.
+• Westlake fan-related closure: 2024-01-29.
+• Beacon Hill fan-related closure: 2025-08-06.
+• Other 2025 fan-related closures: 2025-08-15, 2025-09-20, 2025-09-22.
+
+Out of scope
+• West Seattle and Ballard Link vent sites. These are not final, so do not map them.
+• SR 99 tunnel buildings, unless a WSDOT record is cited and they are marked highway_context.
+
+Output reminders
+• Coordinates at no more than 4 decimals, and never more precise than the source.
+• For every feature, include an exact quote, the source URL, the source tier, and the access date in ISO 8601.
+• Mark any point placed by geocoding an address as precision "address_geocode", and say so in notes.
+• If you cannot verify a baseline point, keep it and set verified to false. Do not delete it.
+
+### ASSISTANT

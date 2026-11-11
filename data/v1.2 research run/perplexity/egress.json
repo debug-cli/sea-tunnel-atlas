@@ -1,0 +1,468 @@
+{
+  "type": "FeatureCollection",
+  "name": "sea-tunnel-atlas egress points",
+  "metadata": {
+    "generated": "2026-11-11",
+    "crs": "EPSG:4326",
+    "coordinate_precision": "4 decimals (~11 m), never finer than the source",
+    "scope": "Public record only. Surface structures. No cross passages, no security systems, no access details.",
+    "not_included": [
+      "U-Link cross passages (16, 20, or 21 depending on source; locations not public)",
+      "Northgate Link cross passages (23 per Tunnel Business Magazine; locations not public)",
+      "WSBLE / DSTT2 vent shafts (still in environmental review)",
+      "SR 99 portal buildings (WSDOT, not transit; add only with a fetched WSDOT source)"
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "dstt-n00",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3314,
+          47.6132
+        ]
+      },
+      "properties": {
+        "id": "dstt-n00",
+        "name": "Pine Street Ventilation Facility (N00), also Pine St. Substation N00",
+        "type": "vent_facility",
+        "tunnel": "DSTT / University Link",
+        "owner": "Sound Transit",
+        "public_location": "Pine St east of 9th Ave, beside the Paramount Theatre",
+        "visible_from_street": "yes",
+        "precision": "block-level",
+        "confidence": "medium",
+        "source_title": "Downtown Seattle Transit Tunnel partner site, What's new in the tunnel? (archived 2007); ST Equipment and Facilities Numbering Standard Rev 4 (2021); ST Quarterly Look Ahead (Oct 2026); King County Ordinance 19513 (2022)",
+        "source_url": "https://web.archive.org/web/20071217032946/http:/www.seattletunnel.org/whatsnew.asp",
+        "verified": "2026-11-11",
+        "notes": "Partner site (2007): \"The stub tunnel includes a permanent vent shaft structure east of Ninth Avenue. This structure will be the only visible indication of the Pine Street Stub Tunnel.\" Ries Niemi's \"Eat, Drink, and Be Merry\" artwork stands at the surface. King County Ordinance 19513 calls it Pine St. Substation N00. No parcel found. The point is block-level at the theatre address."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dstt-westlake",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3367,
+          47.6116
+        ]
+      },
+      "properties": {
+        "id": "dstt-westlake",
+        "name": "Westlake Station",
+        "type": "station_egress",
+        "tunnel": "DSTT",
+        "owner": "Sound Transit",
+        "public_location": "4th Ave & Pine St",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-10",
+        "notes": "Station stairs and fan plant are inside the station."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dstt-symphony",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.336,
+          47.6078
+        ]
+      },
+      "properties": {
+        "id": "dstt-symphony",
+        "name": "Symphony Station",
+        "type": "station_egress",
+        "tunnel": "DSTT",
+        "owner": "Sound Transit",
+        "public_location": "3rd Ave & Seneca St",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-10",
+        "notes": "Formerly University Street."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dstt-pioneer",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3312,
+          47.6026
+        ]
+      },
+      "properties": {
+        "id": "dstt-pioneer",
+        "name": "Pioneer Square Station",
+        "type": "station_egress",
+        "tunnel": "DSTT",
+        "owner": "Sound Transit",
+        "public_location": "3rd Ave & James St",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit blog, 2023-02-15",
+        "source_url": "https://www.soundtransit.org/blog/platform/thank-you-to-our-passengers-their-patience",
+        "verified": "2026-11-10",
+        "notes": "Emergency ventilation failure closed the DSTT on 2023-02-14."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dstt-idc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.328,
+          47.5984
+        ]
+      },
+      "properties": {
+        "id": "dstt-idc",
+        "name": "International District/Chinatown Station",
+        "type": "station_egress",
+        "tunnel": "DSTT",
+        "owner": "Sound Transit",
+        "public_location": "5th Ave S & S Jackson St",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "medium",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-11",
+        "notes": "Station point only. The DSTT south portal is a separate record."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dstt-south-portal",
+      "geometry": null,
+      "properties": {
+        "id": "dstt-south-portal",
+        "name": "DSTT South Portal (formerly the Merge Zone)",
+        "type": "portal",
+        "tunnel": "DSTT",
+        "owner": "WSDOT (land), Sound Transit (operations)",
+        "public_location": "Limited access area from the DSTT south to S Royal Brougham Way",
+        "visible_from_street": "unknown",
+        "precision": "corridor-level, unmapped",
+        "confidence": "low",
+        "source_title": "King County Ordinance 19513 (2022)",
+        "source_url": "https://aqua.kingcounty.gov/council/clerk/OldOrdsMotions/Ordinance%2019513.pdf",
+        "verified": "2026-11-11",
+        "notes": "Ordinance: the portion of the WSDOT limited access area that extends from the DSTT south to Royal Brougham Way, where light rail vehicles enter the DSTT from the south. No primary address or coordinates found, so geometry is null."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ulink-capitolhill",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3202,
+          47.6191
+        ]
+      },
+      "properties": {
+        "id": "ulink-capitolhill",
+        "name": "Capitol Hill Station",
+        "type": "station_egress",
+        "tunnel": "University Link",
+        "owner": "Sound Transit",
+        "public_location": "140 Broadway E",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-10",
+        "notes": "Stations handle tunnel ventilation; Montlake mid-tunnel shaft dropped in 2007."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ulink-uw",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3038,
+          47.6498
+        ]
+      },
+      "properties": {
+        "id": "ulink-uw",
+        "name": "University of Washington Station",
+        "type": "station_egress",
+        "tunnel": "University Link / Northgate Link",
+        "owner": "Sound Transit",
+        "public_location": "3720 Montlake Blvd NE",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-10",
+        "notes": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "nlink-udistrict",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3141,
+          47.6603
+        ]
+      },
+      "properties": {
+        "id": "nlink-udistrict",
+        "name": "U District Station",
+        "type": "station_egress",
+        "tunnel": "Northgate Link",
+        "owner": "Sound Transit",
+        "public_location": "4300 Brooklyn Ave NE",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-10",
+        "notes": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "nlink-roosevelt",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.316,
+          47.6766
+        ]
+      },
+      "properties": {
+        "id": "nlink-roosevelt",
+        "name": "Roosevelt Station",
+        "type": "station_egress",
+        "tunnel": "Northgate Link",
+        "owner": "Sound Transit",
+        "public_location": "6501 12th Ave NE",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-10",
+        "notes": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "nlink-mapleleaf",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3285,
+          47.6977
+        ]
+      },
+      "properties": {
+        "id": "nlink-mapleleaf",
+        "name": "Maple Leaf Portal",
+        "type": "portal",
+        "tunnel": "Northgate Link",
+        "owner": "Sound Transit",
+        "public_location": "1st Ave NE & NE 95th St, east side of I-5",
+        "visible_from_street": "yes",
+        "precision": "intersection-level",
+        "confidence": "high",
+        "source_title": "Sound Transit news release, 2016-09-02",
+        "source_url": "https://www.soundtransit.org/get-to-know-us/news-events/news-releases/sound-transit-contractor-completes-mining-last-tunnel",
+        "verified": "2026-11-10",
+        "notes": "North tunnel portal. Gemini report's NE 60th location is wrong. 2025-08-15 fan fault traced to breaker next to this portal."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bh-station",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.3115,
+          47.5793
+        ]
+      },
+      "properties": {
+        "id": "bh-station",
+        "name": "Beacon Hill Station headhouse (main and ancillary shafts)",
+        "type": "station_shaft",
+        "tunnel": "Beacon Hill Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "2702 Beacon Ave S",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "high",
+        "source_title": "Dr. Sauer & Partners, Benchmark for the Future (Beacon Hill SEM)",
+        "source_url": "http://projects.dr-sauer.com/files/drsauer/public/content/file/1485/upload/benchmark-future.pdf",
+        "verified": "2026-11-11",
+        "notes": "Main shaft 46 ft ID, ancillary shaft 26 ft ID (Dr. Sauer). Depth conflict: Dr. Sauer gives 181 ft, the ST fact sheet gives 165 ft. Fan issue closed station 2025-08-06."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bh-west-portal",
+      "geometry": null,
+      "properties": {
+        "id": "bh-west-portal",
+        "name": "Beacon Hill Tunnel west portal",
+        "type": "portal",
+        "tunnel": "Beacon Hill Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "Under I-5, east of Airport Way",
+        "visible_from_street": "unknown",
+        "precision": "description only, unmapped",
+        "confidence": "medium",
+        "source_title": "Sound Transit, Beacon Hill Tunnel & Station fact sheet (archived 2012)",
+        "source_url": "https://web.archive.org/web/20150909225511if_/http:/www.soundtransit.org/sites/default/files/documents/pdf/archived_projects/20121130_beaconhilltunnelandstation.pdf",
+        "verified": "2026-11-11",
+        "notes": "ST: \"The tunnel's west portal, or opening, is located under I-5, east of Airport Way.\" No point given, so geometry is null."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bh-east-portal",
+      "geometry": null,
+      "properties": {
+        "id": "bh-east-portal",
+        "name": "Beacon Hill Tunnel east portal",
+        "type": "portal",
+        "tunnel": "Beacon Hill Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "East of 25th Ave S and south of S McClellan St",
+        "visible_from_street": "unknown",
+        "precision": "description only, unmapped",
+        "confidence": "medium",
+        "source_title": "Sound Transit, Beacon Hill Tunnel & Station fact sheet (archived 2012)",
+        "source_url": "https://web.archive.org/web/20150909225511if_/http:/www.soundtransit.org/sites/default/files/documents/pdf/archived_projects/20121130_beaconhilltunnelandstation.pdf",
+        "verified": "2026-11-11",
+        "notes": "ST: \"The east portal is located to the east of 25th Avenue South and south of South McClellan Street.\" No point given, so geometry is null."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "elink-eastmain",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.1911,
+          47.6082
+        ]
+      },
+      "properties": {
+        "id": "elink-eastmain",
+        "name": "East Main Station (south end, Downtown Bellevue Tunnel)",
+        "type": "station_egress",
+        "tunnel": "Downtown Bellevue Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "229 112th Ave SE, Bellevue",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "medium",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-11",
+        "notes": "Station point only. The tunnel's south portal is a separate record."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "elink-south-portal",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.1908,
+          47.61
+        ]
+      },
+      "properties": {
+        "id": "elink-south-portal",
+        "name": "Downtown Bellevue Tunnel south portal",
+        "type": "portal",
+        "tunnel": "Downtown Bellevue Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "112th Ave NE and Main St, Bellevue",
+        "visible_from_street": "yes",
+        "precision": "intersection (Census address-range geocode)",
+        "confidence": "high",
+        "source_title": "Sound Transit, Downtown Bellevue tunneling update (2017-05-05)",
+        "source_url": "https://www.soundtransit.org/get-to-know-us/news-events/project-updates/downtown-bellevue-tunneling-update",
+        "verified": "2026-11-11",
+        "notes": "ST: \"The south portal of the tunnel is located at 112th Avenue NE and Main Street.\""
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "elink-bvdt",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.1921,
+          47.6152
+        ]
+      },
+      "properties": {
+        "id": "elink-bvdt",
+        "name": "Bellevue Downtown Station (north end, Downtown Bellevue Tunnel)",
+        "type": "station_egress",
+        "tunnel": "Downtown Bellevue Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "594 110th Ave NE, Bellevue",
+        "visible_from_street": "yes",
+        "precision": "station centroid (GTFS)",
+        "confidence": "medium",
+        "source_title": "Sound Transit GTFS stops.txt (Fall 2026)",
+        "source_url": "https://www.soundtransit.org/GTFS-rail/40_gtfs.zip",
+        "verified": "2026-11-11",
+        "notes": "Station point only. The tunnel's north portal is a separate record."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "elink-north-portal",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.1937,
+          47.6155
+        ]
+      },
+      "properties": {
+        "id": "elink-north-portal",
+        "name": "Downtown Bellevue Tunnel north portal",
+        "type": "portal",
+        "tunnel": "Downtown Bellevue Tunnel",
+        "owner": "Sound Transit",
+        "public_location": "110th Ave NE and NE 6th St, next to Bellevue City Hall",
+        "visible_from_street": "yes",
+        "precision": "intersection (Census address-range geocode)",
+        "confidence": "high",
+        "source_title": "Sound Transit, Downtown Bellevue tunneling update (2017-05-05)",
+        "source_url": "https://www.soundtransit.org/get-to-know-us/news-events/project-updates/downtown-bellevue-tunneling-update",
+        "verified": "2026-11-11",
+        "notes": "ST: \"the north portal will be adjacent to City Hall at 110 Avenue NE and NE 6th Street.\""
+      }
+    }
+  ]
+}

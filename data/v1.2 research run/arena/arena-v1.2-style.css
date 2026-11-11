@@ -1,0 +1,988 @@
+/*
+  Sea Tunnel Atlas
+
+  Contents
+   1. Tokens
+   2. Base
+   3. Header
+   4. Safety warning
+   5. Layout: bottom sheet below 760px, sidebar from 760px
+   6. Sidebar content
+   7. Buttons and form controls
+   8. Dialogs
+   9. Map markers
+  10. Leaflet controls
+  11. Leaflet popups
+  12. Reduced motion
+*/
+
+
+/* 1. Tokens ------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* Type. Mono is for data values only: counts, dates, IDs. */
+  --font-ui: "Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", sans-serif;
+  --font-data: "DejaVu Sans Mono", ui-monospace, monospace;
+  --text-small: 0.875rem;  /* 14px */
+  --text-body: 1rem;       /* 16px */
+  --text-h3: 1.125rem;     /* 18px */
+  --text-h2: 1.375rem;     /* 22px */
+
+  /* Spacing scale: 4, 8, 16, 24, 32, 48 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+
+  --target: 2.75rem;       /* 44px minimum touch target */
+  --radius-control: 4px;
+  --radius-panel: 8px;
+  --shadow-float: 0 2px 12px rgb(0 0 0 / 0.3);
+
+  /* Stacking order. Leaflet's own panes are contained inside #map. */
+  --z-map: 0;
+  --z-panel: 20;
+  --z-header: 40;
+
+  /* Colour, light theme */
+  --bg: #ffffff;
+  --surface-hover: #edefe9;
+  --ink: #1c2a25;
+  --muted: #4f5e56;
+  --rule: #c9cfc2;
+  --control-border: #6b7a72;
+  --header-bg: #203b30;
+  --header-ink: #f5f5e8;
+  --warn-bg: #ffe9a8;
+  --warn-ink: #352300;
+  --line-1: #176d4e;       /* 1 Line */
+  --line-2: #007CAD;       /* 2 Line */
+  --focus: #10201a;
+  --focus-halo: #ffffff;
+  --primary-bg: #1c2a25;
+  --primary-ink: #ffffff;
+  --scrim: rgb(16 24 20 / 0.75);
+
+  /* Map tiles are light in both themes, so everything drawn on the map
+     (markers, controls, popups) keeps one fixed light palette. */
+  --map-bg: #dfe5da;
+  --map-ui-bg: #ffffff;
+  --map-ui-ink: #1c2a25;
+  --map-ui-border: #6b7a72;
+  --map-ui-hover: #edefe9;
+  --marker-fill: #1c2a25;
+  --marker-casing: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1d1b;
+    --surface-hover: #2a302c;
+    --ink: #e8ebe6;
+    --muted: #b4bdb6;
+    --rule: #3b423d;
+    --control-border: #8d978f;
+    --header-bg: #26302b;
+    --header-ink: #f5f5e8;
+    --warn-bg: #4a3a0c;
+    --warn-ink: #ffe9a8;
+    --line-1: #72c99e;
+    --line-2: #5cb8e0;
+    --focus: #ffffff;
+    --focus-halo: #1a1d1b;
+    --primary-bg: #e8ebe6;
+    --primary-ink: #1a1d1b;
+    --scrim: rgb(0 0 0 / 0.75);
+  }
+}
+
+
+/* 2. Base --------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(12rem, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--text-h2);
+}
+
+h3 {
+  font-size: var(--text-h3);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  overflow-wrap: anywhere;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* One focus style everywhere: a 3px ring with a contrasting 2px halo, so
+   it shows on light surfaces, dark surfaces and map imagery alike. */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--focus-halo);
+}
+
+.data {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.icon {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: calc(var(--z-header) + 1);
+  display: flex;
+  align-items: center;
+  min-height: var(--target);
+  padding: 0 var(--space-3);
+  background: var(--bg);
+  color: var(--ink);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+
+/* 3. Header ------------------------------------------------------------- */
+
+.site-header {
+  --focus: #ffffff;
+  --focus-halo: var(--header-bg);
+  position: relative;
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  padding-top: max(var(--space-2), env(safe-area-inset-top));
+  padding-left: max(var(--space-3), env(safe-area-inset-left));
+  padding-right: max(var(--space-3), env(safe-area-inset-right));
+  background: var(--header-bg);
+  color: var(--header-ink);
+}
+
+.site-header h1 {
+  font-size: var(--text-h3);
+}
+
+.brand p {
+  display: none;
+  font-size: var(--text-small);
+}
+
+@media (min-width: 760px) {
+  .site-header {
+    padding-top: max(var(--space-3), env(safe-area-inset-top));
+    padding-bottom: var(--space-3);
+    padding-left: max(var(--space-4), env(safe-area-inset-left));
+    padding-right: max(var(--space-4), env(safe-area-inset-right));
+  }
+
+  .site-header h1 {
+    font-size: var(--text-h2);
+  }
+
+  .brand {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-3);
+  }
+
+  .brand p {
+    display: block;
+  }
+}
+
+
+/* 4. Safety warning ------------------------------------------------------
+   In normal flow directly above the map at every width. Body size, full
+   contrast, never hidden or collapsed. */
+
+.safety {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  padding-left: max(var(--space-3), env(safe-area-inset-left));
+  padding-right: max(var(--space-3), env(safe-area-inset-right));
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  font-size: var(--text-body);
+}
+
+@media (min-width: 760px) {
+  .safety {
+    padding-left: max(var(--space-4), env(safe-area-inset-left));
+    padding-right: max(var(--space-4), env(safe-area-inset-right));
+  }
+}
+
+
+/* 5. Layout --------------------------------------------------------------
+   Below 760px: the map fills everything under the warning. The sidebar is
+   a sheet that rises over the map from a bar pinned to the bottom edge.
+   From 760px: sidebar on the left, map on the right. */
+
+main {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+#map {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: var(--z-map);
+  isolation: isolate;
+  min-width: 0;
+  min-height: 0;
+  background: var(--map-bg);
+}
+
+#map:focus-visible {
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 5px var(--focus-halo);
+}
+
+.panel {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+  z-index: var(--z-panel);
+  max-height: calc(100% - var(--space-5));
+  padding: var(--space-4) var(--space-3);
+  padding-left: max(var(--space-3), env(safe-area-inset-left));
+  padding-right: max(var(--space-3), env(safe-area-inset-right));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  box-shadow: var(--shadow-float);
+
+  /* Collapsed state. Leaving is faster than entering. */
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(var(--space-3));
+  transition: transform 120ms ease-in, opacity 120ms ease-in, visibility 0s linear 120ms;
+}
+
+.panel.is-open {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition: transform 200ms ease-out, opacity 200ms ease-out, visibility 0s;
+}
+
+.panel:focus-visible {
+  outline-offset: -3px;
+  box-shadow: none;
+}
+
+.panel-bar {
+  grid-column: 1;
+  grid-row: 2;
+  position: relative;
+  z-index: var(--z-panel);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+  padding-left: max(var(--space-3), env(safe-area-inset-left));
+  padding-right: max(var(--space-3), env(safe-area-inset-right));
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+}
+
+#status {
+  /* Reserve one line so the bar does not jump when the count arrives. */
+  min-height: 1.5em;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.panel-toggle .icon {
+  transition: transform 150ms ease-out;
+}
+
+.panel-toggle[aria-expanded="true"] .icon {
+  transform: rotate(180deg);
+}
+
+@media (min-width: 760px) {
+  main {
+    grid-template-columns: 20rem minmax(0, 1fr);
+  }
+
+  #map {
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+
+  .panel,
+  .panel.is-open {
+    align-self: stretch;
+    max-height: none;
+    padding: var(--space-4);
+    padding-left: max(var(--space-4), env(safe-area-inset-left));
+    border-radius: 0;
+    box-shadow: none;
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .panel-bar {
+    padding: var(--space-2) var(--space-4);
+    padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+    padding-left: max(var(--space-4), env(safe-area-inset-left));
+  }
+
+  .panel-bar .panel-toggle {
+    display: none;
+  }
+}
+
+
+/* 6. Sidebar content ---------------------------------------------------- */
+
+.panel > * + *,
+.panel section > * + * {
+  margin-top: var(--space-2);
+}
+
+.panel > h3,
+.panel > section,
+.panel > section + p {
+  margin-top: var(--space-5);
+}
+
+.panel p {
+  max-width: 60ch;
+  color: var(--muted);
+}
+
+.legend,
+.record-list,
+.unmapped-list {
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+/* Legend shapes match the map markers: solid for high confidence, dashed
+   outline for medium or low. */
+.shape {
+  flex: none;
+  overflow: visible;
+  fill: var(--marker-fill);
+  stroke: var(--marker-casing);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.shape.is-dashed {
+  fill: var(--marker-casing);
+  stroke: var(--marker-fill);
+  stroke-dasharray: 3 2;
+  paint-order: normal;
+}
+
+.legend .shape {
+  margin-top: 0.125rem;
+  fill: var(--ink);
+  stroke: var(--bg);
+}
+
+.legend .shape.is-dashed {
+  fill: var(--bg);
+  stroke: var(--ink);
+}
+
+.line-swatch {
+  flex: none;
+  width: var(--space-4);
+  height: var(--space-1);
+  margin-top: 0.625rem;
+}
+
+.line-swatch.line-1 {
+  background: var(--line-1);
+}
+
+.line-swatch.line-2 {
+  background: var(--line-2);
+}
+
+.record-list li + li {
+  margin-top: var(--space-2);
+}
+
+.record-button {
+  display: block;
+  width: 100%;
+  min-height: var(--target);
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.record-button:hover {
+  background: var(--surface-hover);
+}
+
+.record-button span {
+  display: block;
+}
+
+.record-kind {
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+
+.unmapped-list li + li {
+  margin-top: var(--space-3);
+}
+
+.panel .unmapped-name {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+
+/* 7. Buttons and form controls ------------------------------------------ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-control);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:hover {
+  background: var(--surface-hover);
+}
+
+.site-header .button:hover {
+  background: var(--header-ink);
+  color: var(--header-bg);
+}
+
+.button-primary,
+.button-primary:hover {
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+  color: var(--primary-ink);
+}
+
+.button-primary:hover {
+  text-decoration: underline;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target);
+  touch-action: manipulation;
+}
+
+.file {
+  display: block;
+  margin-top: var(--space-3);
+  font-weight: 700;
+}
+
+input[type="file"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--target);
+  margin-top: var(--space-1);
+  color: inherit;
+  font: inherit;
+}
+
+input[type="file"]::file-selector-button {
+  min-height: var(--target);
+  margin-right: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+
+/* 8. Dialogs ------------------------------------------------------------ */
+
+dialog {
+  width: 28rem;
+  max-width: calc(100vw - var(--space-5));
+  max-height: calc(100vh - var(--space-5));
+  max-height: calc(100dvh - var(--space-5) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: var(--space-4);
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-float);
+  color: var(--ink);
+}
+
+dialog::backdrop {
+  background: var(--scrim);
+}
+
+dialog h2 {
+  margin-bottom: var(--space-3);
+}
+
+dialog p {
+  margin-top: var(--space-3);
+}
+
+dialog .check + .check {
+  margin-top: var(--space-2);
+}
+
+#settings-status {
+  min-height: 1.5em;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+
+/* 9. Map markers ---------------------------------------------------------
+   A 44px round hit area around a 20px shape. */
+
+.record-marker {
+  --focus: var(--map-ui-ink);
+  --focus-halo: var(--map-ui-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.record-marker:focus-visible {
+  outline-offset: -6px;
+  box-shadow: inset 0 0 0 3px var(--focus-halo), 0 0 0 0 transparent;
+  background: var(--map-ui-bg);
+}
+
+
+/* 10. Leaflet controls -------------------------------------------------- */
+
+.leaflet-container {
+  color-scheme: light;
+  accent-color: var(--map-ui-ink);
+  --focus: var(--map-ui-ink);
+  --focus-halo: var(--map-ui-bg);
+  color: var(--map-ui-ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+.leaflet-container a {
+  color: var(--map-ui-ink);
+}
+
+.leaflet-container input {
+  accent-color: var(--map-ui-ink);
+}
+
+/* Keep controls clear of notches and rounded corners. */
+.leaflet-left {
+  left: env(safe-area-inset-left);
+}
+
+.leaflet-right {
+  right: env(safe-area-inset-right);
+}
+
+.leaflet-bar,
+.leaflet-touch .leaflet-bar,
+.leaflet-control-layers,
+.leaflet-touch .leaflet-control-layers {
+  background: var(--map-ui-bg);
+  border: 1px solid var(--map-ui-border);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  color: var(--map-ui-ink);
+}
+
+/* Zoom: two separate 44px buttons with an 8px gap. */
+.leaflet-control-zoom,
+.leaflet-touch .leaflet-control-zoom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: none;
+  border: 0;
+}
+
+.leaflet-bar a,
+.leaflet-touch .leaflet-bar a,
+.leaflet-touch .leaflet-bar a:first-child,
+.leaflet-touch .leaflet-bar a:last-child {
+  width: var(--target);
+  height: var(--target);
+  background-color: var(--map-ui-bg);
+  border: 1px solid var(--map-ui-border);
+  border-radius: var(--radius-control);
+  color: var(--map-ui-ink);
+  font-size: 1.375rem;
+  line-height: calc(var(--target) - 2px);
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+  background-color: var(--map-ui-hover);
+}
+
+.leaflet-bar a.leaflet-disabled {
+  background-color: var(--map-ui-hover);
+  color: var(--map-ui-border);
+}
+
+.leaflet-control-layers-toggle,
+.leaflet-touch .leaflet-control-layers-toggle {
+  width: var(--target);
+  height: var(--target);
+}
+
+.leaflet-control-layers-expanded,
+.leaflet-touch .leaflet-control-layers-expanded {
+  padding: var(--space-2) var(--space-3);
+  background: var(--map-ui-bg);
+  color: var(--map-ui-ink);
+}
+
+.leaflet-control-layers-separator {
+  margin: var(--space-2) calc(-1 * var(--space-3));
+  border-top-color: var(--rule);
+}
+
+.leaflet-control-layers label,
+.poi-options label {
+  display: block;
+  font-size: var(--text-small);
+}
+
+.leaflet-control-layers label > span,
+.poi-options label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--space-5);
+  touch-action: manipulation;
+}
+
+.leaflet-control-layers-selector {
+  top: 0;
+  margin: 0;
+}
+
+.poi-control {
+  width: max-content;
+  max-width: 100%;
+}
+
+.poi-toggle {
+  display: block;
+  width: 100%;
+  min-height: var(--target);
+  padding: 0 var(--space-3);
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.poi-toggle:hover {
+  background: var(--map-ui-hover);
+}
+
+.poi-options {
+  padding: 0 var(--space-3) var(--space-2);
+}
+
+.poi-options p {
+  font-size: var(--text-small);
+}
+
+.leaflet-container .leaflet-control-attribution {
+  padding: 0 var(--space-2);
+  background: var(--map-ui-bg);
+  color: var(--map-ui-ink);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.leaflet-tooltip {
+  color: var(--map-ui-ink);
+  font-size: var(--text-small);
+}
+
+/* Small or touch screens: 44px rows and body-size text. */
+@media (max-width: 759.98px), (pointer: coarse) {
+  .leaflet-control-layers label,
+  .poi-options label,
+  .poi-toggle {
+    font-size: var(--text-body);
+  }
+
+  .leaflet-control-layers label > span,
+  .poi-options label {
+    min-height: var(--target);
+  }
+}
+
+/* Compact maps (app.js sets .is-compact on small, touch or short screens):
+   every control sits in one row along the top edge, 8px apart, so the
+   bottom of a short map stays clear. */
+.is-compact .leaflet-top.leaflet-right {
+  display: flex;
+  flex-flow: row-reverse wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding: var(--space-2);
+}
+
+.is-compact .leaflet-top .leaflet-control {
+  float: none;
+  margin: 0;
+}
+
+.is-compact .leaflet-top.leaflet-left {
+  padding: var(--space-2);
+}
+
+.is-compact .leaflet-control-zoom {
+  flex-direction: row;
+}
+
+
+/* 11. Leaflet popups ---------------------------------------------------- */
+
+.leaflet-popup-content-wrapper {
+  background: var(--map-ui-bg);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-float);
+  color: var(--map-ui-ink);
+}
+
+.leaflet-popup-tip {
+  background: var(--map-ui-bg);
+  box-shadow: none;
+}
+
+.leaflet-popup-content {
+  margin: var(--space-3);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.leaflet-popup-content p {
+  margin: 0;
+}
+
+.leaflet-popup-scrolled {
+  border: 0;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  width: var(--target);
+  height: var(--target);
+  color: var(--map-ui-ink);
+  font: 1.5rem / var(--target) var(--font-ui);
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+  color: var(--map-ui-ink);
+  background: var(--map-ui-hover);
+  border-radius: var(--radius-control);
+}
+
+.record-popup h3 {
+  /* Room for the 44px close button. */
+  padding-right: var(--space-5);
+  font-size: var(--text-h3);
+}
+
+.record-popup > * + * {
+  margin-top: var(--space-2);
+}
+
+.record-popup dl {
+  margin-bottom: 0;
+}
+
+.record-popup dl div + div {
+  margin-top: var(--space-1);
+}
+
+.record-popup dt {
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.record-popup dd {
+  margin: 0;
+}
+
+/* Same size and colour as the rest of the popup text; never fine print. */
+.record-popup .popup-warning {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--map-ui-border);
+  color: var(--map-ui-ink);
+  font-size: var(--text-body);
+}
+
+
+/* 12. Reduced motion ---------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .panel,
+  .panel.is-open {
+    transform: none;
+  }
+}

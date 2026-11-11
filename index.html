@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#203b30">
   <title>Sea Tunnel Atlas: public surface records for Seattle light rail tunnels</title>
   <meta name="description" content="A map of publicly documented portals, vents, shafts and station egress for Seattle light rail tunnels. Public sources only. Locations may be approximate.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -14,18 +15,23 @@
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
 
+  <div class="topbar" id="topbar">
   <header class="site-header">
     <div class="brand">
       <h1>Sea Tunnel Atlas</h1>
       <p>Public surface records for Seattle light rail tunnels</p>
     </div>
-    <button id="settings-open" class="button" type="button">Settings</button>
+    <div class="header-actions">
+      <button id="fullscreen-toggle" class="button" type="button" hidden aria-pressed="false">Full screen</button>
+      <button id="settings-open" class="button" type="button">Settings</button>
+    </div>
   </header>
 
   <p class="safety" role="note">
     <svg class="icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M12 3.5 22 20.5H2Z"/><path d="M12 10v5"/><path d="M12 17.75v.25"/></svg>
     <span>Public sources only · No SSI · Education and civic interest · Entering tunnels, shafts or trackways is illegal and can kill you</span>
   </p>
+  </div>
 
   <main id="main">
     <aside id="panel" class="panel" aria-label="Legend and records" tabindex="-1">
@@ -67,7 +73,7 @@
     <div class="panel-bar">
       <button id="panel-toggle" class="button panel-toggle" type="button" aria-expanded="false" aria-controls="panel">
         <svg class="icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M5 15l7-7 7 7"/></svg>
-        <span id="panel-toggle-label">Show legend and records</span>
+        <span id="panel-toggle-label">Legend and records</span>
       </button>
       <p id="status" role="status">Loading public records…</p>
     </div>

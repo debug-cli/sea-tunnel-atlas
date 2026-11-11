@@ -362,13 +362,35 @@
     setStatus('Could not load records. Serve this site over HTTP and check the data file.');
   });
 
+  /* ---------- Immersive map: top bar height and full screen ---------- */
+
+  const topbar = $('#topbar');
+  const setTopbar = () => document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+  setTopbar();
+  if ('ResizeObserver' in window) new ResizeObserver(setTopbar).observe(topbar);
+
+  const fsButton = $('#fullscreen-toggle');
+  if (document.fullscreenEnabled && fsButton) {
+    fsButton.hidden = false;
+    fsButton.addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen({navigationUI: 'hide'}).catch(() => {});
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const on = Boolean(document.fullscreenElement);
+      fsButton.textContent = on ? 'Exit full screen' : 'Full screen';
+      fsButton.setAttribute('aria-pressed', String(on));
+      setTimeout(() => map.invalidateSize(), 150);
+    });
+  }
+
   /* ---------- Bottom sheet (below 760px) ---------- */
 
   const panel = $('#panel'), panelToggle = $('#panel-toggle'), panelLabel = $('#panel-toggle-label');
   function setPanel(open) {
     panel.classList.toggle('is-open', open);
     panelToggle.setAttribute('aria-expanded', String(open));
-    panelLabel.textContent = open ? 'Hide legend and records' : 'Show legend and records';
+    panelLabel.textContent = open ? 'Close legend' : 'Legend and records';
   }
   panelToggle.addEventListener('click', () => {
     const open = !panel.classList.contains('is-open');

@@ -986,3 +986,180 @@ dialog .check + .check {
     transform: none;
   }
 }
+
+
+/* 13. Immersive map ------------------------------------------------------
+   Below 760px the map fills the whole screen. The header and the safety
+   warning float over the top edge as one solid bar (no blur). The legend
+   toggle and status float as small chips over the bottom-left corner.
+   The safety text stays visible at every width. --topbar-h is set by
+   app.js from the bar's real height. */
+
+.topbar {
+  display: contents;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+@media (max-width: 759.98px) {
+  :root {
+    --map-target: 2.5rem;   /* 40px map controls */
+    --topbar-h: 6.5rem;
+  }
+
+  body {
+    display: block;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .topbar {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-header);
+    box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+
+  .site-header {
+    padding-top: max(var(--space-1), env(safe-area-inset-top));
+    padding-bottom: var(--space-1);
+    padding-left: max(var(--space-3), env(safe-area-inset-left));
+    padding-right: max(var(--space-2), env(safe-area-inset-right));
+  }
+
+  .site-header h1 {
+    font-size: var(--text-body);
+  }
+
+  .site-header .button {
+    min-height: 2.25rem;
+    min-width: 2.25rem;
+    padding: 0 var(--space-2);
+    font-size: var(--text-small);
+  }
+
+  .safety {
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    font-size: 0.8125rem;   /* 13px, full contrast on yellow */
+    line-height: 1.35;
+  }
+
+  .safety .icon {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+  }
+
+  main {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  #map {
+    position: absolute;
+    inset: 0;
+  }
+
+  .leaflet-top {
+    top: var(--topbar-h);
+  }
+
+  .panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: calc(100% - var(--topbar-h) - var(--space-3));
+    padding-bottom: calc(var(--map-target) + var(--space-6) + env(safe-area-inset-bottom));
+  }
+
+  .panel-bar {
+    position: absolute;
+    left: max(var(--space-2), env(safe-area-inset-left));
+    bottom: max(var(--space-4), calc(env(safe-area-inset-bottom) + var(--space-2)));
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    padding: 0;
+    background: none;
+    border: 0;
+    pointer-events: none;
+  }
+
+  .panel-bar > * {
+    pointer-events: auto;
+  }
+
+  .panel-toggle {
+    min-height: var(--map-target);
+    padding: 0 var(--space-3);
+    background: var(--map-ui-bg);
+    color: var(--map-ui-ink);
+    border: 1px solid var(--map-ui-border);
+    border-radius: var(--radius-control);
+    box-shadow: var(--shadow-float);
+    font-size: var(--text-small);
+  }
+
+  .panel-toggle .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  #status {
+    min-height: 0;
+    padding: 0 var(--space-2);
+    background: var(--map-ui-bg);
+    color: var(--map-ui-ink);
+    border-radius: var(--radius-control);
+    font-size: 0.75rem;
+  }
+
+  #status:empty {
+    display: none;
+  }
+
+  .leaflet-bar a,
+  .leaflet-touch .leaflet-bar a,
+  .leaflet-touch .leaflet-bar a:first-child,
+  .leaflet-touch .leaflet-bar a:last-child {
+    width: var(--map-target);
+    height: var(--map-target);
+    font-size: 1.125rem;
+    line-height: calc(var(--map-target) - 2px);
+  }
+
+  .leaflet-control-layers-toggle,
+  .leaflet-touch .leaflet-control-layers-toggle {
+    width: var(--map-target);
+    height: var(--map-target);
+  }
+
+  .poi-toggle {
+    min-height: var(--map-target);
+    font-size: var(--text-small);
+  }
+
+  .leaflet-control-layers label,
+  .poi-options label {
+    font-size: var(--text-small);
+  }
+
+  .leaflet-control-layers label > span,
+  .poi-options label {
+    min-height: 2.25rem;
+  }
+
+  .leaflet-control-attribution {
+    font-size: 0.625rem;
+  }
+}

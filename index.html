@@ -1,7 +1,108 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sea Tunnel Atlas</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css"><script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script defer src="app.js"></script></head>
-<body><header><div class="brand"><span class="mark">STA / 01</span><h1>Sea Tunnel Atlas</h1><p>Seattle light rail · public surface records</p></div><button id="settings-open" type="button">Settings</button></header>
-<main><aside><div class="section-label">FIELD GUIDE <span>01 / 01</span></div><h2>Infrastructure at the surface</h2><p>A map of publicly documented portals, vents, shafts and station egress. Locations may be approximate.</p><div class="rule"></div><h3>Reading the map</h3><ul class="legend"><li><i class="dot portal"></i> Portal</li><li><i class="dot vent_facility"></i> Vent facility</li><li><i class="dot station_egress"></i> Station egress</li><li><i class="dot station_shaft"></i> Station shaft</li><li><i class="dot station_portal"></i> Station portal</li></ul><p class="note">Dashed outline indicates medium or low confidence. Select a point for its source and verification date.</p><div class="rule"></div><p id="status" role="status">Loading public records…</p><p class="note">Transit feed layers require locally generated GTFS data. See <a href="DATA_SOURCES.md">data sources</a>.</p></aside><div id="map" aria-label="Map of public surface infrastructure"></div></main>
-<footer>Public sources only · No SSI · Education and civic interest · Entering tunnels, shafts or trackways is illegal and can kill you</footer>
-<dialog id="notice"><form method="dialog"><span class="section-label">BEFORE YOU EXPLORE</span><h2>Stay on the surface</h2><p>Data is from public sources only and contains no SSI. This map is for education and civic interest. Entering tunnels, shafts, or trackways is illegal and can kill you.</p><p>Locations are approximate and must not be used for navigation or emergency response.</p><button value="acknowledge">I understand</button></form></dialog>
-<dialog id="settings"><form method="dialog"><span class="section-label">MAP PREFERENCES</span><h2>Settings</h2><label><input id="medium" type="checkbox" checked> Show medium and low confidence points</label><label><input id="remember" type="checkbox"> Remember last map view</label><div class="settings-actions"><button id="export" type="button">Export settings</button> <label>Import settings <input id="import" type="file" accept="application/json"></label><p id="settings-status" role="status"></p><button value="close">Close</button></div></form></dialog></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#203b30">
+  <title>Sea Tunnel Atlas: public surface records for Seattle light rail tunnels</title>
+  <meta name="description" content="A map of publicly documented portals, vents, shafts and station egress for Seattle light rail tunnels. Public sources only. Locations may be approximate.">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#map">Skip to map</a>
+
+  <div class="topbar" id="topbar">
+  <header class="site-header">
+    <div class="brand">
+      <h1>Sea Tunnel Atlas</h1>
+      <p>Public surface records for Seattle light rail tunnels</p>
+    </div>
+    <div class="header-actions">
+      <button id="fullscreen-toggle" class="button" type="button" hidden aria-pressed="false">Full screen</button>
+      <button id="settings-open" class="button" type="button">Settings</button>
+    </div>
+  </header>
+
+  <p class="safety" role="note">
+    <svg class="icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M12 3.5 22 20.5H2Z"/><path d="M12 10v5"/><path d="M12 17.75v.25"/></svg>
+    <span>Public sources only · No SSI · Education and civic interest · Entering tunnels, shafts or trackways is illegal and can kill you</span>
+  </p>
+  </div>
+
+  <main id="main">
+    <aside id="panel" class="panel" aria-label="Legend and records" tabindex="-1">
+      <h2>Infrastructure at the surface</h2>
+      <p>A map of publicly documented portals, vents, shafts and station egress. Locations may be approximate.</p>
+
+      <h3>Reading the map</h3>
+      <ul class="legend">
+        <li><svg class="shape" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><rect x="4" y="4" width="12" height="12"/></svg>Portal</li>
+        <li><svg class="shape" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><path d="M10 3 17.5 16H2.5Z"/></svg>Vent facility</li>
+        <li><svg class="shape" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5"/></svg>Station egress</li>
+        <li><svg class="shape" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><path d="M10 2.5 17.5 10 10 17.5 2.5 10Z"/></svg>Station shaft</li>
+        <li><svg class="shape is-dashed" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5"/></svg>Dashed outline indicates medium or low confidence</li>
+      </ul>
+      <p>Select a point for its source and verification date.</p>
+
+      <section id="lines" hidden>
+        <h3>Link light rail lines</h3>
+        <ul id="line-list" class="legend"></ul>
+      </section>
+
+      <section id="mapped" hidden>
+        <h3>Mapped records</h3>
+        <ul id="mapped-list" class="record-list"></ul>
+      </section>
+
+      <section id="unmapped" hidden>
+        <h3>Not mapped</h3>
+        <p>These records have no public coordinates, so they have no point on the map.</p>
+        <ul id="unmapped-list" class="unmapped-list"></ul>
+      </section>
+
+      <p id="feed-note" hidden>Transit feed layers require locally generated GTFS data. See <a href="https://github.com/debug-cli/sea-tunnel-atlas/blob/main/DATA_SOURCES.md">data sources</a>.</p>
+      <p>See the <a href="https://github.com/debug-cli/sea-tunnel-atlas/blob/main/DATA_SOURCES.md">data sources</a> for where each data file comes from.</p>
+    </aside>
+
+    <div id="map" role="region" aria-label="Map of public surface infrastructure"></div>
+
+    <div class="panel-bar">
+      <button id="panel-toggle" class="button panel-toggle" type="button" aria-expanded="false" aria-controls="panel">
+        <svg class="icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M5 15l7-7 7 7"/></svg>
+        <span id="panel-toggle-label">Legend and records</span>
+      </button>
+      <p id="status" role="status">Loading public records…</p>
+    </div>
+  </main>
+
+  <dialog id="notice" aria-labelledby="notice-title">
+    <form method="dialog">
+      <h2 id="notice-title">Stay on the surface</h2>
+      <p>Data is from public sources only and contains no SSI. This map is for education and civic interest. Entering tunnels, shafts, or trackways is illegal and can kill you.</p>
+      <p>Locations are approximate and must not be used for navigation or emergency response.</p>
+      <div class="dialog-actions">
+        <button class="button button-primary" value="acknowledge">I understand</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings" aria-labelledby="settings-title">
+    <form method="dialog">
+      <h2 id="settings-title">Settings</h2>
+      <label class="check"><input id="medium" type="checkbox" checked> Show medium and low confidence points</label>
+      <label class="check"><input id="remember" type="checkbox"> Remember last map view</label>
+      <label class="file" for="import">Import settings</label>
+      <input id="import" type="file" accept="application/json">
+      <p id="settings-status" role="status"></p>
+      <div class="dialog-actions">
+        <button id="export" class="button" type="button">Export settings</button>
+        <button class="button button-primary" value="close">Close settings</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

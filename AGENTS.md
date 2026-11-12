@@ -29,7 +29,7 @@ public sources -> tools/gtfs_to_geojson.py -> data/*.geojson
                                          static page -> browser
 ```
 
-The seed GeoJSON is read directly. The converter is present but generated feed layers are not checked in: the feed hosts were unreachable from the development environment on 2026-11-11. The app loads those files if available. Places use viewport-bounded Overpass requests only after opt-in and at zoom 15 or higher.
+`data/egress.geojson` is read directly. Generated GTFS layers (`link-lines`, `link-stations`, `bus-routes`, `bus-stops`) are checked in under `data/`; the app disables any layer whose file is missing. The live site is https://seatunnelatlas.vercel.app and deploys from `main`. Places use viewport-bounded Overpass requests only after opt-in and at zoom 15 or higher.
 
 ## §2 Repository map
 
@@ -37,7 +37,8 @@ Counts below are as checked on 2026-11-11; use the commands at the end to refres
 
 | Path | Size | Lines/pages | Role |
 |---|---:|---:|---|
-| `data/egress.geojson` | 11,959 bytes | 355 lines | 13 seed surface points |
+| `data/egress.geojson` | 17,303 bytes | 468 lines | 18 records: 15 points, 3 with null geometry |
+| `data/v1.2 research run/` | varies | see its README | raw AI research output and Hark verification notes; leads only |
 | `data/seattle-transit-tunnel-infrastructure.pdf` | 275,534 bytes | 13 pages | AI-generated research lead |
 | `index.html`, `style.css`, `app.js` | varies | run `wc -l` | static site |
 | `tools/gtfs_to_geojson.py` | varies | run `wc -l` | GTFS conversion |
@@ -47,18 +48,19 @@ Counts below are as checked on 2026-11-11; use the commands at the end to refres
 
 In order: (1) Sound Transit EIS/FEIS, Records of Decision, board motions and news releases; (2) Sound Transit GTFS; (3) engineering firm project pages and papers; (4) city permits and SDCI records; (5) major news outlets. Wikipedia, Reddit and the Gemini PDF are leads only. Confirm every lead against the source ladder before it becomes a point; new points require a fetched primary source.
 
-The seed assigns Maple Leaf Portal a Sound Transit news-release URL. Its location has **not** been independently reconfirmed during this work because the agency host could not be reached; fetch and quote the primary source before treating that confirmation as reproduced. The PDF claims an NE 60th portal, but the brief explicitly rejected that location; no independently fetched primary source supports adding it. Do not add it based on the PDF.
+Maple Leaf Portal is confirmed at 1st Ave NE & NE 95th St by a Sound Transit news release (2016-09-02). The PDF claims an NE 60th portal, but the brief explicitly rejected that location; no independently fetched primary source supports adding it. Do not add it based on the PDF.
 
-The seed is supplied as verified, but this is not an independent audit: in particular `dstt-n00` cites Wikipedia, contrary to the current source ladder. Its high confidence and verified date are inherited from the seed, not newly established by this work. Review all seed citations before presenting them as independently verified.
+`dstt-n00` (Pine Street ventilation facility) is named in Sound Transit records and cited to an archived 2007 page placing it east of 9th Ave; its point is a block-level placement, not a parcel. Verification notes for the 2026-11-11 pass are in `data/v1.2 research run/hark/`.
 
 | Path | Format | What it holds | Trust level | How to read it |
 |---|---|---|---|---|
-| `data/egress.geojson` | GeoJSON | 13 surface points | verified seed data, not independently reverified here | `jq '.features | length' data/egress.geojson` |
+| `data/egress.geojson` | GeoJSON | 18 records | primary-source checked, see per-feature `source_url` | `jq '.features | length' data/egress.geojson` |
+| `data/v1.2 research run/` | mixed | Grok and Qwen output, prompts, Arena output, verification notes | AI output is lead only | see its README |
 | `data/seattle-transit-tunnel-infrastructure.pdf` | PDF | Gemini research report | lead only | `pdftotext data/seattle-transit-tunnel-infrastructure.pdf -` |
 
 ## §4 How to add a point
 
-GeoJSON Point feature properties, exactly: `id`, `name`, `type`, `tunnel`, `owner`, `public_location`, `visible_from_street`, `precision`, `confidence`, `source_title`, `source_url`, `verified`, `notes`. Feature `id` must equal property `id`. Current types: `vent_facility`, `station_egress`, `station_portal`, `portal`, `station_shaft`. Confidence: high only when the source directly supports both feature and location; medium for a clearly identified approximate area; low when evidence is weaker. Omit unsubstantiated locations rather than giving them a confidence label. No coordinate may be more precise than its source or exceed four decimal places; rounding is a maximum, not permission to derive a location.
+GeoJSON Point feature properties, exactly: `id`, `name`, `type`, `tunnel`, `owner`, `public_location`, `visible_from_street`, `precision`, `confidence`, `source_title`, `source_url`, `verified`, `notes`. Feature `id` must equal property `id`. Current types: `vent_facility`, `station_egress`, `portal`, `station_shaft` (`station_portal` is retired; the test still accepts it). A record with a primary source but no published location gets `"geometry": null` and shows in the "Not mapped" list; never invent coordinates for it. Mark intersection or address-range geocodes as such in `precision` and `notes`. Confidence: high only when the source directly supports both feature and location; medium for a clearly identified approximate area; low when evidence is weaker. Omit unsubstantiated locations rather than giving them a confidence label. No coordinate may be more precise than its source or exceed four decimal places; rounding is a maximum, not permission to derive a location.
 
 PR checklist:
 - [ ] Fetch a primary source URL and quote the exact line supporting the point and location.
@@ -83,11 +85,17 @@ PR checklist:
 
 ## §7 Settings schema
 
-`localStorage` key `sea-tunnel-atlas:v1`: `{version: 1, acknowledged: boolean, showLower: boolean, rememberView: boolean, view: null | [latitude, longitude, zoom]}`. The confidence filter helps readers distinguish approximate seed points; remembered view is opt-in to reduce persistence. Acknowledgement avoids repeating the safety notice. Settings import validates types and coordinates; export is JSON. Acknowledgement is not imported. Map base and overlay choices are session-only. Trebuchet MS and Verdana are readable signage-like sans faces; DejaVu Sans Mono and Consolas identify technical labels. Green and concrete are dominant, amber marks hazards. Reduced-motion CSS suppresses animation.
+`localStorage` key `sea-tunnel-atlas:v1`: `{version: 1, acknowledged: boolean, showLower: boolean, rememberView: boolean, view: null | [latitude, longitude, zoom]}`. The confidence filter helps readers distinguish approximate seed points; remembered view is opt-in to reduce persistence. Acknowledgement avoids repeating the safety notice. Settings import validates types and coordinates; export is JSON. Acknowledgement is not imported. Map base and overlay choices are session-only. Trebuchet MS and Verdana are readable signage-like sans faces; DejaVu Sans Mono and Consolas identify technical labels. Palette: `#176d4e`, `#007CAD`, `#72c99e`, `#5cb8e0`; no purple, gradients or glassmorphism. DejaVu Sans Mono is for data values only. `style.css` is the authority, including dark mode and the mobile layout (section 13). The safety warning stays visible at every width. Reduced-motion CSS suppresses animation.
 
 ## §8 Testing
 
 `node --test tests/*.test.js`: 5 passing on 2026-11-11. Tests validate a synthetic converter fixture plus seed count, schema, coordinate precision, dates, types and confidence; they do not establish truth of sources, browser behavior or feed correctness. `python3 -m py_compile tools/gtfs_to_geojson.py` checks converter syntax.
+
+## §8a Workflow
+
+- Data edits verified against a primary source go straight to `main`; report what changed.
+- UI and code changes go on a branch with a draft PR. Merge only after the maintainer checks the Vercel preview.
+- New AI research downloads go in `data/v1.2 research run/`. They never enter `egress.geojson` without a fetched primary source.
 
 ## §9 Traps
 
@@ -107,19 +115,18 @@ Check sources and quotations, privacy and SSI, coordinate precision, attribution
 ## §12 Open questions and unverified items
 
 As of 2026-11-11:
-- UNVERIFIED: seed citations and coordinates were not independently checked; `dstt-n00` uses a lead as its URL.
 - UNVERIFIED: agency feed conversion, route colors, tile endpoints and Overpass behavior in a browser. Network access to those hosts was unavailable here.
 - UNVERIFIED: the title SVG could not be rendered here; route title colors are provisional, not claimed as GTFS colors.
 - UNVERIFIED: legal/provider terms, external links and the alleged Esri usage threshold.
-- No screenshot or deployment is established. Source-check table was not supplied separately; attached PDF matches the seed report.
+- Deployed at https://seatunnelatlas.vercel.app from `main`.
 
 ## Verifying this document
 
 ```sh
 wc -lc data/egress.geojson data/seattle-transit-tunnel-infrastructure.pdf
-# 355 11959 data/egress.geojson
+# 468 17303 data/egress.geojson
 # 4662 275534 data/seattle-transit-tunnel-infrastructure.pdf
-jq '.features | length' data/egress.geojson  # 13
+jq '.features | length' data/egress.geojson  # 18
 pdfinfo data/seattle-transit-tunnel-infrastructure.pdf | grep Pages  # 13
 node --test tests/*.test.js  # 5 passing
 python3 -m py_compile tools/gtfs_to_geojson.py

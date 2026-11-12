@@ -6,5 +6,6 @@ Raw files from the v1.2 research run. The AI outputs (Grok, Qwen) are unverified
 - qwen/: prompt, baseline files sent, and chat exports (no final report yet; the free-plan usage limit blocked it)
 - arena/: anti-slop design guidelines and the raw Arena v1.2 output files (the merged site in the repo root has more edits)
 - hark/: primary-source verification notes
+- notebooklm/: Gemini Notebook wave #2 share link, Deep Research report (.md and .pdf, redacted for scope), and the 36 source files it found
 
 Public sources only. Entering tunnels, shafts, or trackways is illegal and can kill you.

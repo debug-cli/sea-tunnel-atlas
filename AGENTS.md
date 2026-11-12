@@ -1,6 +1,6 @@
 # sea-tunnel-atlas — engineering handbook
 
-> Rule zero: Only public, cited, surface-level information goes in this repo. No cross-passage locations, no security systems, no access methods, no coordinates finer than the source publishes.
+> Rule zero: Any public document may be stored in this repo verbatim, AI research reports included, with its source noted. The map (data/egress.geojson and its popups) may carry any detail a public primary source states, if publishing it is legal. Never publish Sensitive Security Information (49 CFR 1520) or records exempt under RCW 42.56.420. Never map security systems, access methods, or cross-passage locations. No coordinates finer than the source publishes.
 
 For maintainers, contributors, researchers, and AI agents working on this static map. This is an engineering report on the current tree, not a promise of completeness.
 
@@ -16,7 +16,7 @@ Nothing here is aspirational. Every claim was checked against the files at the c
 | Reviewing safety or a takedown | §5, §10–§12 |
 
 1. Rule zero overrides everything else.
-2. Never treat the research PDF, Wikipedia, or Reddit as final evidence.
+2. Never treat the research PDF, AI reports, Wikipedia, or Reddit as final evidence for the map. Storing them as documents is fine.
 3. Fetch and quote a primary source before adding a point; never infer a precise coordinate from a vague location.
 4. Do not claim a feature, feed, source verification, test, license, or deployment that does not exist.
 5. Preserve the seed files unless a reviewed change meets §4.

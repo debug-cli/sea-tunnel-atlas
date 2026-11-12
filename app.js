@@ -291,9 +291,8 @@
     source.append(sourceLink(p));
     sourceRow.append(text('dt', 'Source'), source);
     list.append(sourceRow);
-    const warning = text('p', 'Public sources only; no SSI. For education and civic interest. Entering tunnels, shafts or trackways is illegal and can kill you.');
-    warning.className = 'popup-warning';
-    el.append(list, warning);
+    // The safety warning lives in the top bar and the first-visit dialog, not in popups.
+    el.append(list);
     return el;
   }
 

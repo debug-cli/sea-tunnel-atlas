@@ -958,14 +958,6 @@ dialog .check + .check {
   margin: 0;
 }
 
-/* Same size and colour as the rest of the popup text; never fine print. */
-.record-popup .popup-warning {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--map-ui-border);
-  color: var(--map-ui-ink);
-  font-size: var(--text-body);
-}
 
 
 /* 12. Reduced motion ---------------------------------------------------- */

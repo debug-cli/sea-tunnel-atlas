@@ -54,7 +54,25 @@
   }
 
   const status = $('#status');
-  function setStatus(...parts) { status.replaceChildren(...parts); }
+  function setStatus(state, ...parts) {
+    status.dataset.state = state;
+    status.replaceChildren(...parts);
+  }
+
+  // Map colors come from the Astryx tokens in style.css, not from literals
+  // in this file. The probe resolves var() chains and light-dark() against
+  // the current theme; magenta is the sentinel for "token missing".
+  const SENTINEL = 'rgb(255, 0, 255)';
+  function tokenColor(name, fallback) {
+    const probe = document.createElement('span');
+    probe.style.color = `var(${name}, ${SENTINEL})`;
+    document.body.append(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return !value || value === SENTINEL ? fallback : value;
+  }
+  const mapInk = () => tokenColor('--map-ui-ink', '#000000');
+  const mapSurface = () => tokenColor('--map-ui-bg', '#ffffff');
 
   /* ---------- Map ---------- */
 
@@ -127,9 +145,11 @@
 
   /* ---------- Transit feeds ---------- */
 
-  const lineColors = {'1 Line': '#176d4e', '2 Line': '#007CAD'};
+  // 1 Line and 2 Line take the Astryx categorical data colors through the
+  // --line-1 / --line-2 aliases; other routes keep their GTFS color.
+  const lineColors = {'1 Line': tokenColor('--line-1', '#08a3a3'), '2 Line': tokenColor('--line-2', '#0171e3')};
   const lineClasses = {'1 Line': 'line-1', '2 Line': 'line-2'};
-  const feedColor = p => lineColors[p.name] || (/^[0-9a-fA-F]{6}$/.test(p.color) ? '#' + p.color : '#526b60');
+  const feedColor = p => lineColors[p.name] || (/^[0-9a-fA-F]{6}$/.test(p.color) ? '#' + p.color : tokenColor('--muted', '#6a6a6a'));
 
   function showLineLegend(lines) {
     const list = $('#line-list'), seen = new Set();
@@ -158,7 +178,7 @@
         }
       }).addTo(group);
       const stopLayer = L.geoJSON(stops, {
-        pointToLayer: (f, latlng) => L.circleMarker(latlng, {radius: isBus ? 3 : 5, color: '#203b30', weight: 1, fillColor: '#fff', fillOpacity: 1}),
+        pointToLayer: (f, latlng) => L.circleMarker(latlng, {radius: isBus ? 3 : 5, color: mapInk(), weight: 1, fillColor: mapSurface(), fillOpacity: 1}),
         onEachFeature: (f, l) => l.bindTooltip(text('span', String(f.properties.name || 'Stop')))
       });
       function showStops() { if (!isBus || map.getZoom() >= 15) group.addLayer(stopLayer); else group.removeLayer(stopLayer); }
@@ -242,10 +262,10 @@
         el.className = 'record-popup';
         el.append(text('h3', p.tags?.name || 'Unnamed place'));
         el.append(text('p', sentence(p.tags?.amenity || p.tags?.shop || 'Place')));
-        L.circleMarker([lat, lon], {radius: 6, color: '#694c29', weight: 1, fillColor: '#e5b758', fillOpacity: .9}).bindPopup(el).addTo(places);
+        L.circleMarker([lat, lon], {radius: 6, color: tokenColor('--place-stroke', '#a13f04'), weight: 1, fillColor: tokenColor('--place-fill', '#fcec85'), fillOpacity: .9}).bindPopup(el).addTo(places);
       }
     } catch (e) {
-      if (e.name !== 'AbortError') setStatus('Places unavailable; try again later');
+      if (e.name !== 'AbortError') setStatus('error', 'Places unavailable; try again later');
     }
   }
   layers.addOverlay(places, 'Places (OpenStreetMap)');
@@ -262,19 +282,17 @@
     station_shaft: ['path', {d: 'M10 2.5 17.5 10 10 17.5 2.5 10Z'}]
   };
 
+  // Leaflet's divIcon `html` option takes a string, not a DOM node. Return an
+  // HTML string so the SVG is parsed by the browser and the `.shape` CSS rules
+  // (fill/stroke from --marker-fill / --marker-casing) apply to the child shape.
   function shapeIcon(type, dashed) {
-    const svg = document.createElementNS(SVG, 'svg');
     const [tag, attrs] = shapes[type] || shapes.station_egress;
-    const shape = document.createElementNS(SVG, tag);
-    for (const [name, value] of Object.entries(attrs)) shape.setAttribute(name, value);
-    svg.setAttribute('viewBox', '0 0 20 20');
-    svg.setAttribute('width', '20');
-    svg.setAttribute('height', '20');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('focusable', 'false');
-    svg.setAttribute('class', dashed ? 'shape is-dashed' : 'shape');
-    svg.append(shape);
-    return svg;
+    let attrStr = '';
+    for (const [name, value] of Object.entries(attrs)) {
+      attrStr += ` ${name}="${value}"`;
+    }
+    const cls = dashed ? 'shape is-dashed' : 'shape';
+    return `<svg class="${cls}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><${tag}${attrStr}></${tag}></svg>`;
   }
 
   function popupContent(p) {
@@ -304,6 +322,13 @@
     mappedList.replaceChildren();
     features.filter(f => f.geometry && (state.showLower || f.properties.confidence === 'high')).forEach(f => {
       const p = f.properties, dashed = p.confidence !== 'high';
+      const item = document.createElement('li'), button = document.createElement('button');
+      const kind = text('span', sentence(p.type));
+      button.type = 'button';
+      button.className = 'record-button';
+      kind.className = 'record-kind';
+      button.append(text('span', p.name), kind);
+
       const marker = L.marker([f.geometry.coordinates[1], f.geometry.coordinates[0]], {
         icon: L.divIcon({className: 'record-marker', html: shapeIcon(p.type, dashed), iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -8]}),
         keyboard: true,
@@ -311,18 +336,17 @@
       }).bindPopup(popupContent(p)).addTo(points);
       const icon = marker.getElement();
       if (icon) icon.setAttribute('aria-label', `${p.name}, ${sentence(p.type)}`);
+
+      // The list entry shows which record is open on the map, and the map
+      // clears the mark when the popup closes.
+      marker.on('popupopen', () => button.setAttribute('aria-current', 'true'));
+      marker.on('popupclose', () => button.removeAttribute('aria-current'));
       // Give focus back to the marker when its popup closes from the keyboard.
       marker.on('popupclose', e => {
         const active = document.activeElement, popupEl = e.popup.getElement();
         if (icon && icon.isConnected && (active === document.body || (popupEl && popupEl.contains(active)))) icon.focus({preventScroll: true});
       });
 
-      const item = document.createElement('li'), button = document.createElement('button');
-      const kind = text('span', sentence(p.type));
-      button.type = 'button';
-      button.className = 'record-button';
-      kind.className = 'record-kind';
-      button.append(text('span', p.name), kind);
       button.addEventListener('click', () => {
         if (mobile.matches) setPanel(false);
         map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), {animate: false});
@@ -356,9 +380,9 @@
     const unmapped = features.filter(f => !f.geometry).length;
     const parts = [data(features.length), ' surface records loaded'];
     if (unmapped) parts.push(', ', data(unmapped), ' not mapped');
-    setStatus(...parts);
+    setStatus('ready', ...parts);
   }).catch(() => {
-    setStatus('Could not load records. Serve this site over HTTP and check the data file.');
+    setStatus('error', 'Could not load records. Serve this site over HTTP and check the data file.');
   });
 
   /* ---------- Immersive map: top bar height and full screen ---------- */

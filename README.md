@@ -45,13 +45,19 @@ The GTFS transit layers are not yet populated: the agency hosts were unreachable
 
 Read [AGENTS.md](AGENTS.md) before changing data or code.
 
+## Design
+
+The interface follows the [Astryx](https://github.com/meta/astryx) design system, theme **neutral**, version 0.7.17 (MIT, Beta). The Astryx CSS ships in `assets/astryx/` and loads with plain `<link>` tags: no build step, no npm install, no React. `style.css` maps Astryx tokens onto the atlas, and `AGENTS.md` §13 traces every mapping.
+
+Neutral was picked over the other Astryx themes because color on this page should belong to the data: the four marker shapes, the two Link line colors and the yellow safety banner. A neutral chrome keeps those apart, and neutral ships paired light and dark values for every token, so the warning banner and the dialogs keep full contrast in both schemes without a second hand-tuned palette. `stone` tints every rule and popup on top of already-warm street tiles; `butter`, `chocolate`, `matcha`, `gothic` and `y2k` each add a strong accent that competes with the banner.
+
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). No version has been assigned.
+Current release **v2.0.0**, 2026-11-19: a UI overhaul on the Astryx neutral theme — new tokens for color, type, spacing, radius, shadow and motion; header version badge; version and date in the sidebar footer and in Settings; explicit loading, ready and error status states; selected state for the record whose popup is open. No data, source, confidence or verification-date change. Full notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 
-Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. See [DATA_SOURCES.md](DATA_SOURCES.md).
+Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. Design tokens: [Astryx](https://github.com/meta/astryx) neutral theme, MIT, from local copies in `assets/astryx/`. See [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## License
 

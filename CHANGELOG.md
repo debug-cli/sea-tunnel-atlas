@@ -1,3 +1,39 @@
 # Changelog
 
-No version has been assigned. The initial release entry will be added after the maintainer supplies its version and name.
+One entry per version. Dates are the day the change landed on the branch.
+
+## v2.0.0 — 2026-11-19
+
+First assigned release. UI overhaul on the Astryx design system's neutral theme. No data, source, confidence, precision or verification-date change.
+
+### Design system
+
+- Adopted the Astryx neutral theme (`@astryxdesign/theme-neutral` 0.7.17, MIT, Beta) from local copies in `assets/astryx/`. No build step, no npm install, no React migration.
+- Linked `assets/astryx/reset.css`, `astryx.css`, `theme-neutral.css` and `fonts.css` before `style.css`, in that order, and set `data-astryx-theme="neutral"` on `<html>`.
+- Mapped every UI value to an Astryx token: neutral color ramp, 4px spacing grid, radius, shadow and duration tokens. Retired the old `#176d4e`, `#007CAD`, `#72c99e`, `#5cb8e0` palette and the Trebuchet MS / Verdana, DejaVu Sans Mono / Consolas stacks.
+- Type now uses `--font-family-body`, `--font-family-heading` and `--font-family-code`, with the Astryx size scale. Mono is still reserved for data values.
+- Dark mode now comes from Astryx `light-dark()` values instead of a hand-written dark token block. Reduced motion, keyboard controls and the runtime `--topbar-h` layout are unchanged.
+
+### Interface
+
+- Header: brand title, subtitle, `v2.0.0` badge, Settings and Full screen actions on the inverted accent surface.
+- Safety banner: unchanged wording, now warning-yellow tokens, visible at every width and in both color schemes.
+- Left panel: legend, Link line swatches, mapped records, Not mapped list, feed note and a version/date footer.
+- Records: selected state on the list entry whose map popup is open; hover, pressed, focus and disabled states on every control.
+- Settings dialog: version and release date surfaced, confidence filter, remembered view, JSON import and export.
+- Map: marker shapes unchanged; marker, control, popup and places colors now come from CSS tokens read at runtime instead of literals in `app.js`.
+- Status line reports loading, ready and error states explicitly.
+
+### Docs
+
+- `AGENTS.md` §7 palette and font rules replaced with a dated note, and new §13 records the theme choice, token and font mapping tables, component mapping, files changed, verification results and open items.
+- `README.md` and `CHANGELOG.md` record v2.0.0 and the 2026-11-19 date.
+- `TECHNICAL.md` corrected: markers are shaped by type, not colored by type.
+
+### Unchanged
+
+- `data/*.geojson` byte-for-byte; 18 records, 15 points, 3 with null geometry.
+- GeoJSON property set, confidence, precision, verification dates, source ladder and rule zero.
+- Leaflet 1.9.4 from unpkg, vanilla JS, no bundler, `python3 -m http.server`.
+- Settings schema version 1 under `sea-tunnel-atlas:v1`.
+- Tests: 5 passing.

@@ -87,10 +87,19 @@ export class ImmersiveMap3D {
       throw new Error('WebGPU is not available in this browser.');
     }
 
-    console.info('[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container})');
-    this.map = await ImmersiveMap.create({
+    // Wrap ImmersiveMap.create() in a timeout so a hung WebGPU adapter
+    // request doesn't leave the button silently doing nothing forever.
+    const CREATE_TIMEOUT_MS = 15000;
+    const createPromise = ImmersiveMap.create({
       container: this.container,
     });
+    const timeoutPromise = new Promise((_resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error(`ImmersiveMap.create() timed out after ${CREATE_TIMEOUT_MS / 1000}s — WebGPU adapter or canvas initialization did not complete.`));
+      }, CREATE_TIMEOUT_MS);
+    });
+    console.info('[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with', CREATE_TIMEOUT_MS / 1000, 's timeout');
+    this.map = await Promise.race([createPromise, timeoutPromise]);
     console.info('[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved');
 
     // Forward camera moves so the 2D view can return to the same place.

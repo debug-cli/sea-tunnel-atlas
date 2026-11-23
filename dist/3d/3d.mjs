@@ -32336,16 +32336,21 @@ class TS {
     }
     if (!pS())
       throw new Error("WebGPU is not available in this browser.");
-    console.info("[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container})"), this.map = await xg.create({
+    const A = 15e3, e = xg.create({
       container: this.container
-    }), console.info("[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved"), this.map.onFrame(() => {
+    }), i = new Promise((s, n) => {
+      setTimeout(() => {
+        n(new Error(`ImmersiveMap.create() timed out after ${A / 1e3}s — WebGPU adapter or canvas initialization did not complete.`));
+      }, A);
+    });
+    console.info("[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with", A / 1e3, "s timeout"), this.map = await Promise.race([e, i]), console.info("[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved"), this.map.onFrame(() => {
       if (this.destroyed || !this.onViewChange) return;
-      const A = this.map.view;
-      this.onViewChange({ lat: A.center[1], lng: A.center[0], zoom: A.zoom });
-    }), this._layerTapUnsubscribe = this.map.onLayerTap((A) => {
+      const s = this.map.view;
+      this.onViewChange({ lat: s.center[1], lng: s.center[0], zoom: s.zoom });
+    }), this._layerTapUnsubscribe = this.map.onLayerTap((s) => {
       if (this.destroyed) return;
-      const { layer: e, shapeID: i, coordinate: s } = A, n = dc().find((o) => String(o.id) === String(i));
-      n && this.onTap && this.onTap(n.properties, { lat: s.latitude, lng: s.longitude });
+      const { layer: n, shapeID: o, coordinate: a } = s, g = dc().find((l) => String(l.id) === String(o));
+      g && this.onTap && this.onTap(g.properties, { lat: a.latitude, lng: a.longitude });
     }), console.info("[sea-tunnel-atlas] 3D: onFrame and onLayerTap listeners registered"), this._layerConfigs = this._defaultLayerConfigs(), console.info("[sea-tunnel-atlas] 3D: calling _applyLayers()"), await this._applyLayers(), console.info("[sea-tunnel-atlas] 3D: init() complete");
   }
   // Layer configurations, reapplied whenever the confidence filter changes.

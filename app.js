@@ -512,6 +512,7 @@
   let view3d = null;
   let view3dActive = false;
   let selectedRecordId = null;
+  let view3dInitializing = false; // guard against double-click while init is pending
 
   // Select a record in both views: highlight its list entry and centre the
   // map on it. Called from record buttons and from 3D taps.
@@ -526,6 +527,10 @@
   // Switch from Leaflet to the 3D view. Checks WebGPU first; when it is
   // missing, shows a plain message and stays on Leaflet.
   async function switchTo3D() {
+    if (view3dInitializing) {
+      console.warn('[sea-tunnel-atlas] switchTo3D: already initializing, ignoring click');
+      return;
+    }
     console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
     const mapDiv = $('#map');
     if (!mapDiv) {
@@ -541,6 +546,7 @@
       return;
     }
     console.info('[sea-tunnel-atlas] switchTo3D: WebGPU available, importing 3D module');
+    view3dInitializing = true;
     try {
       console.info('[sea-tunnel-atlas] switchTo3D: starting import(/dist/3d/3d.mjs)');
       const mod = await import('/dist/3d/3d.mjs');
@@ -588,11 +594,13 @@
       if (b3d) b3d.hidden = true;
       if (b2d) b2d.hidden = false;
       console.info('[sea-tunnel-atlas] switchTo3D: 3D view activated successfully');
+      view3dInitializing = false;
     } catch (e) {
       console.error('[sea-tunnel-atlas] switchTo3D: FAILED:', e);
       const msg = $('#view-3d-unavailable');
       if (msg) { msg.textContent = '3D view failed to start: ' + String(e.message); msg.hidden = false; }
       setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+      view3dInitializing = false;
     }
   }
 

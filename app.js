@@ -631,14 +631,32 @@
     }
   }
 
+  // Gate the 3D view to Chrome/macOS only. ImmersiveMap 0.1.1 is tested
+  // only on Chrome on macOS — its renderer hangs on Windows (Chrome and
+  // Edge) and other platforms. The WebGPU check inside switchTo3D() is
+  // a secondary safety net.
+  function isSupported3DBrowser() {
+    const ua = navigator.userAgent;
+    const isMac = /Macintosh|MacPPC|MacIntel/.test(ua) || navigator.platform === 'MacIntel';
+    const isChrome = ua.includes('Chrome') && !ua.includes('Edg');
+    const supported = isMac && isChrome;
+    console.info('[sea-tunnel-atlas] 3D browser gate: isMac=', isMac, 'isChrome=', isChrome, 'supported=', supported);
+    return supported;
+  }
+
   // Wire the 3D / 2D buttons once the DOM is up. WebGPU availability is
   // checked lazily when the button is tapped.
   const b3d = $('#view-3d-toggle');
   const b2d = $('#view-2d-toggle');
   if (b3d) {
-    console.info('[sea-tunnel-atlas] 3D toggle button found, wiring click handler');
-    b3d.hidden = false;
-    b3d.addEventListener('click', switchTo3D);
+    if (isSupported3DBrowser()) {
+      console.info('[sea-tunnel-atlas] 3D toggle button found, wiring click handler (supported browser)');
+      b3d.hidden = false;
+      b3d.addEventListener('click', switchTo3D);
+    } else {
+      console.info('[sea-tunnel-atlas] 3D toggle button found but browser not supported — keeping hidden');
+      b3d.hidden = true;
+    }
   } else {
     console.error('[sea-tunnel-atlas] 3D toggle button #view-3d-toggle NOT found in DOM');
   }

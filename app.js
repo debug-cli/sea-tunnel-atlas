@@ -500,19 +500,13 @@
 
   map.on('moveend', () => {
     if (state.rememberView) { const c = map.getCenter(); state.view = [c.lat, c.lng, map.getZoom()]; save(); }
-    // While the 3D view is active, keep its camera in sync with Leaflet's.
-    if (view3dActive && view3d) {
-      const c = map.getCenter();
-      view3d.setView({ lat: c.lat, lng: c.lng, zoom: map.getZoom() });
-    }
   });
 
-  /* ---------- Optional 3D view (ImmersiveMap, WebGPU) ---------- */
+  /* ---------- Optional 3D view (Deck.gl, WebGL) ---------- */
 
-  let view3d = null;
-  let view3dActive = false;
+  let deckgl = null;
+  let deckActive = false;
   let selectedRecordId = null;
-  let view3dInitializing = false; // guard against double-click while init is pending
 
   // Select a record in both views: highlight its list entry and centre the
   // map on it. Called from record buttons and from 3D taps.
@@ -521,97 +515,165 @@
     document.querySelectorAll('.record-button').forEach(b => b.removeAttribute('aria-current'));
     const btn = document.querySelector(`.record-button[data-id="${featureId}"]`);
     if (btn) btn.setAttribute('aria-current', 'true');
-    if (view3dActive && view3d) view3d.selectFeature(featureId, latlng);
   }
 
-  // Switch from Leaflet to the 3D view. Checks WebGPU first; when it is
-  // missing, shows a plain message and stays on Leaflet.
-  async function switchTo3D() {
-    if (view3dInitializing) {
-      console.warn('[sea-tunnel-atlas] switchTo3D: already initializing, ignoring click');
-      return;
-    }
-    console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
-    const mapDiv = $('#map');
-    if (!mapDiv) {
-      console.error('[sea-tunnel-atlas] switchTo3D: #map element not found');
-      return;
-    }
-    console.info('[sea-tunnel-atlas] switchTo3D: #map found, checking WebGPU');
-    if (!('gpu' in navigator) || !navigator.gpu.requestAdapter) {
-      console.warn('[sea-tunnel-atlas] switchTo3D: WebGPU NOT available — navigator.gpu=', !!navigator.gpu, 'requestAdapter=', typeof navigator.gpu?.requestAdapter);
-      const msg = $('#view-3d-unavailable');
-      if (msg) msg.hidden = false;
-      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
-      return;
-    }
-    console.info('[sea-tunnel-atlas] switchTo3D: WebGPU available, importing 3D module');
-    view3dInitializing = true;
-    try {
-      console.info('[sea-tunnel-atlas] switchTo3D: starting import(/dist/3d/3d.mjs)');
-      const mod = await import('/dist/3d/3d.mjs');
-      console.info('[sea-tunnel-atlas] switchTo3D: 3D module imported, exports=', Object.keys(mod || {}));
-      mapDiv.classList.add('view-3d');
-      console.info('[sea-tunnel-atlas] switchTo3D: view-3d class added to #map');
-      view3d = new mod.ImmersiveMap3D({
-        container: mapDiv,
-        onTap: (properties, latlng) => {
-          console.info('[sea-tunnel-atlas] 3D onTap: featureId=', properties.id, 'latlng=', latlng);
-          selectRecord(properties.id, latlng);
-          // When tapping in 3D, open the record's popup if we return to 2D.
-          selectedRecordId = properties.id;
-        },
-        onViewChange: (view) => {
-          // Keep Leaflet's view in sync so returning to 2D is seamless.
-          if (!view3dActive) return;
-          map.setView([view.lat, view.lng], view.zoom, { animate: false });
-        },
-      });
-      console.info('[sea-tunnel-atlas] switchTo3D: ImmersiveMap3D instance created, calling init()');
-      await view3d.init();
-      console.info('[sea-tunnel-atlas] switchTo3D: view3d.init() completed');
-      view3dActive = true;
+  // Type colours for 3D view — Deck.gl points are discs, so type is shown
+  // by colour instead of shape. Colours match the Astryx neutral theme.
+  const TYPE_COLOR_3D = {
+    portal: [8, 163, 163],       // #08a3a3 teal
+    station_egress: [1, 113, 227], // #0171e3 blue
+    station_shaft: [161, 63, 4],   // #a13f04 orange
+    vent_facility: [252, 236, 133] // #fcec85 yellow
+  };
 
-      // Sync the current Leaflet view into 3D.
-      const c = map.getCenter();
-      console.info('[sea-tunnel-atlas] switchTo3D: syncing view to 3D, center=', c.lat, c.lng, 'zoom=', map.getZoom());
-      view3d.setView({ lat: c.lat, lng: c.lng, zoom: map.getZoom() });
+  // Build Deck.gl layers from the same GeoJSON data Leaflet uses.
+  function buildDeckLayers() {
+    const layers = [];
 
-      // If a record is already selected, reflect it in 3D.
-      if (selectedRecordId) {
-        const f = features.find(f => f.id === selectedRecordId);
-        if (f && f.geometry) {
-          view3d.selectFeature(selectedRecordId, {
-            lat: f.geometry.coordinates[1],
-            lng: f.geometry.coordinates[0],
-          });
+    // Egress points from shared features (already parsed by app.js).
+    const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
+    const egressPoints = egressFeatures.filter(f => f.geometry && f.geometry.type === 'Point');
+    if (egressPoints.length) {
+      layers.push(new deck.ScatterplotLayer({
+        id: 'egress-points',
+        data: egressPoints,
+        getPosition: d => [d.geometry.coordinates[0], d.geometry.coordinates[1]],
+        getRadius: d => 2000,
+        getFillColor: d => TYPE_COLOR_3D[d.properties?.type] || TYPE_COLOR_3D.station_egress,
+        getLineColor: [255, 255, 255],
+        getLineWidth: 2,
+        pickable: true,
+        autoHighlight: true
+      }));
+    }
+
+    // Other layers loaded from data/ files (fetched on demand).
+    const layerSpecs = [
+      { id: 'link-lines', path: '/data/link-lines.geojson', kind: 'line', color: [8, 163, 163], width: 3 },
+      { id: 'link-stations', path: '/data/link-stations.geojson', kind: 'point', color: [1, 113, 227], radius: 1500 },
+      { id: 'bus-routes', path: '/data/bus-routes.geojson', kind: 'line', color: [120, 120, 120], width: 2 },
+      { id: 'bus-stops', path: '/data/bus-stops.geojson', kind: 'point', color: [120, 120, 120], radius: 800 }
+    ];
+
+    layerSpecs.forEach(spec => {
+      try {
+        const data = window.__atlasData?.[spec.id];
+        if (data && data.features) {
+          if (spec.kind === 'line') {
+            layers.push(new deck.LineLayer({
+              id: spec.id,
+              data: data.features,
+              getSourcePosition: d => d.geometry.coordinates[0],
+              getTargetPosition: d => d.geometry.coordinates[1],
+              getColor: spec.color,
+              getWidth: spec.width
+            }));
+          } else {
+            layers.push(new deck.ScatterplotLayer({
+              id: spec.id,
+              data: data.features,
+              getPosition: d => d.geometry.coordinates,
+              getRadius: spec.radius,
+              getFillColor: spec.color,
+              getLineColor: [255, 255, 255],
+              getLineWidth: 1,
+              pickable: true,
+              autoHighlight: true
+            }));
+          }
         }
+      } catch (e) {
+        console.warn(`3D: could not load ${spec.id}:`, e);
       }
+    });
 
-      // Toggle buttons.
-      const b3d = $('#view-3d-toggle');
-      const b2d = $('#view-2d-toggle');
-      if (b3d) b3d.hidden = true;
-      if (b2d) b2d.hidden = false;
-      console.info('[sea-tunnel-atlas] switchTo3D: 3D view activated successfully');
-      view3dInitializing = false;
-    } catch (e) {
-      console.error('[sea-tunnel-atlas] switchTo3D: FAILED:', e);
-      const msg = $('#view-3d-unavailable');
-      if (msg) { msg.textContent = '3D view failed to start: ' + String(e.message); msg.hidden = false; }
-      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
-      view3dInitializing = false;
+    return layers;
+  }
+
+  function switchTo3D() {
+    if (deckActive) return;
+
+    const mapDiv = $('#map');
+    const deckCanvas = $('#deck-canvas');
+    if (!mapDiv || !deckCanvas) {
+      console.error('[sea-tunnel-atlas] switchTo3D: #map or #deck-canvas not found');
+      return;
     }
+
+    // Check WebGL availability.
+    const probe = document.createElement('canvas');
+    const webgl = !!(
+      window.WebGLRenderingContext &&
+      (probe.getContext('webgl') || probe.getContext('experimental-webgl'))
+    );
+    if (!webgl) {
+      const msg = $('#view-3d-unavailable');
+      if (msg) {
+        msg.textContent = '3D view is not available in this browser — WebGL is required. Staying on the 2D map.';
+        msg.hidden = false;
+      }
+      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+      return;
+    }
+
+    mapDiv.classList.add('view-3d');
+    deckCanvas.hidden = false;
+
+    // Get current Leaflet view.
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+
+    // Build layers from available data.
+    const layers = buildDeckLayers();
+
+    // Initialize Deck.gl.
+    deckgl = new deck.Deck({
+      canvas: deckCanvas,
+      controller: true,
+      initialViewState: {
+        longitude: center.lng,
+        latitude: center.lat,
+        zoom: zoom,
+        pitch: 45,
+        bearing: 0
+      },
+      layers: layers,
+      onClick: (info) => {
+        if (info.object && info.object.id !== undefined) {
+          const latlng = { lat: info.coordinate[1], lng: info.coordinate[0] };
+          selectRecord(info.object.id, latlng);
+          selectedRecordId = info.object.id;
+        }
+      },
+      onViewStateChange: ({ viewState }) => {
+        // Keep Leaflet's view in sync so returning to 2D is seamless.
+        if (!deckActive) return;
+        map.setView([viewState.latitude, viewState.longitude], viewState.zoom, { animate: false });
+      }
+    });
+
+    deckActive = true;
+
+    // Toggle buttons.
+    const b3d = $('#view-3d-toggle');
+    const b2d = $('#view-2d-toggle');
+    if (b3d) b3d.hidden = true;
+    if (b2d) b2d.hidden = false;
+
+    console.info('[sea-tunnel-atlas] switchTo3D: Deck.gl 3D view activated');
   }
 
   // Switch from 3D back to Leaflet, keeping the same centre, zoom and
   // selected record.
   function switchTo2D() {
-    if (!view3dActive || !view3d) return;
-    const view = view3d.getView();
-    view3d.destroy();
-    view3d = null;
-    view3dActive = false;
+    if (!deckActive || !deckgl) return;
+
+    const view = deckgl.getViewState();
+    deckgl.finalize();
+    deckgl = null;
+    deckActive = false;
+
+    $('#deck-canvas').hidden = true;
     $('#map').classList.remove('view-3d');
 
     const b3d = $('#view-3d-toggle');
@@ -620,7 +682,7 @@
     if (b2d) b2d.hidden = true;
 
     if (view) {
-      map.setView([view.lat, view.lng], view.zoom, { animate: false });
+      map.setView([view.latitude, view.longitude], view.zoom, { animate: false });
       if (selectedRecordId) {
         const f = features.find(f => f.id === selectedRecordId);
         if (f && f.geometry) {
@@ -631,32 +693,14 @@
     }
   }
 
-  // Gate the 3D view to Chrome/macOS only. ImmersiveMap 0.1.1 is tested
-  // only on Chrome on macOS — its renderer hangs on Windows (Chrome and
-  // Edge) and other platforms. The WebGPU check inside switchTo3D() is
-  // a secondary safety net.
-  function isSupported3DBrowser() {
-    const ua = navigator.userAgent;
-    const isMac = /Macintosh|MacPPC|MacIntel/.test(ua) || navigator.platform === 'MacIntel';
-    const isChrome = ua.includes('Chrome') && !ua.includes('Edg');
-    const supported = isMac && isChrome;
-    console.info('[sea-tunnel-atlas] 3D browser gate: isMac=', isMac, 'isChrome=', isChrome, 'supported=', supported);
-    return supported;
-  }
-
-  // Wire the 3D / 2D buttons once the DOM is up. WebGPU availability is
-  // checked lazily when the button is tapped.
+  // Wire the 3D / 2D buttons once the DOM is up. Deck.gl works on all
+  // platforms with WebGL, so the 3D button is shown for everyone.
   const b3d = $('#view-3d-toggle');
   const b2d = $('#view-2d-toggle');
   if (b3d) {
-    if (isSupported3DBrowser()) {
-      console.info('[sea-tunnel-atlas] 3D toggle button found, wiring click handler (supported browser)');
-      b3d.hidden = false;
-      b3d.addEventListener('click', switchTo3D);
-    } else {
-      console.info('[sea-tunnel-atlas] 3D toggle button found but browser not supported — keeping hidden');
-      b3d.hidden = true;
-    }
+    console.info('[sea-tunnel-atlas] 3D toggle button found, wiring click handler');
+    b3d.hidden = false;
+    b3d.addEventListener('click', switchTo3D);
   } else {
     console.error('[sea-tunnel-atlas] 3D toggle button #view-3d-toggle NOT found in DOM');
   }
@@ -670,6 +714,8 @@
     state.showLower = medium.checked;
     save();
     render();
-    if (view3dActive && view3d) view3d.setConfidenceFilter(state.showLower);
+    if (deckActive && deckgl) {
+      deckgl.setProps({ layers: buildDeckLayers() });
+    }
   });
 })();

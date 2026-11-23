@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://unpkg.com/@deck.gl/core@latest/dist.min.js"></script>
+  <script defer src="https://unpkg.com/@deck.gl/layers@latest/dist.min.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -37,7 +39,7 @@
       <button id="view-2d-toggle" class="button" type="button" hidden>2D map</button>
     </div>
     <p id="view-3d-unavailable" role="alert" class="view-3d-message" hidden>
-      3D view is not available in this browser — WebGPU is required. Staying on the 2D map.
+      3D view is not available in this browser — WebGL is required. Staying on the 2D map.
     </p>
   </header>
 
@@ -86,7 +88,9 @@
       </footer>
     </aside>
 
-    <div id="map" role="region" aria-label="Map of public surface infrastructure"></div>
+    <div id="map" role="region" aria-label="Map of public surface infrastructure">
+      <div id="deck-canvas" hidden style="width: 100%; height: 100%; position: absolute; inset: 0; z-index: 1;"></div>
+    </div>
 
     <div class="panel-bar">
       <button id="panel-toggle" class="button panel-toggle" type="button" aria-expanded="false" aria-controls="panel">

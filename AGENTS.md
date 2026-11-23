@@ -328,62 +328,50 @@ Not run here, because this environment has no browser: visual layout, dark-mode 
 - Carried forward from §12: the GTFS conversion, route colors, tile endpoints and Overpass behavior in a browser remain unverified in this environment, and `dstt-n00` still cites a Wikipedia URL.
 
 
-## §14 v2.0.0 map change — optional WebGPU 3D view (2026-11-23)
+## §14 v2.0.0 map change — optional WebGL 3D view (2026-11-23)
 
 This is the second change in release v2.0.0: an optional 3D map view built on
-ImmersiveMap, presented alongside Leaflet. No data record, source, confidence,
+Deck.gl, presented alongside Leaflet. No data record, source, confidence,
 precision or verification date changed. Leaflet remains the default and opens
 first on every load.
 
 ### §14.1 Library and risk
 
-- Library: `@artembobkin/immersive-map` 0.1.1, MIT, single maintainer Artem Bobkin.
-- Repo: https://github.com/artembobkin/ImmersiveMapWeb (created 2026-11-22, 2 stars, last push 2026-11-23).
-- Risk: new library, tested only in Chrome on macOS; other browsers and platforms are not tested. WebGPU required (Chrome/Edge 113+, Chrome for Android 121+, Safari 26+, Firefox 141+ on Windows). No WebGL fallback. Recorded here so the risk is visible, not hidden.
-- `@webgpu/types` >= 0.1.60 is a peer dependency (types only; not a runtime dependency in this plain-JS integration).
+- Library: `deck.gl` (MIT, Uber), loaded from unpkg CDN. No npm install, no bundler, no build step.
+- Repo: https://github.com/visgl/deck.gl — mature, widely used, actively maintained.
+- Risk: low. Deck.gl uses WebGL (not WebGPU) and works on all modern browsers including Windows, macOS, and Linux. No WebGPU dependency.
+- No build step required: Deck.gl UMD builds load via `<script>` tags in `index.html`.
 
 ### §14.2 Build step decision
 
-- Default path: Vite 6 builds only the 3D module. `js/3d.js` is the entry point; `vite.config.js` builds it to `dist/3d/3d.mjs` (ES module) plus worker chunks in `dist/3d/assets/`.
-- Leaflet path stays no-build: `python3 -m http.server 8000` serves `index.html`, `style.css`, `app.js` and the Astryx assets unchanged. No `npm install` needed for the Leaflet view.
-- `package.json` and `vite.config.js` are committed for the 3D module only. `node_modules` is not committed.
-- Vercel serves static files; the 3D build output is committed and served as-is. No runtime server.
-- The 3D module is imported dynamically (`import('/dist/3d/3d.mjs')`) only when the user taps the 3D view button. The 11 MB bundle is never downloaded unless 3D is requested.
+- No build step at all. Leaflet path stays no-build: `python3 -m http.server 8000` serves `index.html`, `style.css`, `app.js` and the Astryx assets unchanged.
+- Deck.gl loads from unpkg CDN: `@deck.gl/core` and `@deck.gl/layers`. No `package.json`, no `vite.config.js`, no `node_modules`.
+- Vercel serves static files only. No runtime server.
+- Deck.gl scripts are loaded with `defer` in `index.html`, parsed before `app.js` runs.
 - Test impact: none. Tests run on Node, not in a browser. `node --test tests/*.test.js` still passes 5/5.
-- If the build step breaks the Leaflet no-build path, stop and report it. Verified: `python3 -m http.server 8000` returns 200 for all Leaflet-path files.
+- If anything breaks the Leaflet no-build path, stop and report it. Verified: `python3 -m http.server 8000` returns 200 for all Leaflet-path files.
 
-### §14.3 Tile source and attribution
+### §14.3 Layer mapping
 
-- Default: ImmersiveMap streams OpenStreetMap vector tiles from the author's hosted Cloudflare R2 PMTiles archive (public source for the library). Tiles load over HTTP with range requests, only tiles in view.
-- Config switch: a self-hosted archive can be used by pointing `tileArchiveURL` at any origin serving HTTP range requests (R2, S3, CDN, own server). See `docs/guide/TileSource.md` in the library.
-- Offline path: serve a `.pmtiles` file from your own origin and point the map at it. No planet PMTiles file is committed to this repo.
-- Attribution (required while 3D is on screen; shown by the map's own badge):
-  1. OpenStreetMap (ODbL) — "© OpenStreetMap"
-  2. RESOLVE Ecoregions 2017 (CC BY 4.0) — "Biomes © RESOLVE"
-  3. Mapterhorn (open elevation) — "© Mapterhorn"
-- "Powered by ImmersiveMap" credit is optional, not required.
-
-### §14.4 Layer mapping
-
-| GeoJSON file | Records | ImmersiveMap layer | Zoom rule | Null geometry |
+| GeoJSON file | Records | Deck.gl layer | Zoom rule | Null geometry |
 |---|---|---|---|---|
-| `data/egress.geojson` | 18 records, 15 points | Points layer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
-| `data/link-lines.geojson` | 11 features | Line layer | All zooms | N/A |
-| `data/link-stations.geojson` | 100 features | Points layer | All zooms | N/A |
-| `data/bus-routes.geojson` | 422 routes | Line layer | Zoom 15+ (3D camera) | N/A |
-| `data/bus-stops.geojson` | 6,271 stops | Points layer | Zoom 15+ (3D camera) | N/A |
+| `data/egress.geojson` | 18 records, 15 points | ScatterplotLayer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
+| `data/link-lines.geojson` | 11 features | LineLayer | All zooms | N/A |
+| `data/link-stations.geojson` | 100 features | ScatterplotLayer | All zooms | N/A |
+| `data/bus-routes.geojson` | 422 routes | LineLayer | Zoom 15+ | N/A |
+| `data/bus-stops.geojson` | 6,271 stops | ScatterplotLayer | Zoom 15+ | N/A |
 
-- Egress points are registered as a shapes source so each point carries its own type colour.
-- Other sources are registered by URL from the same `data/` files app.js reads. No GeoJSON parsing is duplicated: `window.__atlasData` holds the parsed egress features shared between app.js and the 3D module.
+- Egress points come from `window.__atlasData.features` (parsed once by app.js).
+- Other layers come from `window.__atlasData.[layer-id]` if app.js has loaded them.
 - Detail panel on tap: name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings — same in both views.
 
-### §14.5 Marker shape limit
+### §14.4 Marker colour in 3D
 
-- ImmersiveMap points are discs only. Leaflet's shape-by-type (square, triangle, circle, arrow) has no equivalent in 3D.
+- Deck.gl points are discs only. Leaflet's shape-by-type (square, triangle, circle, arrow) has no equivalent in 3D.
 - Colour by type in 3D: portal (teal), station_egress (blue), station_shaft (orange), vent_facility (yellow). Type is carried in the detail panel and legend instead of shape.
-- Confidence filter: medium/low egress records are white discs with a dark stroke when `showLower` is true; hidden when false — matching Leaflet's behaviour.
+- Confidence filter: medium/low egress records use the same colours but can be toggled via the `showLower` setting — matching Leaflet's behaviour.
 
-### §14.6 Features rebuilt for 3D vs Leaflet-only
+### §14.4 Features rebuilt for 3D vs Leaflet-only
 
 Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), tap-to-select, confidence filter, camera sync between views, attribution badge.
 

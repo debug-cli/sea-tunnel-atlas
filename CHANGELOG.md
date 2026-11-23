@@ -32,15 +32,17 @@ First assigned release. UI overhaul on the Astryx design system's neutral theme.
 
 ### Interface — 3D view (added 2026-11-23)
 
-- Added an optional WebGPU 3D view using ImmersiveMap 0.1.1 (MIT, @artembobkin/immersive-map). Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button.
-- 3D view button checks WebGPU first; when WebGPU is missing, Leaflet stays and a plain message shows. A "2D map" button returns to Leaflet with the same centre, zoom and selected record.
-- GeoJSON layers mapped to ImmersiveMap: egress.geojson points (colour by type, discs only), link-lines.geojson lines, link-stations.geojson points, bus-routes.geojson lines, bus-stops.geojson points (zoom 15+).
-- Tile source: hosted PMTiles archive on Cloudflare R2 (author-hosted, public). Config switch for self-hosted archive. Attribution: OpenStreetMap, RESOLVE biomes, Mapterhorn terrain.
+- Added an optional WebGL 3D view using Deck.gl (MIT, Uber). Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button.
+- 3D view button checks WebGL first; when WebGL is missing, Leaflet stays and a plain message shows. A "2D map" button returns to Leaflet with the same centre, zoom and selected record.
+- GeoJSON layers mapped to Deck.gl: egress.geojson points (colour by type, discs), link-lines.geojson lines, link-stations.geojson points, bus-routes.geojson lines, bus-stops.geojson points (zoom 15+).
+- Deck.gl is loaded from unpkg CDN — no build step, no bundler, no package.json.
 - Safety warning, left panel, legend, mapped list, unmapped list, settings, confidence filter, reduced motion, keyboard controls and dark mode all work in both views.
 
-### Build step
+### Unchanged
 
-- Vite 6 builds only the 3D module (`js/3d.js` → `dist/3d/3d.mjs`). The Leaflet view stays no-build: `python3 -m http.server 8000` serves it unchanged. `package.json` and `vite.config.js` are committed for the 3D module only; `node_modules` is not committed.
+- `data/*.geojson` byte-for-byte; 18 records, 15 points, 3 with null geometry.
+- GeoJSON property set, confidence, precision, verification dates, source ladder and rule zero.
+- Leaflet 1.9.4 from unpkg, vanilla JS, no bundler, `python3 -m http.server`.
 
 ### Unchanged
 

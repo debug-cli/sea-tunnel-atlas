@@ -1395,15 +1395,12 @@ dialog .check {
 }
 
 /* 14. Optional 3D view --------------------------------------------------
-   When the 3D view is active, ImmersiveMap draws a canvas inside #map.
+   When the 3D view is active, Deck.gl draws a canvas inside #map.
    Leaflet's container is hidden, the canvas fills #map, and the header,
    safety warning, panel and buttons stay visible at every width. */
 
 #map.view-3d {
   overflow: hidden;
-  /* Ensure the 3D canvas container always has explicit dimensions.
-     On desktop #map is a grid item with min-height: 0 which can collapse;
-     ImmersiveMap needs a non-zero canvas to configure WebGPU. */
   height: calc(100vh - var(--topbar-h));
   width: 100%;
 }
@@ -1416,6 +1413,7 @@ dialog .check {
   width: 100%;
   height: 100%;
   display: block;
+  /* Deck.gl canvas fills #map; Leaflet's canvas is hidden via .leaflet-container */
 }
 
 /* The 3D view and 2D map buttons toggle each other. Only one is visible. */

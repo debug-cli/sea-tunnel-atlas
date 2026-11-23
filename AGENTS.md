@@ -355,6 +355,7 @@ first on every load.
 
 | GeoJSON file | Records | Deck.gl layer | Zoom rule | Null geometry |
 |---|---|---|---|---|
+| (base map) | — | TileLayer (OpenStreetMap) | All zooms | N/A |
 | `data/egress.geojson` | 18 records, 15 points | ScatterplotLayer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
 | `data/link-lines.geojson` | 11 features | LineLayer | All zooms | N/A |
 | `data/link-stations.geojson` | 100 features | ScatterplotLayer | All zooms | N/A |
@@ -362,6 +363,7 @@ first on every load.
 | `data/bus-stops.geojson` | 6,271 stops | ScatterplotLayer | Zoom 15+ | N/A |
 
 - Egress points come from `window.__atlasData.features` (parsed once by app.js).
+- Base map tiles from OpenStreetMap via deck.gl TileLayer; attribution shown in 3D view overlay.
 - Other layers come from `window.__atlasData.[layer-id]` if app.js has loaded them.
 - Detail panel on tap: name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings — same in both views.
 

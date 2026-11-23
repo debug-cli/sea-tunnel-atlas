@@ -108,6 +108,27 @@ export class ImmersiveMap3D {
       this.container.style.height = 'calc(100vh - 64px)';
     }
 
+    // Diagnose WebGPU adapter/device independently to isolate where it hangs.
+    console.info('[sea-tunnel-atlas] 3D: testing navigator.gpu.requestAdapter() independently');
+    try {
+      const adapter = await Promise.race([
+        navigator.gpu.requestAdapter(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('requestAdapter timed out after 5s')), 5000)),
+      ]);
+      console.info('[sea-tunnel-atlas] 3D: requestAdapter resolved:', !!adapter);
+      if (adapter) {
+        console.info('[sea-tunnel-atlas] 3D: testing adapter.requestDevice() independently');
+        const device = await Promise.race([
+          adapter.requestDevice(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('requestDevice timed out after 5s')), 5000)),
+        ]);
+        console.info('[sea-tunnel-atlas] 3D: requestDevice resolved:', !!device);
+      }
+    } catch (e) {
+      console.error('[sea-tunnel-atlas] 3D: WebGPU diagnostic failed:', e.message);
+      throw e;
+    }
+
     const CREATE_TIMEOUT_MS = 15000;
     console.info('[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with', CREATE_TIMEOUT_MS / 1000, 's timeout');
     const createPromise = ImmersiveMap.create({

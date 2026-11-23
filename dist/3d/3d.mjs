@@ -297,7 +297,7 @@ const uc = H({
   service: 0,
   path: 0,
   other: 0
-}), zm = H({
+}), ym = H({
   symbolWidthPoints: Tm,
   overviewWidthPoints: jm,
   overviewZoom: 6,
@@ -328,7 +328,7 @@ const uc = H({
   maximumTileZoom: 7,
   coverMinimumTileZoom: 2,
   coverFadeInZooms: 1
-}), ym = Object.freeze([
+}), zm = Object.freeze([
   "tropicalMoistForest",
   "tropicalDryForest",
   "tropicalConiferForest",
@@ -371,7 +371,7 @@ function Dm(t) {
     crownClearanceMetres: Math.max(t.crownClearanceMetres, 0)
   });
 }
-const zr = Object.freeze({
+const yr = Object.freeze({
   /**
    * The day's trees: a crown a touch deeper than the map's wood, so a tree
    * reads on it, lightening to the wood's own tone at the top.
@@ -394,7 +394,7 @@ const zr = Object.freeze({
   wood: Lg({ spacingMetres: 9, heightMetres: [7, 11] }),
   park: Lg({ spacingMetres: 22, heightMetres: [6, 10] }),
   mapped: Dm({ heightMetres: [7, 12], crownClearanceMetres: 4 }),
-  palette: zr.default
+  palette: yr.default
 }), Yc = H({
   land: [0.973, 0.965, 0.941, 1],
   water: [0.647, 0.812, 0.945, 1],
@@ -531,9 +531,9 @@ function xc(t = {}) {
     fadeEndMeters: MA(t.fadeEndMeters ?? { 10: 12e4, 14: 8e3, 18: 500 })
   });
 }
-const yr = xc();
+const zr = xc();
 xc({ intensity: 0 });
-const yo = Object.freeze({
+const zo = Object.freeze({
   isEnabled: !0,
   strength: 0.6,
   radiusMeters: 3e3,
@@ -541,7 +541,7 @@ const yo = Object.freeze({
   resolution: 128
 });
 Object.freeze({
-  ...yo,
+  ...zo,
   isEnabled: !1
 });
 const fc = Object.freeze({
@@ -561,10 +561,10 @@ const br = H({
   layers: Yc,
   globeLayers: null,
   features: km,
-  roadMetrics: zm,
+  roadMetrics: ym,
   routeShields: Rm,
-  hillshade: yr,
-  terrainOcclusion: yo,
+  hillshade: zr,
+  terrainOcclusion: zo,
   labelOpacity: fc
 });
 function Km(t, A) {
@@ -581,14 +581,14 @@ function Bn(t) {
 function pg(t) {
   const A = (e) => ({
     ...e,
-    trees: { ...e.trees, palette: zr.default }
+    trees: { ...e.trees, palette: yr.default }
   });
   return {
     ...t,
     layers: A(t.layers),
     globeLayers: t.globeLayers === null ? null : A(t.globeLayers),
-    hillshade: yr,
-    terrainOcclusion: yo,
+    hillshade: zr,
+    terrainOcclusion: zo,
     labelOpacity: fc
   };
 }
@@ -623,9 +623,9 @@ const vm = (() => {
       casing: [0.06, 0.06, 0.08, 0.95],
       marking: [0.55, 0.53, 0.48, 1]
     };
-    for (const I of ym)
+    for (const I of zm)
       n.biomes[I] = [...t(Ec[I])];
-    n.overviewRoads.major = [0.72, 0.58, 0.26, 1], n.overviewRoads.minor = [0.42, 0.39, 0.3, 1], n.trees.palette = structuredClone(zr.night), s.globeLayers = structuredClone(Yc), s.globeLabels = structuredClone(uc), s.routeShields.rules = s.routeShields.rules.map((I) => ({
+    n.overviewRoads.major = [0.72, 0.58, 0.26, 1], n.overviewRoads.minor = [0.42, 0.39, 0.3, 1], n.trees.palette = structuredClone(yr.night), s.globeLayers = structuredClone(Yc), s.globeLabels = structuredClone(uc), s.routeShields.rules = s.routeShields.rules.map((I) => ({
       network: I.network,
       appearance: I.appearance === null ? null : structuredClone(i(I.appearance))
     })), s.routeShields.fallback = s.routeShields.fallback === null ? null : structuredClone(i(s.routeShields.fallback)), s.features.buildingFillColor = [0.18, 0.19, 0.23, 1];
@@ -959,7 +959,7 @@ function hB(t, A) {
     "Z"
   ].join("");
 }
-function zg(t, A = !1) {
+function yg(t, A = !1) {
   const e = A ? 1 - Vo : 1, i = Object.freeze({ x: 0, y: 0, width: 1, height: e }), s = Math.min(Math.max(t, 0), 0.5) * Math.min(i.width, i.height), n = [hB(i, s)];
   if (!A)
     return Object.freeze({ kind: "paths", paths: Object.freeze(n), anchor: Object.freeze({ x: 0.5, y: 0.5 }), pictureArea: i });
@@ -974,8 +974,8 @@ const no = Object.freeze({
     pictureArea: Object.freeze({ x: 0, y: 0, width: 1, height: 1 - dB })
   }),
   /** A circle centered on the pin's place. */
-  circle: zg(0.5, !1),
-  roundedRectangle: zg,
+  circle: yg(0.5, !1),
+  roundedRectangle: yg,
   /**
    * A shape of the app's own.
    *
@@ -1082,7 +1082,7 @@ const qe = (t) => MA(t), EB = H({
   near: 0.1,
   far: 6e3,
   radiusScale: 10.5
-}), xB = H({ direction: [-0.4, -0.6, 1] }), yg = Object.freeze({ strength: qe, nearCoverageMeters: qe, farCoverageMeters: qe }), fB = H({
+}), xB = H({ direction: [-0.4, -0.6, 1] }), zg = Object.freeze({ strength: qe, nearCoverageMeters: qe, farCoverageMeters: qe }), fB = H({
   isEnabled: !0,
   strength: MA({ 14: 0, 15: 0.22 }),
   mapResolution: 4096,
@@ -1116,7 +1116,7 @@ const LB = H({
 function pB(t = {}) {
   return H(X(kr, t));
 }
-const QB = pB({ skyColor: [0.03, 0.05, 0.11], horizonColor: [0.09, 0.12, 0.22] }), zc = Object.freeze({ buildingsMinimumZoom: 14, riseSeconds: 0.6 }), FB = Object.freeze({
+const QB = pB({ skyColor: [0.03, 0.05, 0.11], horizonColor: [0.09, 0.12, 0.22] }), yc = Object.freeze({ buildingsMinimumZoom: 14, riseSeconds: 0.6 }), FB = Object.freeze({
   isEnabled: !0,
   minimumZoom: 14,
   fullDensityZoom: 14,
@@ -1178,7 +1178,7 @@ const jB = H({
   fog: kr,
   groundFog: bg,
   mountainGroundFog: TB(bg),
-  extrusion: zc,
+  extrusion: yc,
   trees: FB
 });
 function Ng(t) {
@@ -1188,7 +1188,7 @@ function Ng(t) {
     credit: t.credit ?? null
   });
 }
-const zB = Object.freeze({
+const yB = Object.freeze({
   make: Ng,
   /**
    * Mapterhorn's open global terrain, in Terrarium: 30 m everywhere to
@@ -1200,14 +1200,14 @@ const zB = Object.freeze({
     encoding: "terrarium",
     credit: "© Mapterhorn"
   })
-}), yB = Nr.maximumTileZoomLevel, bB = Object.freeze({
+}), zB = Nr.maximumTileZoomLevel, bB = Object.freeze({
   maximumZoomLevel: null,
   archiveMaximumZoomLevel: null,
   rasterBandMarginShare: 0.25
 });
 function HA(t) {
   const A = t.archiveMaximumZoomLevel;
-  return A === null ? t.maximumZoomLevel ?? yB : Math.min(t.maximumZoomLevel ?? A, A);
+  return A === null ? t.maximumZoomLevel ?? zB : Math.min(t.maximumZoomLevel ?? A, A);
 }
 const DB = H({
   maxConcurrentFetches: 5,
@@ -1259,7 +1259,7 @@ function HB(t, A) {
 }
 const vB = H({
   isEnabled: !1,
-  source: zB.mapterhorn,
+  source: yB.mapterhorn,
   exaggeration: 1,
   appearZoom: 10,
   collapseZoom: 13.7,
@@ -1274,7 +1274,7 @@ const vB = H({
   castsShadows: !0,
   surroundings: KB
 });
-function yc(t, A) {
+function zc(t, A) {
   const e = Number.isFinite(t.appearZoom) ? Math.floor(Math.max(t.appearZoom, 0)) : 0;
   return Math.max(0, Math.min(e, A));
 }
@@ -1296,7 +1296,7 @@ const XB = Object.freeze({
   overview: qB
 });
 function bc(t) {
-  return t.groundRelief.isEnabled ? yc(t.groundRelief, HA(t.coverage)) : t.groundFlattening.isEnabled ? t.groundFlattening.fromTileZoom ?? HA(t.coverage) : null;
+  return t.groundRelief.isEnabled ? zc(t.groundRelief, HA(t.coverage)) : t.groundFlattening.isEnabled ? t.groundFlattening.fromTileZoom ?? HA(t.coverage) : null;
 }
 const $B = Object.freeze({
   forceContinuousRendering: !1,
@@ -1908,7 +1908,7 @@ const Fe = class Fe {
    * `ShadowSettings` replaces the group.
    */
   shadowSettings(A) {
-    return this.withScene({ shadows: X(this.data.scene.shadows, A, yg) });
+    return this.withScene({ shadows: X(this.data.scene.shadows, A, zg) });
   }
   /**
    * The globe's atmosphere: the halo of scattered light around the planet's
@@ -2030,7 +2030,7 @@ const Fe = class Fe {
   buildingExtrusion(A = {}) {
     const e = A.buildingsMinimumZoom ?? this.data.scene.extrusion.buildingsMinimumZoom;
     let i = A.riseSeconds === void 0 ? this.data.scene.extrusion.riseSeconds : Math.max(A.riseSeconds, 0);
-    return A.risesFromTheGround === !0 && i <= 0 ? i = zc.riseSeconds : A.risesFromTheGround === !1 && (i = 0), this.withScene({ extrusion: { buildingsMinimumZoom: e, riseSeconds: i } });
+    return A.risesFromTheGround === !0 && i <= 0 ? i = yc.riseSeconds : A.risesFromTheGround === !1 && (i = 0), this.withScene({ extrusion: { buildingsMinimumZoom: e, riseSeconds: i } });
   }
   /**
    * The trees that stand on the woods and the parks of the flat map
@@ -2065,7 +2065,7 @@ const Fe = class Fe {
    * ```
    */
   shadows(A = {}) {
-    const e = X(this.data.scene.shadows, A, yg);
+    const e = X(this.data.scene.shadows, A, zg);
     return this.withScene({ shadows: { ...e, isEnabled: A.isEnabled ?? !0 } });
   }
   // MARK: The pins and the attribution
@@ -2271,7 +2271,7 @@ function Rr(t, A, e, i, s, n) {
   const a = 1 / o, g = i[0], l = i[1], I = i[2] + a, c = Math.sqrt(g * g + l * l + I * I), M = Math.max(c * a, 1e-6), m = (t * g + A * l + (e + a) * I) / M, B = a * a / M, C = m - B, w = 0.03, d = Math.min(Math.max((C + w) / (2 * w), 0), 1);
   return d * d * (3 - 2 * d);
 }
-function yA() {
+function zA() {
   const t = new Float64Array(16);
   return t[0] = 1, t[5] = 1, t[10] = 1, t[15] = 1, t;
 }
@@ -3564,7 +3564,7 @@ const Lo = class Lo {
 };
 /** The memory a worker may keep between jobs: 32 MB, a few megabytes of GeoJSON. */
 r(Lo, "defaultRetainedMemoryBytes", 32 * 1024 * 1024);
-let za = Lo;
+let ya = Lo;
 const lt = class lt {
   constructor(A = {}) {
     /** @internal The registered sources and the ones that are read, shared with every map that draws this controller's layers. */
@@ -3574,7 +3574,7 @@ const lt = class lt {
     r(this, "changeHandlerOwner", null);
     r(this, "sourceFailed", null);
     const e = A.meshCache ?? new EC(A.cacheLimitBytes ?? lt.defaultCacheLimitBytes);
-    this.library = new FC(A.inputLimitBytes ?? lt.defaultInputLimitBytes, e, A.jobs ?? new za()), this.orderedLayers = Vg((A.layers ?? []).map((i) => ri.make(i)));
+    this.library = new FC(A.inputLimitBytes ?? lt.defaultInputLimitBytes, e, A.jobs ?? new ya()), this.orderedLayers = Vg((A.layers ?? []).map((i) => ri.make(i)));
   }
   /** The most memory the shapes that are read may take at one time, in bytes. */
   get inputLimitBytes() {
@@ -4086,7 +4086,7 @@ function qo(t) {
 function Xg(t, A, e) {
   return [t[0] + (A[0] - t[0]) * e, t[1] + (A[1] - t[1]) * e, t[2] + (A[2] - t[2]) * e];
 }
-const zC = 1e-9, yC = 1e-7, JA = {
+const yC = 1e-9, zC = 1e-7, JA = {
   /**
    * Great-circle interpolation over unit vectors: correct near the
    * antimeridian and the poles, unlike a lat/lon lerp.
@@ -4098,10 +4098,10 @@ const zC = 1e-9, yC = 1e-7, JA = {
     if (!(i < 1))
       return A;
     const s = JA.unitVector(t), n = JA.unitVector(A), o = JA.centralAngleOfVectors(s, n);
-    if (!(o > zC))
+    if (!(o > yC))
       return t;
     const a = Math.sin(o);
-    if (!(a > yC))
+    if (!(a > zC))
       return bC(t, A, i);
     const g = Math.sin((1 - i) * o) / a, l = Math.sin(i * o) / a, I = Hg(vg(s, g), vg(n, l));
     return JA.coordinateOfVector(I);
@@ -4537,7 +4537,7 @@ function Se(t, A) {
   t !== null && queueMicrotask(() => t(A));
 }
 const qg = "immersive-map/archive-depth/";
-class ya {
+class za {
   constructor(A = globalThis.localStorage) {
     r(this, "storage");
     r(this, "depths", /* @__PURE__ */ new Map());
@@ -6268,7 +6268,7 @@ class Oa {
    * @returns {Float64Array}
    */
   solve(A, e, i, s, n, o, a, g, l, I, c, M, m, B) {
-    const C = +e, w = +i, d = +s, h = +n, u = +o, E = +a, x = +g, Y = +l, Z = +I, f = +c, S = +M, L = +m, p = +B, Q = yw(A, K.__wbindgen_malloc), j = dA, b = K.pincollisionsolver_solve(this.__wbg_ptr, Q, j, C, w, d, h, u, E, x, Y, Z, f, S, L, p);
+    const C = +e, w = +i, d = +s, h = +n, u = +o, E = +a, x = +g, Y = +l, Z = +I, f = +c, S = +M, L = +m, p = +B, Q = zw(A, K.__wbindgen_malloc), j = dA, b = K.pincollisionsolver_solve(this.__wbg_ptr, Q, j, C, w, d, h, u, E, x, Y, Z, f, S, L, p);
     var J = Qw(b[0], b[1]).slice();
     return K.__wbindgen_free(b[0], b[1] * 8, 8), J;
   }
@@ -6382,7 +6382,7 @@ function Jw(t, A) {
   return t = t >>> 0, Dw(Pr().subarray(t, t + A));
 }
 let rs = null;
-function zw() {
+function yw() {
   return (rs === null || rs.byteLength === 0) && (rs = new Uint32Array(K.memory.buffer)), rs;
 }
 let gs = null;
@@ -6402,7 +6402,7 @@ function Va(t) {
 }
 function wt(t, A) {
   const e = A(t.length * 4, 4) >>> 0;
-  return zw().set(t, e / 4), dA = t.length, e;
+  return yw().set(t, e / 4), dA = t.length, e;
 }
 function ea(t, A) {
   const e = A(t.length * 1, 1) >>> 0;
@@ -6412,7 +6412,7 @@ function xn(t, A) {
   const e = A(t.length * 4, 4) >>> 0;
   return Tw().set(t, e / 4), dA = t.length, e;
 }
-function yw(t, A) {
+function zw(t, A) {
   const e = A(t.length * 8, 8) >>> 0;
   return sM().set(t, e / 8), dA = t.length, e;
 }
@@ -6605,7 +6605,7 @@ r(YA, "realDepthScale", 1 - Vw * Rw), /**
  * projection-view does it and x, y and w are untouched. Never written to.
  */
 r(YA, "gpuClipDepthAdjustment", (() => {
-  const A = ml(YA.nearPlane, YA.farPlane), e = ml(YA.nearPlane, YA.gpuFarPlane), i = e.zScale / A.zScale, s = e.wzScale - i * A.wzScale, n = yA();
+  const A = ml(YA.nearPlane, YA.farPlane), e = ml(YA.nearPlane, YA.gpuFarPlane), i = e.zScale / A.zScale, s = e.wzScale - i * A.wzScale, n = zA();
   return n[10] = i * YA.realDepthScale, n[14] = s * YA.realDepthScale, n;
 })());
 let Pi = YA;
@@ -6772,7 +6772,7 @@ const qn = {
 }, qw = {
   /** The latitude, in radians, where Web Mercator's square world ends: about 85.05 degrees. */
   maxLatitudeRadians: 2 * Math.atan(Math.exp(Math.PI)) - Math.PI / 2
-}, yt = `// Copyright (c) 2025-2026 Artem Bobkin.
+}, zt = `// Copyright (c) 2025-2026 Artem Bobkin.
 // SPDX-License-Identifier: MIT
 
 // library
@@ -7776,7 +7776,7 @@ fn groundReliefOcclude(color: vec3f, textureUV: vec2f) -> vec3f {
   groundHoleBit: 64,
   /** The standing surfaces raise it as they draw: nothing lying on the ground paints over them. */
   surfaceMaskBit: 128
-}, $w = 0.5, zt = {
+}, $w = 0.5, yt = {
   byteLength: 144,
   /** The float offsets of the fields, as the WGSL struct lays them. */
   layout: {
@@ -7806,8 +7806,8 @@ fn groundReliefOcclude(color: vec3f, textureUV: vec2f) -> vec3f {
    * displacement's), with the frame's datum, rise, shading and darkening.
    */
   write(t, A, e, i, s, n, o) {
-    const a = zt.layout, g = n.worldUnitsPerMetre, l = A;
-    t[l + a.placement] = e.originX, t[l + a.placement + 1] = e.originY, t[l + a.placement + 2] = e.scale, t[l + a.placement + 3] = g, t[l + a.frame] = n.datumMetres, t[l + a.frame + 1] = e.strength, t[l + a.frame + 2] = zt.terrainSideMetres(i, s, g, o), t[l + a.frame + 3] = 0;
+    const a = yt.layout, g = n.worldUnitsPerMetre, l = A;
+    t[l + a.placement] = e.originX, t[l + a.placement + 1] = e.originY, t[l + a.placement + 2] = e.scale, t[l + a.placement + 3] = g, t[l + a.frame] = n.datumMetres, t[l + a.frame + 1] = e.strength, t[l + a.frame + 2] = yt.terrainSideMetres(i, s, g, o), t[l + a.frame + 3] = 0;
     const I = n.hillshade;
     t.set(I.light, l + a.hillshadeLight), t.set(I.shadowColor, l + a.hillshadeShadowColor), t.set(I.highlightColor, l + a.hillshadeHighlightColor), t.set(I.eye, l + a.hillshadeEye), t.set(I.fade, l + a.hillshadeFade), t[l + a.shading] = i.originX, t[l + a.shading + 1] = i.originY, t[l + a.shading + 2] = i.scale, t[l + a.shading + 3] = 0, t.set(n.occlusionUniform, l + a.occlusion);
   }
@@ -7818,7 +7818,7 @@ function Ad(t) {
   return t.createBindGroupLayout({
     label: "ground relief",
     entries: [
-      { binding: 0, visibility: A, buffer: { type: "uniform", hasDynamicOffset: !0, minBindingSize: zt.byteLength } },
+      { binding: 0, visibility: A, buffer: { type: "uniform", hasDynamicOffset: !0, minBindingSize: yt.byteLength } },
       { binding: 1, visibility: GPUShaderStage.VERTEX, texture: { sampleType: "float" } },
       { binding: 2, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float" } },
       { binding: 3, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float" } },
@@ -7886,7 +7886,7 @@ class ed {
     const g = s ?? i;
     this.used >= this.capacity && this.grow(this.capacity * 2);
     const l = this.used++;
-    zt.write(this.staging, l * Ht, i, g, n, o, a);
+    yt.write(this.staging, l * Ht, i, g, n, o, a);
     const I = i.texture, c = g.texture, M = g.occlusion ?? this.occlusionFallback;
     A.setBindGroup(e, this.group(I, c, M), [l * va]);
   }
@@ -7923,7 +7923,7 @@ class ed {
       label: "ground relief",
       layout: this.layout,
       entries: [
-        { binding: 0, resource: { buffer: this.buffer, size: zt.byteLength } },
+        { binding: 0, resource: { buffer: this.buffer, size: yt.byteLength } },
         { binding: 1, resource: A.view },
         { binding: 2, resource: e.view },
         { binding: 3, resource: i.view },
@@ -8122,7 +8122,7 @@ class od {
     })));
   }
   descriptor(A, e) {
-    const { device: i, colorFormat: s, depthStencilFormat: n, sampleCount: o } = this.context, a = [qr, yt, gn, oM, ko, _w].join(`
+    const { device: i, colorFormat: s, depthStencilFormat: n, sampleCount: o } = this.context, a = [qr, zt, gn, oM, ko, _w].join(`
 `);
     this.module ?? (this.module = i.createShaderModule({ label: "tile", code: a }));
     const g = this.module, l = A === "roadOpaque" || A === "roadBlended" || A === "roadEdgeLines", I = {
@@ -8467,8 +8467,8 @@ class ul {
         return;
       const b = L === "opaqueFills" && S.isFlattened ? 0 : Jt.layerDepthStep;
       C(L, f);
-      const J = this.writeDraw(e, f, p, b, j), y = e.drawParameters.bindGroup(this.pipelines.drawLayout);
-      y !== n && A.setBindGroup(1, n = y), S.styles !== o && A.setBindGroup(2, o = S.styles);
+      const J = this.writeDraw(e, f, p, b, j), z = e.drawParameters.bindGroup(this.pipelines.drawLayout);
+      z !== n && A.setBindGroup(1, n = z), S.styles !== o && A.setBindGroup(2, o = S.styles);
       const W = f.resident.gpu.buffer;
       W !== a && A.setVertexBuffer(0, a = W), (W !== g || S.indexFormat !== l) && (A.setIndexBuffer(W, S.indexFormat), g = W, l = S.indexFormat), f.stencilReference !== I && A.setStencilReference(I = f.stencilReference);
       const U = S.vertexOffset / 16, O = S.indexOffset / (S.indexFormat === "uint16" ? 2 : 4);
@@ -9168,7 +9168,7 @@ const Jd = [
   "indirect-first-instance",
   "subgroups"
 ];
-async function zd() {
+async function yd() {
   if (!navigator.gpu)
     throw new Error("ImmersiveMap needs WebGPU, which this browser does not provide.");
   const t = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
@@ -9201,7 +9201,7 @@ async function zd() {
     depthStencilFormat: n.depth32Stencil8 ? "depth32float-stencil8" : "depth24plus-stencil8"
   };
 }
-function yd(t, A, e, i) {
+function zd(t, A, e, i) {
   const s = Tt(A, t), n = e.isTransparent ? [0, 0, 0, 0] : e.clearColor, o = e.isTransparent ? [i[0] * i[3], i[1] * i[3], i[2] * i[3], i[3]] : i, a = (g) => n[g] + (o[g] - n[g]) * s;
   return { r: a(0), g: a(1), b: a(2), a: a(3) };
 }
@@ -9326,7 +9326,7 @@ class Nd {
   }
   /** One frame. `makeContext` builds the frame's context once the attachments are known. */
   frame(A, e, i, s) {
-    var y, W, U, O, v, AA;
+    var z, W, U, O, v, AA;
     if (e <= 0 || i <= 0)
       return;
     const { device: n } = this.gpu;
@@ -9336,30 +9336,30 @@ class Nd {
     const a = A.keepsSceneDepth === !0;
     this.sceneDepthViewOfFrame = a ? this.ensureSceneDepth(e, i, A.sampleCount) : void 0, this.drawParameters.reset();
     const g = s(this.frameNumber);
-    for (const z of this.subsystems)
-      (y = z.update) == null || y.call(z, g);
+    for (const y of this.subsystems)
+      (z = y.update) == null || z.call(y, g);
     const l = { ...A.availability };
-    for (const z of this.subsystems)
-      (W = z.contributeAvailability) == null || W.call(z, l);
-    const I = ((U = A.planShadowPasses) == null ? void 0 : U.call(A)) ?? Dd, c = n.createCommandEncoder({ label: "frame" }), { world: M, overlay: m } = this.layerPlan(l), B = this.context.getCurrentTexture(), C = A.sampleCount > 1, w = I.casterPasses, d = m.some((z) => this.subsystems.some((V) => V.layers.includes(z))), h = a && C, u = w.length + (I.groundShadowMask ? 1 : 0) + 1 + (h ? 1 : 0) + (o ? 1 : 0) + (d ? 1 : 0);
+    for (const y of this.subsystems)
+      (W = y.contributeAvailability) == null || W.call(y, l);
+    const I = ((U = A.planShadowPasses) == null ? void 0 : U.call(A)) ?? Dd, c = n.createCommandEncoder({ label: "frame" }), { world: M, overlay: m } = this.layerPlan(l), B = this.context.getCurrentTexture(), C = A.sampleCount > 1, w = I.casterPasses, d = m.some((y) => this.subsystems.some((V) => V.layers.includes(y))), h = a && C, u = w.length + (I.groundShadowMask ? 1 : 0) + 1 + (h ? 1 : 0) + (o ? 1 : 0) + (d ? 1 : 0);
     let E = 0, x = !1;
-    const Y = this.profilesPasses && this.timing !== void 0 ? this.ensureProfiling() : void 0, Z = [], f = (z) => {
+    const Y = this.profilesPasses && this.timing !== void 0 ? this.ensureProfiling() : void 0, Z = [], f = (y) => {
       if (!Y || Z.length >= El)
         return;
-      const V = Z.push(z) - 1;
+      const V = Z.push(y) - 1;
       return { querySet: Y.querySet, beginningOfPassWriteIndex: V * 2, endOfPassWriteIndex: V * 2 + 1 };
-    }, S = (z) => {
+    }, S = (y) => {
       if (Y) {
-        const V = f(z);
+        const V = f(y);
         return V ? { timestampWrites: V } : {};
       }
       return !this.timing || x ? {} : (x = !0, { timestampWrites: { querySet: this.timing.querySet, beginningOfPassWriteIndex: 0 } });
     };
-    for (const z of this.subsystems)
-      (O = z.prepareGPU) == null || O.call(z, g, c, S);
-    const L = (z) => {
+    for (const y of this.subsystems)
+      (O = y.prepareGPU) == null || O.call(y, g, c, S);
+    const L = (y) => {
       if (Y) {
-        const tA = f(z);
+        const tA = f(y);
         return tA ? { timestampWrites: tA } : {};
       }
       const V = E++ === u - 1, _ = !x;
@@ -9371,25 +9371,25 @@ class Nd {
         }
       };
     };
-    for (const z of w) {
+    for (const y of w) {
       const V = c.beginRenderPass({
-        label: z.layer,
+        label: y.layer,
         colorAttachments: [],
-        depthStencilAttachment: { view: z.view, depthClearValue: 1, depthLoadOp: z.keepsDepth === !0 ? "load" : "clear", depthStoreOp: "store" },
-        ...L(z.layer)
+        depthStencilAttachment: { view: y.view, depthClearValue: 1, depthLoadOp: y.keepsDepth === !0 ? "load" : "clear", depthStoreOp: "store" },
+        ...L(y.layer)
       });
-      (v = z.encodeFirst) == null || v.call(z, V), this.encodeLayer(z.layer, V, g), V.end();
+      (v = y.encodeFirst) == null || v.call(y, V), this.encodeLayer(y.layer, V, g), V.end();
     }
     if (I.groundShadowMask) {
-      const z = c.beginRenderPass({
+      const y = c.beginRenderPass({
         label: "ground shadow mask",
         colorAttachments: [{ view: I.groundShadowMask, clearValue: { r: 1, g: 1, b: 1, a: 1 }, loadOp: "clear", storeOp: "store" }],
         ...L("groundShadowMask")
       });
-      this.encodeLayer("groundShadowMask", z, g), z.end();
+      this.encodeLayer("groundShadowMask", y, g), y.end();
     }
-    const p = o ? this.postProcessingTexture.createView() : B.createView(), Q = Y && this.profilesWorldLayers ? M.map((z) => [z]) : [M];
-    if (Q.length === 0 && Q.push([]), Q.forEach((z, V) => {
+    const p = o ? this.postProcessingTexture.createView() : B.createView(), Q = Y && this.profilesWorldLayers ? M.map((y) => [y]) : [M];
+    if (Q.length === 0 && Q.push([]), Q.forEach((y, V) => {
       const _ = V === 0, tA = V === Q.length - 1, uA = c.beginRenderPass({
         label: "world",
         colorAttachments: [
@@ -9411,59 +9411,59 @@ class Nd {
           stencilLoadOp: _ ? "clear" : "load",
           stencilStoreOp: tA ? "discard" : "store"
         },
-        ...L(Q.length > 1 ? `world ${z[0] ?? ""}` : "world")
+        ...L(Q.length > 1 ? `world ${y[0] ?? ""}` : "world")
       });
-      for (const ZA of z)
+      for (const ZA of y)
         this.encodeLayer(ZA, uA, g);
       uA.end();
     }), h) {
-      const z = c.beginRenderPass({
+      const y = c.beginRenderPass({
         label: "scene depth resolve",
         colorAttachments: [],
         depthStencilAttachment: { view: this.sceneDepthViewOfFrame, depthClearValue: 1, depthLoadOp: "clear", depthStoreOp: "store" },
         ...L("sceneDepthResolve")
       }), V = this.sceneDepthResolve;
-      z.setPipeline(V.pipeline), z.setBindGroup(0, V.group), z.draw(3), z.end();
+      y.setPipeline(V.pipeline), y.setBindGroup(0, V.group), y.draw(3), y.end();
     }
     if (o) {
-      const z = c.beginRenderPass({
+      const y = c.beginRenderPass({
         label: "post-processing",
         colorAttachments: [{ view: B.createView(), clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp: "clear", storeOp: "store" }],
         ...L("postProcessing")
       });
-      this.encodeLayer("postProcessing", z, g), z.end();
+      this.encodeLayer("postProcessing", y, g), y.end();
     }
     if (d) {
-      const z = c.beginRenderPass({
+      const y = c.beginRenderPass({
         label: "overlay",
         colorAttachments: [{ view: B.createView(), loadOp: "load", storeOp: "store" }],
         depthStencilAttachment: { view: this.overlayDepthTexture.createView(), depthClearValue: 1, depthLoadOp: "clear", depthStoreOp: "discard" },
         ...L("overlay")
       });
       for (const V of m)
-        this.encodeLayer(V, z, g);
-      z.end();
+        this.encodeLayer(V, y, g);
+      y.end();
     }
     const j = Y ? void 0 : this.timing, b = j !== void 0 && !j.reading, J = Y !== void 0 && !Y.reading && Z.length > 0;
     if (Y && Z.length > 0) {
-      const z = Z.length * 2;
-      c.resolveQuerySet(Y.querySet, 0, z, Y.resolve, 0), J && c.copyBufferToBuffer(Y.resolve, 0, Y.read, 0, z * 8);
+      const y = Z.length * 2;
+      c.resolveQuerySet(Y.querySet, 0, y, Y.resolve, 0), J && c.copyBufferToBuffer(Y.resolve, 0, Y.read, 0, y * 8);
     }
     j && (c.resolveQuerySet(j.querySet, 0, 2, j.resolve, 0), b && c.copyBufferToBuffer(j.resolve, 0, j.read, 0, 16)), this.drawParameters.flush();
-    for (const z of this.flushes)
-      z();
+    for (const y of this.flushes)
+      y();
     n.queue.submit([c.finish()]);
-    for (const z of this.subsystems)
-      (AA = z.frameCommitted) == null || AA.call(z);
+    for (const y of this.subsystems)
+      (AA = y.frameCommitted) == null || AA.call(y);
     j && b && (j.reading = !0, j.read.mapAsync(GPUMapMode.READ).then(() => {
-      const [z, V] = new BigInt64Array(j.read.getMappedRange());
-      this.gpuMilliseconds = Number(V - z) / 1e6, j.read.unmap();
+      const [y, V] = new BigInt64Array(j.read.getMappedRange());
+      this.gpuMilliseconds = Number(V - y) / 1e6, j.read.unmap();
     }).catch(() => {
     }).finally(() => {
       j.reading = !1;
     })), Y && J && (Y.reading = !0, Y.read.mapAsync(GPUMapMode.READ, 0, Z.length * 16).then(() => {
-      const z = new BigInt64Array(Y.read.getMappedRange(0, Z.length * 16));
-      this.passProfile = Z.map((V, _) => ({ name: V, start: Number(z[_ * 2] - z[0]) / 1e6, milliseconds: Number(z[_ * 2 + 1] - z[_ * 2]) / 1e6 })), this.gpuMilliseconds = Number(z[Z.length * 2 - 1] - z[0]) / 1e6, Y.read.unmap();
+      const y = new BigInt64Array(Y.read.getMappedRange(0, Z.length * 16));
+      this.passProfile = Z.map((V, _) => ({ name: V, start: Number(y[_ * 2] - y[0]) / 1e6, milliseconds: Number(y[_ * 2 + 1] - y[_ * 2]) / 1e6 })), this.gpuMilliseconds = Number(y[Z.length * 2 - 1] - y[0]) / 1e6, Y.read.unmap();
     }).catch(() => {
     }).finally(() => {
       Y.reading = !1;
@@ -9672,7 +9672,7 @@ const vt = [0, 0, 0, 0], dt = {
       E[2] + (u[2] - E[2]) * B
     ];
     We(ta, t.projectionView) || ta.fill(0);
-    const Y = d(A.haloRimRadii), Z = Math.max(A.featherPixels * t.verticalFovRadians / Math.max(t.drawableHeightPx, 1), A.minimumRadians), f = A.featherPeakStrength * m, S = (a ? w : 0) * m, L = Math.max(Y, A.minimumRadians), p = Math.max(Y * A.rimCutoffStartWidths, A.minimumRadians), Q = Math.max(Y * A.rimCutoffEndWidths, A.minimumRadians), j = g.isEnabled ? B : 0, b = e.scene.globeLight, J = b.isEnabled ? Ri.sunWorldDirection(b, n) : e.scene.light.direction, y = Math.hypot(J[0], J[1], J[2]), W = y * y > 1e-12 ? [J[0] / y, J[1] / y, J[2] / y] : [0, 0, 1], U = Math.max(Q, Z * 4), O = dt.cornerDirections(ta, s).map((P) => dt.angleAboveEdge(P, c)), v = O.some((P) => P >= -U), AA = Math.max(...O) + A.bandTopMarginRadians, z = d(A.haloGlowRadii) * A.bandTopGlowWidths, V = j > 0 ? Math.max(AA, A.skyGradientRadians * A.bandTopGlowWidths, z) : z, _ = e.scene.space.isTransparent, tA = i === "spherical" && !_ && m > 0, uA = _ ? 0 : m, ZA = v && (tA || j > 0), LA = v && (S > 0 || f > 0);
+    const Y = d(A.haloRimRadii), Z = Math.max(A.featherPixels * t.verticalFovRadians / Math.max(t.drawableHeightPx, 1), A.minimumRadians), f = A.featherPeakStrength * m, S = (a ? w : 0) * m, L = Math.max(Y, A.minimumRadians), p = Math.max(Y * A.rimCutoffStartWidths, A.minimumRadians), Q = Math.max(Y * A.rimCutoffEndWidths, A.minimumRadians), j = g.isEnabled ? B : 0, b = e.scene.globeLight, J = b.isEnabled ? Ri.sunWorldDirection(b, n) : e.scene.light.direction, z = Math.hypot(J[0], J[1], J[2]), W = z * z > 1e-12 ? [J[0] / z, J[1] / z, J[2] / z] : [0, 0, 1], U = Math.max(Q, Z * 4), O = dt.cornerDirections(ta, s).map((P) => dt.angleAboveEdge(P, c)), v = O.some((P) => P >= -U), AA = Math.max(...O) + A.bandTopMarginRadians, y = d(A.haloGlowRadii) * A.bandTopGlowWidths, V = j > 0 ? Math.max(AA, A.skyGradientRadians * A.bandTopGlowWidths, y) : y, _ = e.scene.space.isTransparent, tA = i === "spherical" && !_ && m > 0, uA = _ ? 0 : m, ZA = v && (tA || j > 0), LA = v && (S > 0 || f > 0);
     return {
       edge: c,
       center: I > 0 ? [0, 0, -1 / I] : [0, 0, -1e6],
@@ -11657,7 +11657,7 @@ class ig {
       addressModeU: "clamp-to-edge",
       addressModeV: "clamp-to-edge"
     }), m = n.createSampler({ label: "raster tile mip", minFilter: "linear", magFilter: "linear" }), B = n.createShaderModule({ label: "raster tile bake", code: qr + `
-` + Ch }), C = n.createShaderModule({ label: "raster tile mip", code: wh }), w = [yt, gn, oM, ko, dh].join(`
+` + Ch }), C = n.createShaderModule({ label: "raster tile mip", code: wh }), w = [zt, gn, oM, ko, dh].join(`
 `), d = ln(s, [], EM), h = n.createShaderModule({ label: "raster tile", code: w }), u = n.createShaderModule({ label: "raster tile sphere", code: d }), E = { kTileRasterMipLevelBias: i.mipLevelBias }, x = n.createPipelineLayout({ bindGroupLayouts: [e.frameLayout, e.drawLayout, I] }), Y = n.createPipelineLayout({ bindGroupLayouts: [e.frameLayout, e.drawLayout, I, e.reliefLayout] }), Z = (J) => n.createRenderPipelineAsync({
       label: `raster tile flat${J ? " relief" : ""}`,
       layout: Y,
@@ -11667,12 +11667,12 @@ class ig {
       depthStencil: Io(a, "opaqueFills"),
       multisample: { count: g }
     }), f = (J) => {
-      const y = { kGlobeMorph: J ? 1 : 0, kTileRasterMipLevelBias: i.mipLevelBias };
+      const z = { kGlobeMorph: J ? 1 : 0, kTileRasterMipLevelBias: i.mipLevelBias };
       return n.createRenderPipelineAsync({
         label: `raster tile sphere${J ? " morph" : ""}`,
         layout: x,
-        vertex: { module: u, ...lA(d, "tileRasterSphereVertex", y), buffers: [Fs] },
-        fragment: { module: u, ...lA(d, "tileRasterSphereFragment", y), targets: [{ format: o }] },
+        vertex: { module: u, ...lA(d, "tileRasterSphereVertex", z), buffers: [Fs] },
+        fragment: { module: u, ...lA(d, "tileRasterSphereFragment", z), targets: [{ format: o }] },
         // The far side of the planet goes to back-face culling, as the
         // vector ground's does. The depth is the ground's first rank.
         primitive: { topology: "triangle-list", frontFace: "ccw", cullMode: "back" },
@@ -12121,7 +12121,7 @@ class xM {
   }
 }
 r(xM, "pinnedWorldCoverMaxZoomLevel", Ki);
-const zA = 1e-5, Zh = 11920928955078125e-23, ga = new Float64Array(2);
+const yA = 1e-5, Zh = 11920928955078125e-23, ga = new Float64Array(2);
 class rt {
   constructor(A) {
     r(this, "vertices");
@@ -12161,7 +12161,7 @@ class rt {
    * the square's own.
    */
   intersects(A, e, i, s) {
-    const n = zA, o = this.bounds;
+    const n = yA, o = this.bounds;
     return o.maxX < A - n || o.minX > i + n || o.maxY < e - n || o.minY > s + n || !this.slabXRangeInto(e - n, s + n, ga) ? !1 : ga[0] <= i + n && ga[1] >= A - n;
   }
   /**
@@ -12181,7 +12181,7 @@ class rt {
     if (I.length < 3)
       return;
     const c = new rt(I);
-    if (Math.abs(c.signedArea) > zA)
+    if (Math.abs(c.signedArea) > yA)
       return c;
   }
   /** Where the segment from `a` to `b` crosses the line through `c` and `d`. */
@@ -12259,14 +12259,14 @@ function Lh(t, A) {
 const pl = new Float64Array(16);
 function ph(t, A) {
   const [e, i, s] = t, n = A[0] * e + A[4] * i + A[8] * s + A[12], o = A[1] * e + A[5] * i + A[9] * s + A[13], a = A[2] * e + A[6] * i + A[10] * s + A[14], g = A[3] * e + A[7] * i + A[11] * s + A[15];
-  if (!Number.isFinite(g) || !(Math.abs(g) > zA))
+  if (!Number.isFinite(g) || !(Math.abs(g) > yA))
     return;
   const l = n / g, I = o / g, c = a / g;
   if (!(!Number.isFinite(l) || !Number.isFinite(I) || !Number.isFinite(c)))
     return [l, I, c];
 }
 function sg(t, A, e) {
-  const i = zA * zA;
+  const i = yA * yA;
   for (const s of e) {
     const n = s[0] - t, o = s[1] - A;
     if (n * n + o * o <= i)
@@ -12275,18 +12275,18 @@ function sg(t, A, e) {
   e.push([t, A]);
 }
 function Ql(t, A, e) {
-  Math.abs(t[2] - A) <= zA && sg(t[0], t[1], e);
+  Math.abs(t[2] - A) <= yA && sg(t[0], t[1], e);
 }
 function Qh(t, A, e, i) {
   Ql(t, e, i), Ql(A, e, i);
   const s = t[2] - A[2];
-  if (!(Math.abs(s) > zA))
+  if (!(Math.abs(s) > yA))
     return;
   const n = (t[2] - e) / s;
-  if (!(n >= -zA && n <= 1 + zA))
+  if (!(n >= -yA && n <= 1 + yA))
     return;
   const o = Math.min(Math.max(n, 0), 1), a = t[0] + (A[0] - t[0]) * o, g = t[1] + (A[1] - t[1]) * o, l = t[2] + (A[2] - t[2]) * o;
-  Math.abs(l - e) <= zA && sg(a, g, i);
+  Math.abs(l - e) <= yA && sg(a, g, i);
 }
 function Fh(t) {
   if (t.length < 3)
@@ -12297,7 +12297,7 @@ function Fh(t) {
   const i = A / t.length, s = e / t.length;
   return [...t].sort((n, o) => {
     const a = Math.atan2(n[1] - s, n[0] - i), g = Math.atan2(o[1] - s, o[0] - i);
-    return Math.abs(a - g) > zA ? a - g : Math.abs(n[0] - o[0]) > zA ? n[0] - o[0] : n[1] - o[1];
+    return Math.abs(a - g) > yA ? a - g : Math.abs(n[0] - o[0]) > yA ? n[0] - o[0] : n[1] - o[1];
   });
 }
 function Th(t) {
@@ -12311,7 +12311,7 @@ function Th(t) {
   return A * 0.5;
 }
 const fM = {
-  planeIntersectionTolerance: zA,
+  planeIntersectionTolerance: yA,
   /**
    * The footprint on the plane, or, with `heights`, over the slab between
    * two heights over it, in world units, the plane itself always within the
@@ -12341,7 +12341,7 @@ const fM = {
       for (const g of e)
         g[2] > n && g[2] < o && sg(g[0], g[1], s);
     const a = Fh(i.length > 1 ? fM.convexHull(s) : s);
-    if (!(a.length < 3 || !(Math.abs(Th(a)) > zA)))
+    if (!(a.length < 3 || !(Math.abs(Th(a)) > yA)))
       return new rt(a);
   },
   /** The convex hull of the points (Andrew's monotone chain), without the points on its edges. */
@@ -12404,7 +12404,7 @@ const Bo = {
   compare(t, A) {
     return t.tile.z !== A.tile.z ? A.tile.z - t.tile.z : Fl(t, A);
   }
-}, zh = Object.freeze({
+}, yh = Object.freeze({
   targets: [],
   bands: [],
   linelessTargets: /* @__PURE__ */ new Set(),
@@ -12429,7 +12429,7 @@ const Bo = {
    */
   resolve(t, A, e, i, s, n) {
     if (A < 0)
-      return zh;
+      return yh;
     const o = Math.min(e === void 0 ? 0 : e + 1, A), a = /* @__PURE__ */ new Map(), g = /* @__PURE__ */ new Set(), l = /* @__PURE__ */ new Set(), I = /* @__PURE__ */ new Map(), c = [], M = { count: 0 };
     let m;
     const B = t.renderMapSize / 2 ** A * Gi.edgeInsetInTargetTiles;
@@ -12577,7 +12577,7 @@ function Xt(t, A) {
   const e = t - Math.PI * 0.5, i = A + Math.PI, s = Math.sin(e) * Math.sin(i), n = Math.cos(e), o = Math.sin(e) * Math.cos(i), a = 1 / Math.sqrt(s * s + n * n + o * o);
   return [s * a, n * a, o * a];
 }
-function yh(t, A) {
+function zh(t, A) {
   const e = t[0] * A[0] + t[1] * A[1] + t[2] * A[2];
   return Math.acos(Math.min(Math.max(e, -1), 1));
 }
@@ -12597,7 +12597,7 @@ function Dh(t) {
   ];
   let I = 0;
   for (const c of l)
-    I = Math.max(I, yh(g, c));
+    I = Math.max(I, zh(g, c));
   return { centerDirection: g, radiusScale: 2 * Math.sin(I * 0.5) };
 }
 const li = {
@@ -12646,10 +12646,10 @@ function jl(t, A) {
 function Jl() {
   return { duration: 0, visitedNodeCount: 0, frustumRejectCount: 0, horizonRejectCount: 0, placedTileCount: 0, acceptedWholeSubtreeCount: 0 };
 }
-const wo = Ki, Nh = 3, zl = /* @__PURE__ */ new Map();
+const wo = Ki, Nh = 3, yl = /* @__PURE__ */ new Map();
 function kh(t) {
-  let A = zl.get(t);
-  return A === void 0 && (A = Object.freeze({ size: t }), zl.set(t, A)), A;
+  let A = yl.get(t);
+  return A === void 0 && (A = Object.freeze({ size: t }), yl.set(t, A)), A;
 }
 function Wh(t, A) {
   return Math.min(t, A > 0 ? 4 : 3);
@@ -12758,7 +12758,7 @@ const Oh = {
       metrics: n.metrics
     };
   }
-}, yl = /* @__PURE__ */ new Set(), bl = /* @__PURE__ */ new Map();
+}, zl = /* @__PURE__ */ new Set(), bl = /* @__PURE__ */ new Map();
 function Rh(t, A) {
   if (t === A)
     return !0;
@@ -12791,7 +12791,7 @@ const It = class It {
   }
   resolveVisibleContent(A) {
     const { resolvedPresentation: e, targetZoom: i, diagnostics: s } = A, n = A.rules ?? le.default, o = A.rasterBandMarginShare ?? 0, a = A.cameraState.centerWorldMercator, g = It.makeCenter(a, i);
-    let l, I = [], c = yl, M = yl, m = bl;
+    let l, I = [], c = zl, M = zl, m = bl;
     if (e.renderSurfaceMode === "spherical") {
       const B = Oh.targets(i, {
         eye: A.cameraEye,
@@ -14011,7 +14011,7 @@ class Cu {
     this.isActive = !1, this.lastTickTime = null, this.previousBearing = null;
   }
 }
-const ze = {
+const ye = {
   /** Maximum dt between ticks (guards against a jump after a pause or a background tab). */
   maximumDeltaTime: 0.05,
   /** Threshold in radians below which pitch is considered to have reached the target and follow is released. */
@@ -14023,7 +14023,7 @@ const ze = {
    */
   progressThreshold: 2e-5,
   clampedDeltaTime(t) {
-    return Number.isFinite(t) ? Math.min(Math.max(0, t), ze.maximumDeltaTime) : 0;
+    return Number.isFinite(t) ? Math.min(Math.max(0, t), ye.maximumDeltaTime) : 0;
   },
   /** New pitch for the frame: the remaining gap to the target is multiplied by the half-life factor. */
   steppedPitch(t, A, e, i) {
@@ -14031,7 +14031,7 @@ const ze = {
     return A - (A - t) * n;
   },
   shouldSnap(t, A) {
-    return Math.abs(A - t) <= ze.snapThreshold;
+    return Math.abs(A - t) <= ye.snapThreshold;
   },
   /**
    * True if the actual pitch is stuck (hit the clamp at the ceiling): no
@@ -14039,7 +14039,7 @@ const ze = {
    * does not keep the frames coming forever.
    */
   isStalled(t, A, e) {
-    return Math.abs(t - A) <= ze.progressThreshold && Math.abs(e - t) > ze.snapThreshold;
+    return Math.abs(t - A) <= ye.progressThreshold && Math.abs(e - t) > ye.snapThreshold;
   }
 };
 class wu {
@@ -14084,15 +14084,15 @@ class du {
     const i = this.lastTickTime;
     if (i === null)
       return this.lastTickTime = e, this.previousPitch = A, this.previousStepAskedForProgress = !1, { pitch: A, isActive: !0 };
-    const s = ze.clampedDeltaTime(e - i);
+    const s = ye.clampedDeltaTime(e - i);
     if (this.lastTickTime = e, !(s > 0))
       return { pitch: A, isActive: !0 };
-    if (this.previousPitch !== null && this.previousStepAskedForProgress && ze.isStalled(A, this.previousPitch, this.target))
+    if (this.previousPitch !== null && this.previousStepAskedForProgress && ye.isStalled(A, this.previousPitch, this.target))
       return this.cancel(), { pitch: A, isActive: !1 };
-    if (ze.shouldSnap(A, this.target))
+    if (ye.shouldSnap(A, this.target))
       return this.cancel(), { pitch: this.target, isActive: !1 };
-    const n = ze.steppedPitch(A, this.target, s, this.configuration.halfLife);
-    return this.previousPitch = A, this.previousStepAskedForProgress = Math.abs(n - A) > ze.progressThreshold, { pitch: n, isActive: !0 };
+    const n = ye.steppedPitch(A, this.target, s, this.configuration.halfLife);
+    return this.previousPitch = A, this.previousStepAskedForProgress = Math.abs(n - A) > ye.progressThreshold, { pitch: n, isActive: !0 };
   }
   cancel() {
     this.isActive = !1, this.lastTickTime = null, this.previousPitch = null;
@@ -15122,7 +15122,7 @@ class Ju {
     return this.hasMatrix ? this.matrix : null;
   }
 }
-const zs = {
+const ys = {
   /**
    * Fraction of the transition phase by which the morph geometry fully
    * unfolds into the plane.
@@ -15133,11 +15133,11 @@ const zs = {
    * debug panel's switch) wins over the zoom when given.
    */
   resolve(t, A = Jc, e = null) {
-    const i = 2 ** Math.floor(t.zoom), s = zu(t, A), n = yu(s, e, A.isGlobeEnabled), o = A.globeRadiusScale * i, a = 2 * Math.PI * o, g = T.globePan(t.centerWorldMercator), l = T.flatPan(t.centerWorldMercator), I = {
+    const i = 2 ** Math.floor(t.zoom), s = yu(t, A), n = zu(s, e, A.isGlobeEnabled), o = A.globeRadiusScale * i, a = 2 * Math.PI * o, g = T.globePan(t.centerWorldMercator), l = T.flatPan(t.centerWorldMercator), I = {
       panX: g[0],
       panY: g[1],
       radius: o,
-      transition: zs.geometryTransition(n)
+      transition: ys.geometryTransition(n)
     }, c = n >= 1 ? "flat" : "spherical";
     return {
       semanticWorldState: { cameraState: t },
@@ -15157,14 +15157,14 @@ const zs = {
    * transition (fades, fog, surface selection) stays continuous up to 1.
    */
   geometryTransition(t) {
-    return Math.min(1, Math.max(0, t) / zs.geometryCompletionPhase);
+    return Math.min(1, Math.max(0, t) / ys.geometryCompletionPhase);
   }
 };
-function zu(t, A) {
+function yu(t, A) {
   const e = A.automaticTransitionStartZoom, i = Math.max(Number.MIN_VALUE, A.automaticTransitionSpan);
   return Math.max(0, Math.min(1, (t.zoom - e) / i));
 }
-function yu(t, A, e) {
+function zu(t, A, e) {
   switch (A) {
     case null:
       return e ? t : 1;
@@ -15177,7 +15177,7 @@ function yu(t, A, e) {
 const lg = {
   /** @param transition globe-to-plane phase: 0 is globe, 1 is plane. */
   surfaceScale(t, A) {
-    const e = zs.geometryTransition(A), i = Math.max(Math.cos(t), 1e-6);
+    const e = ys.geometryTransition(A), i = Math.max(Math.cos(t), 1e-6);
     return i + e * e * (1 - i);
   }
 }, ut = {
@@ -15755,7 +15755,7 @@ class Wu {
     A.eye = [-B * m, B * M, C], A.up = [-w * m, w * M, d], A.recalculateMatrix(), this.needsUpdate = !1, this.appliedTransition = i;
   }
 }
-Object.freeze({ projectionView: yA(), view: yA(), screen: yA() });
+Object.freeze({ projectionView: zA(), view: zA(), screen: zA() });
 class Uu {
   constructor(A) {
     r(this, "camera", new Pi());
@@ -15799,7 +15799,7 @@ class Uu {
     const s = this.screenMatrix.get();
     if (s === null)
       return this.skipReason = "missingScreenMatrix", null;
-    const n = this.cameraStateController.cameraState, o = i ?? zs.resolve(n, this.presentationSettings).presentationState.transition;
+    const n = this.cameraStateController.cameraState, o = i ?? ys.resolve(n, this.presentationSettings).presentationState.transition;
     this.cameraPoseResolver.updateIfNeeded(this.camera, n, o);
     const a = this.camera.cameraMatrix, g = this.camera.view;
     if (a === null || g === null)
@@ -15935,7 +15935,7 @@ class Vu {
     this.settings = A;
   }
   resolve(A) {
-    return zs.resolve(A, this.settings.presentation, this.forcedRenderSurfaceMode);
+    return ys.resolve(A, this.settings.presentation, this.forcedRenderSurfaceMode);
   }
   /**
    * The debug panel's switch: forces the surface opposite the one shown, and
@@ -16371,7 +16371,7 @@ const ci = {
     this.frameValue = { x: He.leadingInset, y: e - He.bottomInset - s, width: i, height: s };
   }
   contains(A) {
-    return this.isEnabled && zM(this.frameValue, A);
+    return this.isEnabled && yM(this.frameValue, A);
   }
   /** Takes the zone's value from the camera, so a drag starts where the camera is. */
   syncValue(A, e, i) {
@@ -16427,7 +16427,7 @@ const ve = class ve {
     };
   }
   contains(A) {
-    return this.isEnabled && zM(this.frameValue, A);
+    return this.isEnabled && yM(this.frameValue, A);
   }
   began() {
     this.setControlInteractionActive(!0);
@@ -16473,7 +16473,7 @@ class _u {
     this.pitchZone.syncValue(A, e, i);
   }
 }
-function zM(t, A) {
+function yM(t, A) {
   return A[0] >= t.x && A[0] < t.x + t.width && A[1] >= t.y && A[1] < t.y + t.height;
 }
 const _l = 8, pn = {
@@ -16518,7 +16518,7 @@ const _l = 8, pn = {
   transition(t, A) {
     return (A & (ne.ended | ne.cancelled)) !== 0 ? "end" : (A & ne.began) !== 0 || (t & ne.began) !== 0 ? "begin" : (t & (ne.ended | ne.cancelled)) !== 0 ? "end" : null;
   }
-}, AI = 8, $u = 3, eI = 0.3, AE = 40, eE = 0.5, yM = 0.1, iE = 6, tE = 0.06, iI = 0.15, lr = 150, sE = 9, nE = 100, oE = 1, aE = 0.35;
+}, AI = 8, $u = 3, eI = 0.3, AE = 40, eE = 0.5, zM = 0.1, iE = 6, tE = 0.06, iI = 0.15, lr = 150, sE = 9, nE = 100, oE = 1, aE = 0.35;
 class rE {
   constructor(A) {
     r(this, "surface");
@@ -16607,7 +16607,7 @@ class rE {
     if (e === void 0)
       return;
     const i = this.pointOf(A), s = this.now();
-    for (e.position = i, e.samples.push([s, i[0], i[1]]); e.samples.length > 2 && s - e.samples[0][0] > yM; )
+    for (e.position = i, e.samples.push([s, i[0], i[1]]); e.samples.length > 2 && s - e.samples[0][0] > zM; )
       e.samples.shift();
     if (e.role === "zone") {
       this.moveZonePointer(e);
@@ -16897,7 +16897,7 @@ function gE(t) {
   return A;
 }
 function sI(t, A) {
-  const e = t.samples.filter((o) => A - o[0] <= yM), i = e[0], s = e[e.length - 1];
+  const e = t.samples.filter((o) => A - o[0] <= zM), i = e[0], s = e[e.length - 1];
   if (i === void 0 || s === void 0 || e.length < 2)
     return [0, 0];
   const n = s[0] - i[0];
@@ -17832,7 +17832,7 @@ class Ig {
       fragment: { module: o, entryPoint: u, targets: [{ format: A.colorFormat, blend: nI }] },
       primitive: { topology: "triangle-list" },
       depthStencil: { format: "depth32float", depthWriteEnabled: !0, depthCompare: "less-equal" }
-    }).then((E) => [d, E]), l = e.createShaderModule({ label: "surface labels", code: ln(A.clipDistances, [yt], EE) }), I = e.createPipelineLayout({ label: "surface labels", bindGroupLayouts: [A.tileFrameLayout, A.drawLayout, s] }), c = (d, h) => e.createRenderPipelineAsync({
+    }).then((E) => [d, E]), l = e.createShaderModule({ label: "surface labels", code: ln(A.clipDistances, [zt], EE) }), I = e.createPipelineLayout({ label: "surface labels", bindGroupLayouts: [A.tileFrameLayout, A.drawLayout, s] }), c = (d, h) => e.createRenderPipelineAsync({
       label: `surface labels ${d}`,
       layout: I,
       vertex: { module: l, entryPoint: h, buffers: [xE] },
@@ -18491,10 +18491,10 @@ function LE(t, A, e, i) {
       let b = h === void 0 ? 0 : h(B[Y * 3], B[Y * 3 + 1], B[Y * 3 + 2], L, p);
       const J = t.roofHeight[Y];
       t.liftsToRoof[Y] !== 0 && J > 0 && !d.isEmpty && (Qn.z = B[Y * 3], Qn.x = B[Y * 3 + 1], Qn.y = B[Y * 3 + 2], b += J * S / 4096 * d.rise(Qn, L, p));
-      const y = n[0] * Q + n[4] * j + n[8] * b + n[12], W = n[1] * Q + n[5] * j + n[9] * b + n[13], U = n[3] * Q + n[7] * j + n[11] * b + n[15];
+      const z = n[0] * Q + n[4] * j + n[8] * b + n[12], W = n[1] * Q + n[5] * j + n[9] * b + n[13], U = n[3] * Q + n[7] * j + n[11] * b + n[15];
       if (U > 0) {
         const O = 1 / U;
-        c[Z + s.screenX] = (y * O + 1) * l, c[Z + s.screenY] = (W * O + 1) * I, c[Z + s.visible] = 1, i.horizonVisible[Y] = U <= a ? 1 : 0;
+        c[Z + s.screenX] = (z * O + 1) * l, c[Z + s.screenY] = (W * O + 1) * I, c[Z + s.visible] = 1, i.horizonVisible[Y] = U <= a ? 1 : 0;
       } else
         c[Z + s.screenX] = 0, c[Z + s.screenY] = 0, c[Z + s.visible] = 0, i.horizonVisible[Y] = 0;
       i.perspectiveScales[Y] = NM(o, g, U), i.anchors[Y * 3] = Q, i.anchors[Y * 3 + 1] = j, i.anchors[Y * 3 + 2] = b;
@@ -18507,21 +18507,21 @@ function pE(t, A, e, i) {
   for (let x = 0; x + 1 < e.length; x += 2) {
     const Y = Math.min(e[x + 1], E);
     for (let Z = e[x]; Z < Y; Z++) {
-      const f = Z * s.floats, S = 2 ** u[Z * 3], L = (u[Z * 3 + 1] + h[Z * 2]) / S, p = (u[Z * 3 + 2] + h[Z * 2 + 1]) / S, Q = Math.PI * (1 - 2 * p), j = Math.tanh(Q), b = 1 / Math.cosh(Q), J = L * 2 * Math.PI - Math.PI, y = b * Math.sin(J), W = j, U = b * Math.cos(J), O = o[0] * y + o[4] * W + o[8] * U + o[12], v = o[1] * y + o[5] * W + o[9] * U + o[13], AA = o[2] * y + o[6] * W + o[10] * U + o[14];
-      let z = O, V = v, _ = AA, tA = 1;
+      const f = Z * s.floats, S = 2 ** u[Z * 3], L = (u[Z * 3 + 1] + h[Z * 2]) / S, p = (u[Z * 3 + 2] + h[Z * 2 + 1]) / S, Q = Math.PI * (1 - 2 * p), j = Math.tanh(Q), b = 1 / Math.cosh(Q), J = L * 2 * Math.PI - Math.PI, z = b * Math.sin(J), W = j, U = b * Math.cos(J), O = o[0] * z + o[4] * W + o[8] * U + o[12], v = o[1] * z + o[5] * W + o[9] * U + o[13], AA = o[2] * z + o[6] * W + o[10] * U + o[14];
+      let y = O, V = v, _ = AA, tA = 1;
       if (a > 0) {
         const P = Math.min(Math.max(1 - 2 * p, -1), 1), mA = T.wrap(L * C - w + l * w, C), di = (P - A.panMercatorY) * w;
-        Or(Fn, O, v, AA, mA, di, a, g), z = Fn[0], V = Fn[1], _ = Fn[2], tA = Ur(O, v, AA, mA, di, a, g);
+        Or(Fn, O, v, AA, mA, di, a, g), y = Fn[0], V = Fn[1], _ = Fn[2], tA = Ur(O, v, AA, mA, di, a, g);
       }
-      const uA = n[0] * z + n[4] * V + n[8] * _ + n[12], ZA = n[1] * z + n[5] * V + n[9] * _ + n[13], LA = n[3] * z + n[7] * V + n[11] * _ + n[15];
+      const uA = n[0] * y + n[4] * V + n[8] * _ + n[12], ZA = n[1] * y + n[5] * V + n[9] * _ + n[13], LA = n[3] * y + n[7] * V + n[11] * _ + n[15];
       if (LA > 0 && tA >= 0) {
         const P = 1 / LA;
         d[f + s.screenX] = (uA * P + 1) * m, d[f + s.screenY] = (ZA * P + 1) * B, d[f + s.visible] = 1;
-        const mA = Rr(z, V, _, A.eye, a, g) >= 0.5;
+        const mA = Rr(y, V, _, A.eye, a, g) >= 0.5;
         i.horizonVisible[Z] = mA && LA <= c ? 1 : 0;
       } else
         d[f + s.screenX] = 0, d[f + s.screenY] = 0, d[f + s.visible] = 0, i.horizonVisible[Z] = 0;
-      i.perspectiveScales[Z] = NM(I, M, LA), i.anchors[Z * 3] = z, i.anchors[Z * 3 + 1] = V, i.anchors[Z * 3 + 2] = _;
+      i.perspectiveScales[Z] = NM(I, M, LA), i.anchors[Z * 3] = y, i.anchors[Z * 3 + 1] = V, i.anchors[Z * 3 + 2] = _;
     }
   }
 }
@@ -18606,7 +18606,7 @@ class JE {
     this.placements.fill(0), this.extrapolated.fill(0);
   }
 }
-class zE {
+class yE {
   constructor() {
     r(this, "screenPoints", new Float64Array(0));
     r(this, "visible", new Uint8Array(0));
@@ -18677,17 +18677,17 @@ const Ms = {
       }
       const Z = x >= 2 ? I[x - 1] : 0, f = t.pathInstanceRanges[u * 2], S = t.pathInstanceRanges[u * 2 + 1];
       for (let L = f; L < S; L++) {
-        const p = t.anchors[L * 3 + 2], Q = t.instanceGlyphRanges[L * 2], j = t.instanceGlyphRanges[L * 2 + 1], b = (B[Q * C.floats + C.labelWidth] * 0.5 + jE) * i, J = A[p * 2], y = A[p * 2 + 1], W = J < -b || y < -b || J > o + b || y > a + b;
+        const p = t.anchors[L * 3 + 2], Q = t.instanceGlyphRanges[L * 2], j = t.instanceGlyphRanges[L * 2 + 1], b = (B[Q * C.floats + C.labelWidth] * 0.5 + jE) * i, J = A[p * 2], z = A[p * 2 + 1], W = J < -b || z < -b || J > o + b || z > a + b;
         if (!Y || p < 0 || p * 2 >= A.length || e[p] === 0 || j <= Q || W) {
           for (let q = Q; q < j; q++)
             c[q * 4] = c[q * 4 + 1] = c[q * 4 + 2] = c[q * 4 + 3] = 0, M[q] = 0;
           continue;
         }
-        const U = Math.min(Math.max(t.anchors[L * 3 + 1], 0), x - 2), O = (E + U) * 2, v = A[O + 2] - A[O], AA = A[O + 3] - A[O + 1], z = I[U + 1] - I[U];
+        const U = Math.min(Math.max(t.anchors[L * 3 + 1], 0), x - 2), O = (E + U) * 2, v = A[O + 2] - A[O], AA = A[O + 3] - A[O + 1], y = I[U + 1] - I[U];
         let V = 0;
-        if (z > 0) {
+        if (y > 0) {
           const q = A[p * 2] - A[O], Dt = A[p * 2 + 1] - A[O + 1];
-          V = Math.min(Math.max((q * v + Dt * AA) / z, 0), z);
+          V = Math.min(Math.max((q * v + Dt * AA) / y, 0), y);
         }
         const _ = I[U] + V, tA = B[Q * C.floats + C.labelWidth], uA = tA * 0.5 * i;
         w(E, x, Math.min(Math.max(_ + uA, 0), Z), d), w(E, x, Math.min(Math.max(_ - uA, 0), Z), h);
@@ -18766,7 +18766,7 @@ function II(t, A, e) {
   }
   return i - 1;
 }
-class yE {
+class zE {
   constructor() {
     r(this, "count", 0);
     r(this, "centers", new Float32Array(512));
@@ -18926,13 +18926,13 @@ class WE {
         b += Math.hypot((j[P * 2] - j[P * 2 - 2]) / g, (j[P * 2 + 1] - j[P * 2 - 1]) / g);
       if (!(b > 0))
         continue;
-      const J = i.glyphBoundRanges[p], y = J.start + J.count;
-      if (J.count <= 0 || J.start < 0 || y > i.glyphBounds.length)
+      const J = i.glyphBoundRanges[p], z = J.start + J.count;
+      if (J.count <= 0 || J.start < 0 || z > i.glyphBounds.length)
         continue;
-      const W = i.glyphBounds.slice(J.start, y), U = i.anchorRanges[p], O = U.start + U.count;
+      const W = i.glyphBounds.slice(J.start, z), U = i.anchorRanges[p], O = U.start + U.count;
       if (U.count <= 0 || U.start < 0 || O > i.anchors.length)
         continue;
-      const v = m.length / 2, AA = new Qs().combine(A.ownerKey.tile.x).combine(A.ownerKey.tile.y).combine(A.ownerKey.tile.z).combine(A.ownerKey.worldWrap).combine(UE(i.pathLabels[p].key)).combine(p).combine(L.start).combine(L.count).finalize(), z = i.sizes[p], V = o === void 0 ? void 0 : kE(j, o), _ = M.length / 2;
+      const v = m.length / 2, AA = new Qs().combine(A.ownerKey.tile.x).combine(A.ownerKey.tile.y).combine(A.ownerKey.tile.z).combine(A.ownerKey.worldWrap).combine(UE(i.pathLabels[p].key)).combine(p).combine(L.start).combine(L.count).finalize(), y = i.sizes[p], V = o === void 0 ? void 0 : kE(j, o), _ = M.length / 2;
       M.push(...(V == null ? void 0 : V.points) ?? j), m.push(_, M.length / 2);
       let tA = 1 / 0, uA = -1 / 0;
       for (const P of W)
@@ -18940,14 +18940,14 @@ class WE {
       const ZA = (tA + uA) * 0.5, LA = l.length;
       for (let P = U.start; P < O; P++) {
         const mA = i.anchors[P], di = l.length;
-        l.push(OE(AA, mA.anchorOrdinal)), I.push(z[0], z[1]), c.push(mA.anchorOrdinal);
+        l.push(OE(AA, mA.anchorOrdinal)), I.push(y[0], y[1]), c.push(mA.anchorOrdinal);
         const In = V === void 0 ? mA.segmentIndex : NE(V, mA);
         E.push([v, In, u.length / 2]);
         const xe = Math.min(Math.max(mA.segmentIndex, 0), L.count - 2), bt = Math.min(Math.max(mA.t, 0), 1);
         u.push(j[xe * 2] + (j[xe * 2 + 2] - j[xe * 2]) * bt, j[xe * 2 + 1] + (j[xe * 2 + 3] - j[xe * 2 + 1]) * bt);
         const cn = d.length;
         for (const q of W)
-          w.push((q[0] + q[1]) * 0.5, ZA, z[0], z[0]), d.push(di), h.push((q[1] - q[0]) * 0.5, (q[3] - q[2]) * 0.5);
+          w.push((q[0] + q[1]) * 0.5, ZA, y[0], y[0]), d.push(di), h.push((q[1] - q[0]) * 0.5, (q[3] - q[2]) * 0.5);
         C.push(cn, d.length);
       }
       B.push(LA, l.length);
@@ -19091,8 +19091,8 @@ class XE {
     /** Per road record: whether it is near enough for its names. */
     r(this, "roadRecordActive", []);
     r(this, "roadItems", new QE());
-    r(this, "roadBoxes", new yE());
-    r(this, "roadScratch", new zE());
+    r(this, "roadBoxes", new zE());
+    r(this, "roadScratch", new yE());
     /** The base labels' state for the draw: whether any fade is in flight this frame. */
     r(this, "baseFadesActive", !1);
     /** The road glyph records of the frame (`RoadGlyphRecordLayout`), `roadGlyphCount` of them. */
@@ -19854,7 +19854,7 @@ fn groundShadowMaskFragment(@builtin(position) position: vec4f) -> @location(0) 
     let mapVisibility = shadowMapVisibility(shadow, shadowMap, shadowSampler, worldPosition, vec3f(0.0), blend);
     return vec4f(1.0 - (1.0 - mapVisibility) * strength * blend.y);
 }
-`, ys = {
+`, zs = {
   format: "r8unorm",
   /**
    * Mask pixels per drawable pixel. The shadow edge is already a two-texel
@@ -19866,7 +19866,7 @@ fn groundShadowMaskFragment(@builtin(position) position: vec4f) -> @location(0) 
   resolutionScale: 0.4,
   /** The mask's size for a drawable, rounded up so the mask always covers it. */
   maskSize(t, A) {
-    return [Math.ceil(t * ys.resolutionScale), Math.ceil(A * ys.resolutionScale)];
+    return [Math.ceil(t * zs.resolutionScale), Math.ceil(A * zs.resolutionScale)];
   }
 }, UM = {
   byteLength: 80
@@ -19902,7 +19902,7 @@ class gY {
       label: "ground shadow mask",
       layout: A.createPipelineLayout({ bindGroupLayouts: [this.layout] }),
       vertex: { module: i, entryPoint: "groundShadowMaskVertex" },
-      fragment: { module: i, entryPoint: "groundShadowMaskFragment", targets: [{ format: ys.format }] },
+      fragment: { module: i, entryPoint: "groundShadowMaskFragment", targets: [{ format: zs.format }] },
       primitive: { topology: "triangle-list" }
     });
   }
@@ -19975,7 +19975,7 @@ const lY = Object.freeze(["near", "far"]), KA = {
     return t.farLightProjectionView ?? t.lightProjectionView;
   }
 }, Mr = Object.freeze({
-  worldToShadowTexture: yA(),
+  worldToShadowTexture: zA(),
   tentSpread: 1,
   fadeStartDistance: 0,
   depthBias: 0,
@@ -20626,7 +20626,7 @@ class hY {
   }
   /** The mask for a drawable of this size (`GroundShadowMask.maskSize`), made again when it differs. Returns its view and size. */
   ensureGroundShadowMask(A, e) {
-    const [i, s] = ys.maskSize(A, e);
+    const [i, s] = zs.maskSize(A, e);
     return (this.maskIsFallback || this.mask.width !== i || this.mask.height !== s) && (this.mask.destroy(), [this.mask, this.maskView] = this.makeMask(i, s), this.maskIsFallback = !1, this.generationCounter++), { view: this.maskView, width: i, height: s };
   }
   /**
@@ -20659,7 +20659,7 @@ class hY {
     const i = this.device.createTexture({
       label: "ground shadow mask",
       size: [A, e],
-      format: ys.format,
+      format: zs.format,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
     });
     return [i, i.createView()];
@@ -21191,7 +21191,7 @@ class pY {
     return this.built;
   }
   descriptors() {
-    const { device: A, colorFormat: e, depthStencilFormat: i, sampleCount: s } = this.context, n = [gn, yt, VM].join(`
+    const { device: A, colorFormat: e, depthStencilFormat: i, sampleCount: s } = this.context, n = [gn, zt, VM].join(`
 `), o = n + `
 ` + EY, a = A.createShaderModule({ label: "tile extruded", code: o }), g = A.createShaderModule({ label: "trees", code: n + `
 ` + YY }), l = A.createPipelineLayout({ bindGroupLayouts: [this.standingFrameLayout, this.drawLayout, this.extrudedStylesLayout, this.liftsLayout] }), I = A.createPipelineLayout({ bindGroupLayouts: [this.emptyLayout, this.drawLayout, this.emptyLayout, this.liftsLayout] }), c = A.createPipelineLayout({ bindGroupLayouts: [this.standingFrameLayout, this.treeTileLayout] }), M = { count: s }, m = (C) => ({
@@ -21515,7 +21515,7 @@ const Fo = class Fo {
 /** A coverage with nothing drawn, every rise 0. Never added to. */
 r(Fo, "none", new Fo());
 let Br = Fo;
-function zY(t) {
+function yY(t) {
   const A = _r(t.textRunCounts), e = (l) => t.spans[A.findIndex((I) => I.kind === l)], i = e("extrudedVertices"), s = e("extrudedIndices"), n = e("extrudedStyles"), o = e("treeInstances");
   let a;
   if (i && s && n && s.elementCount > 0 && n.byteCount >= 16 && i.byteCount === i.elementCount * Mg) {
@@ -21537,7 +21537,7 @@ function zY(t) {
 const SI = /* @__PURE__ */ new WeakMap();
 function ms(t) {
   let A = SI.get(t);
-  return A || (A = zY(t.meta), SI.set(t, A)), A;
+  return A || (A = yY(t.meta), SI.set(t, A)), A;
 }
 function Cr(t, A, e, i, s, n, o) {
   if (!o)
@@ -21552,7 +21552,7 @@ function Cr(t, A, e, i, s, n, o) {
   }
   return g & _i;
 }
-function yY(t, A, e, i, s, n, o, a) {
+function zY(t, A, e, i, s, n, o, a) {
   const g = (c, M, m) => {
     const B = Math.max(Math.abs(c - n), Math.abs(c + m - n)), C = Math.max(Math.abs(M - o), Math.abs(M + m - o));
     return B * B + C * C <= a * a;
@@ -22163,7 +22163,7 @@ class qY {
         continue;
       const u = m.resident.tile, [E, x, Y] = T.flatTileOriginAndSize(u.x, u.y, u.z, m.placeIn.worldWrap, a.pan, a.renderMapSize), Z = B.quarterIndexStarts.length === 5;
       let f = w === void 0 ? Cr(c, E, x, Y, g, m.quarters, Z) : m.quarters;
-      if (M !== void 0 && w === void 0 && (f = yY(E, x, Y, f, Z, M.x, M.y, M.radius)), f === 0)
+      if (M !== void 0 && w === void 0 && (f = zY(E, x, Y, f, Z, M.x, M.y, M.radius)), f === 0)
         continue;
       w !== void 0 !== o && (o = w !== void 0, A.setPipeline(o ? this.pipelines.casterRelief : this.pipelines.caster)), A.setBindGroup(3, w ?? this.emptyLifts);
       const S = this.writeRecord(e, m, C, i), L = e.drawParameters.bindGroup(this.pipelines.drawLayout);
@@ -22356,7 +22356,7 @@ class ex {
     return new Uint8Array(n.getMappedRange(), 0, s.byteCount).set(new Uint8Array(i, 0, s.byteCount)), n.unmap(), this.loaded = { contents: s, buffer: n }, !0;
   }
 }
-class zi {
+class yi {
   constructor(A, e, i, s, n, o = void 0) {
     r(this, "terrain");
     r(this, "originX");
@@ -22380,8 +22380,8 @@ class zi {
   }
   /** The same heights over `part`, a square inside the ground tile `tile` this relief is over. */
   narrowed(A, e) {
-    const i = zi.placement(A, e);
-    return new zi(this.terrain, this.originX + i.originX * this.scale, this.originY + i.originY * this.scale, this.scale * i.scale, this.strength, this.occlusion);
+    const i = yi.placement(A, e);
+    return new yi(this.terrain, this.originX + i.originX * this.scale, this.originY + i.originY * this.scale, this.scale * i.scale, this.strength, this.occlusion);
   }
   /** Where a tile lies in the terrain tile `source` over it. */
   static placement(A, e) {
@@ -22439,8 +22439,8 @@ class ix {
     const i = this.store.terrain(e);
     if (i === void 0)
       return;
-    const s = zi.placement(A, e);
-    return new zi(i.terrain, s.originX, s.originY, s.scale, this.strength, i.occlusion);
+    const s = yi.placement(A, e);
+    return new yi(i.terrain, s.originX, s.originY, s.scale, this.strength, i.occlusion);
   }
   /**
    * The relief under a tile out of the terrain of `terrainZoom` over it, or
@@ -22453,8 +22453,8 @@ class ix {
     const s = this.store.finestTerrain(A, e, i);
     if (s === void 0)
       return;
-    const n = zi.placement(A, s.source);
-    return new zi(s.terrain, n.originX, n.originY, n.scale, this.strength);
+    const n = yi.placement(A, s.source);
+    return new yi(s.terrain, n.originX, n.originY, n.scale, this.strength);
   }
   /** The relief under a point of the world, from the terrain tile of `zoom` that holds it or the finest coarser one in, with the point's uv in the tile. */
   reliefAt(A, e) {
@@ -23431,7 +23431,7 @@ function cx(t) {
   const A = t - Math.floor(t);
   return A < 0 ? A + 1 : A;
 }
-const zn = (t) => Math.min(Math.max(t, 0), 1), gt = {
+const yn = (t) => Math.min(Math.max(t, 0), 1), gt = {
   none: Object.freeze({
     light: [0, 0, 1, 0],
     shadowColor: [0, 0, 0, 0],
@@ -23443,7 +23443,7 @@ const zn = (t) => Math.min(Math.max(t, 0), 1), gt = {
   minimumLightZ: 0.01,
   /** The amounts, each clamped to 0 to 1. */
   amounts(t, A, e) {
-    return { intensity: zn(t), shadow: zn(A), highlight: zn(e) };
+    return { intensity: yn(t), shadow: yn(A), highlight: yn(e) };
   },
   /** The amounts a style shades by. */
   amountsOfStyle(t) {
@@ -23464,7 +23464,7 @@ const zn = (t) => Math.min(Math.max(t, 0), 1), gt = {
       return gt.none;
     let { intensity: n, shadowColor: o, highlightColor: a } = t.style;
     t.amounts !== void 0 && (n = t.amounts.intensity, o = [o[0], o[1], o[2], t.amounts.shadow], a = [a[0], a[1], a[2], t.amounts.highlight]);
-    const g = ((x = t.fade) == null ? void 0 : x.startMeters) ?? t.style.fadeStartMeters, l = ((Y = t.fade) == null ? void 0 : Y.endMeters) ?? t.style.fadeEndMeters, I = Math.sqrt(s), c = [Math.fround(A / I), Math.fround(e / I), Math.fround(i / I)], M = Math.max(0, n) * zn(t.risenShare), m = t.unitsPerMetre;
+    const g = ((x = t.fade) == null ? void 0 : x.startMeters) ?? t.style.fadeStartMeters, l = ((Y = t.fade) == null ? void 0 : Y.endMeters) ?? t.style.fadeEndMeters, I = Math.sqrt(s), c = [Math.fround(A / I), Math.fround(e / I), Math.fround(i / I)], M = Math.max(0, n) * yn(t.risenShare), m = t.unitsPerMetre;
     if (!(c[2] > gt.minimumLightZ) || !(M > 0) || !c.every(Number.isFinite) || !Number.isFinite(m) || !(m > 0))
       return gt.none;
     const B = Math.max(0, ee(g, t.zoom, "geometric")), C = Math.max(B, ee(l, t.zoom, "geometric")), w = B * m, d = Math.max((C - B) * m, Math.max(w, m) * 1e-3), [h, u, E] = t.cameraEye;
@@ -23483,7 +23483,7 @@ class Mx {
    * collapse bounds the tiles the relief is drawn on (`fromTileZoom`). The
    * store's tiles are computed with the occlusion's key from here on.
    */
-  constructor(A, e, i = 15, s = yr, n = yo) {
+  constructor(A, e, i = 15, s = zr, n = zo) {
     r(this, "store");
     r(this, "configuredExaggeration");
     r(this, "appearZoom");
@@ -23524,7 +23524,7 @@ class Mx {
     r(this, "active", !0);
     r(this, "datumMetres", 0);
     r(this, "settledFrame");
-    this.store = A, this.configuredExaggeration = e.exaggeration, this.appearZoom = e.appearZoom, this.collapseZoom = e.collapseZoom, this.collapsesWhereTerrainIsMissing = e.collapsesWhereTerrainIsMissing, this.deepestTileZoom = i, this.transitionSeconds = Math.max(e.transitionSeconds, 0), this.fromTileZoom = yc(e, i), this.cameraClearanceMetres = Math.max(0, e.cameraClearanceMetres), this.hillshadeStyle = s, this.occlusionStyle = n, this.occlusion = n, this.strength = e.exaggeration, A.setOcclusionKey(Mi.ofStyle(n)), this.resolveHillshade(), this.publishDemandFrame();
+    this.store = A, this.configuredExaggeration = e.exaggeration, this.appearZoom = e.appearZoom, this.collapseZoom = e.collapseZoom, this.collapsesWhereTerrainIsMissing = e.collapsesWhereTerrainIsMissing, this.deepestTileZoom = i, this.transitionSeconds = Math.max(e.transitionSeconds, 0), this.fromTileZoom = zc(e, i), this.cameraClearanceMetres = Math.max(0, e.cameraClearanceMetres), this.hillshadeStyle = s, this.occlusionStyle = n, this.occlusion = n, this.strength = e.exaggeration, A.setOcclusionKey(Mi.ofStyle(n)), this.resolveHillshade(), this.publishDemandFrame();
   }
   /** The relief as the frame draws it, settled by the setters before it. */
   get frame() {
@@ -23608,7 +23608,7 @@ class Mx {
    * at the same rise.
    */
   setWorldScale(A, e) {
-    this.worldUnitsPerMetre = zt.worldUnitsPerMetre(A[1], e), this.resolveHillshade(), this.changed();
+    this.worldUnitsPerMetre = yt.worldUnitsPerMetre(A[1], e), this.resolveHillshade(), this.changed();
   }
   /**
    * The map style's shading and occlusion, applied live with a new style:
@@ -23999,7 +23999,7 @@ fn groundReliefShadowVertex(@location(0) localPosition: vec2f, @builtin(instance
       if (u === void 0 && !C.has(h)) {
         const b = d.displacement === void 0 ? void 0 : a.relief(d.tile, d.displacement);
         if (b !== void 0) {
-          const J = bo(this.groundFlattening, d.tile.z), y = m.get(F(d.tile)), W = y === void 0 ? Math.min(J, Mt.maximumVectorCells) : Ae.reliefCells(J, b, y);
+          const J = bo(this.groundFlattening, d.tile.z), z = m.get(F(d.tile)), W = z === void 0 ? Math.min(J, Mt.maximumVectorCells) : Ae.reliefCells(J, b, z);
           u = { relief: b, cells: W };
         }
         C.set(h, u);
@@ -24107,14 +24107,14 @@ function Ex(t) {
     A.push(e), e = Math.max(e + 1, Math.floor(NA(e * 1.25)));
   return A;
 }
-const zI = (t) => Math.sign(t) * Math.round(Math.abs(t));
+const yI = (t) => Math.sign(t) * Math.round(Math.abs(t));
 function Yx(t, A) {
   const e = Ex(NA(A.radiusMetres / t)), i = new ArrayBuffer(Math.max(1, A.directions * e.length) * 16), s = new Int32Array(i), n = new Float32Array(i);
   let o = 0;
   for (let a = 0; a < A.directions; a++) {
     const g = NA(NA(NA(2 * hx) * a) / A.directions), l = NA(Math.cos(g)), I = NA(Math.sin(g));
     for (const c of e)
-      s[o * 4] = zI(NA(l * c)), s[o * 4 + 1] = zI(NA(I * c)), n[o * 4 + 2] = NA(1 / NA(c * t)), o++;
+      s[o * 4] = yI(NA(l * c)), s[o * 4 + 1] = yI(NA(I * c)), n[o * 4 + 2] = NA(1 / NA(c * t)), o++;
   }
   return { data: i, stepCount: e.length };
 }
@@ -24800,7 +24800,7 @@ fn layerPointFragment(in: LayerPointFragmentIn) -> @location(0) vec4f {
     color.a *= covered;
     return vec4f(layerShade(color.rgb, in.worldPosition, in.sphereNormal), color.a);
 }
-`, Qx = { flat: 0, sphere: 1, morph: 2 }, XM = [0, 1, 5, 5, 1, 6, 0, 2, 4, 0, 4, 3, 0, 3, 1, 5, 7, 9, 5, 9, 8, 5, 8, 6], yI = 16, Fx = {
+`, Qx = { flat: 0, sphere: 1, morph: 2 }, XM = [0, 1, 5, 5, 1, 6, 0, 2, 4, 0, 4, 3, 0, 3, 1, 5, 7, 9, 5, 9, 8, 5, 8, 6], zI = 16, Fx = {
   depth: 1 - Jt.appLayersRank * Jt.layerDepthStep
 }, Tx = {
   color: { operation: "add", srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha" },
@@ -24824,7 +24824,7 @@ fn layerPointFragment(in: LayerPointFragmentIn) -> @location(0) vec4f {
       { shaderLocation: 3, offset: 20, format: "uint8x4" }
     ]
   }
-], zx = [
+], yx = [
   {
     arrayStride: Bt.discStride,
     stepMode: "instance",
@@ -24837,7 +24837,7 @@ fn layerPointFragment(in: LayerPointFragmentIn) -> @location(0) vec4f {
     ]
   }
 ];
-class yx {
+class zx {
   constructor(A) {
     r(this, "context");
     /** The index buffer every segment draws by (`LAYER_LINE_TEMPLATE`). */
@@ -24870,8 +24870,8 @@ class yx {
     this.lineTemplateIndices.destroy();
   }
   async compile() {
-    const { device: A, colorFormat: e, depthStencilFormat: i, sampleCount: s, clipDistances: n } = this.context, o = ln(n, [yt], px), a = A.createShaderModule({ label: "layers", code: o }), g = A.createPipelineLayout({ label: "layers", bindGroupLayouts: [this.context.frameLayout, this.context.drawLayout] }), l = { compare: "equal", failOp: "keep", depthFailOp: "keep", passOp: "keep" }, I = (M, m, B) => {
-      const C = { kLayerSurface: Qx[M] }, w = { module: a, ...lA(o, `layer${bI(B)}Vertex`, C), buffers: B === "fill" ? jx : B === "line" ? Jx : zx }, d = {
+    const { device: A, colorFormat: e, depthStencilFormat: i, sampleCount: s, clipDistances: n } = this.context, o = ln(n, [zt], px), a = A.createShaderModule({ label: "layers", code: o }), g = A.createPipelineLayout({ label: "layers", bindGroupLayouts: [this.context.frameLayout, this.context.drawLayout] }), l = { compare: "equal", failOp: "keep", depthFailOp: "keep", passOp: "keep" }, I = (M, m, B) => {
+      const C = { kLayerSurface: Qx[M] }, w = { module: a, ...lA(o, `layer${bI(B)}Vertex`, C), buffers: B === "fill" ? jx : B === "line" ? Jx : yx }, d = {
         module: a,
         ...lA(o, `layer${bI(B)}Fragment`, C),
         targets: [B === "line" ? { format: e } : { format: e, blend: Tx }]
@@ -25288,7 +25288,7 @@ const Rx = new Float64Array(16), To = class To {
         for (const { chunk: C, records: w } of m)
           if (C.lineCount !== 0)
             for (const d of w)
-              e.drawIndexed(XM.length, C.lineCount, 0, d * yI, C.lineStart), this.drawCount++;
+              e.drawIndexed(XM.length, C.lineCount, 0, d * zI, C.lineStart), this.drawCount++;
       }
       if (l.discs !== void 0) {
         e.setPipeline(c.point), e.setVertexBuffer(0, l.discs);
@@ -25297,7 +25297,7 @@ const Rx = new Float64Array(16), To = class To {
             const h = C ? w.joinStart : w.pointStart, u = C ? w.joinCount : w.pointCount;
             if (u !== 0)
               for (const E of d)
-                e.draw(6, u, E * yI, h), this.drawCount++;
+                e.draw(6, u, E * zI, h), this.drawCount++;
           }
       }
     }
@@ -25391,7 +25391,7 @@ class Kx {
     const e = A.controller ?? new go();
     this.controller = e;
     const { device: i } = A.pipeline, s = new Gx((o, a) => Sx(i, o, a), A.requestFrame), n = A.fixedLayers === !0 ? new bx(e) : new Dx(e);
-    this.subsystem = new xr(new yx(A.pipeline), s, () => (e.library.shapesWanted = this.picksWanted(), n), A.frame, () => this.picksWanted(), A.requestFrame), this.selection = new Vx(this), this.selection.tapAction = (o) => {
+    this.subsystem = new xr(new zx(A.pipeline), s, () => (e.library.shapesWanted = this.picksWanted(), n), A.frame, () => this.picksWanted(), A.requestFrame), this.selection = new Vx(this), this.selection.tapAction = (o) => {
       for (const a of this.tapListeners)
         a(o);
     }, A.fixedLayers !== !0 && e.setChangeHandler(() => {
@@ -26997,7 +26997,7 @@ const Gr = Object.freeze({
       maxWidth: `max(0px, calc(100% - ${g} - ${l} - ${PI(A * 2)}))`
     };
   }
-}), ye = Object.freeze({
+}), ze = Object.freeze({
   /**
    * The halo around every glyph: a dark shadow on the glyph itself, blurred
    * by this many pixels, so its edge fades into the map rather than ending
@@ -27010,7 +27010,7 @@ const Gr = Object.freeze({
   /** The text colour when the settings give none. */
   defaultTextColor: Object.freeze([1, 1, 1, 1]),
   segments(t, A) {
-    const e = [], i = A ? ye.dimmedCreditAlpha : 1;
+    const e = [], i = A ? ze.dimmedCreditAlpha : 1;
     return t.forEach((s, n) => {
       n > 0 && e.push({ text: Gr.creditSeparator, fontWeight: 600, alphaShare: i });
       const o = A && n === 0;
@@ -27028,13 +27028,13 @@ const Gr = Object.freeze({
   },
   /** The CSS text shadow of a run: the dark halo, faded with the run. */
   cssHalo(t) {
-    return `0 0 ${ye.haloBlurRadius}px rgba(0, 0, 0, ${XI(ye.haloAlpha * t)})`;
+    return `0 0 ${ze.haloBlurRadius}px rgba(0, 0, 0, ${XI(ze.haloAlpha * t)})`;
   }
 });
 function XI(t) {
   return Math.round(t * 1e3) / 1e3;
 }
-class zf {
+class yf {
   constructor() {
     r(this, "attributionValue", RA.none);
     r(this, "settingsValue", null);
@@ -27066,14 +27066,14 @@ class zf {
    * zoom inside the same ranges allocates nothing.
    */
   applyZoom(A) {
-    return this.zoom = A, yf(this.attributionValue, A, this.shown) ? !1 : (this.shown = RA.creditsAtZoom(this.attributionValue, A), !0);
+    return this.zoom = A, zf(this.attributionValue, A, this.shown) ? !1 : (this.shown = RA.creditsAtZoom(this.attributionValue, A), !0);
   }
   segments() {
     var A;
-    return ye.segments(this.shown, ((A = this.settingsValue) == null ? void 0 : A.emphasizesLeadingCredit) ?? !1);
+    return ze.segments(this.shown, ((A = this.settingsValue) == null ? void 0 : A.emphasizesLeadingCredit) ?? !1);
   }
 }
-function yf(t, A, e) {
+function zf(t, A, e) {
   let i = 0;
   for (const s of t.credits)
     if (!(s.text.length === 0 || !RA.isShown(s, A))) {
@@ -27114,7 +27114,7 @@ class bf {
   constructor(A, e) {
     /** The badge's element: an anchor, with an `href` while the attribution has a link. */
     r(this, "element");
-    r(this, "state", new zf());
+    r(this, "state", new yf());
     r(this, "settings", null);
     r(this, "renderedText", null);
     const i = document.createElement("a");
@@ -27146,7 +27146,7 @@ class bf {
   }
   /** The words on the line now, as the badge shows them. */
   get text() {
-    return ye.text(this.state.segments());
+    return ze.text(this.state.segments());
   }
   destroy() {
     this.element.remove();
@@ -27160,13 +27160,13 @@ class bf {
     var a;
     const A = (a = this.settings) == null ? void 0 : a.attribution, e = this.element;
     e.style.display = this.state.isShown ? "block" : "none", e.style.pointerEvents = this.state.isInteractive ? "auto" : "none";
-    const i = this.state.segments(), s = ye.text(i);
+    const i = this.state.segments(), s = ze.text(i);
     if (e.title = s, s === this.renderedText)
       return;
     this.renderedText = s;
-    const n = (A == null ? void 0 : A.textColor) ?? ye.defaultTextColor, o = i.map((g) => {
+    const n = (A == null ? void 0 : A.textColor) ?? ze.defaultTextColor, o = i.map((g) => {
       const l = document.createElement("span");
-      return l.textContent = g.text, l.style.fontWeight = String(g.fontWeight), l.style.color = ye.cssColor(n, g.alphaShare), l.style.textShadow = ye.cssHalo(g.alphaShare), l;
+      return l.textContent = g.text, l.style.fontWeight = String(g.fontWeight), l.style.color = ze.cssColor(n, g.alphaShare), l.style.textShadow = ze.cssHalo(g.alphaShare), l;
     });
     e.replaceChildren(...o);
   }
@@ -27244,8 +27244,8 @@ function Wf(t, A) {
 function Uf(t) {
   return t.texture.levels.reduce((A, e) => A + e.layerByteCount * t.texture.layerCount, 0);
 }
-const zo = class zo {
-  constructor(A, e, i, s, n = zo.defaultBytesPerFrame) {
+const yo = class yo {
+  constructor(A, e, i, s, n = yo.defaultBytesPerFrame) {
     r(this, "device");
     r(this, "textureLayout");
     r(this, "sampler");
@@ -27323,8 +27323,8 @@ const zo = class zo {
   }
 };
 /** A frame writes this much at most: some 2 ms of copying on a laptop. */
-r(zo, "defaultBytesPerFrame", 12 * 1024 * 1024);
-let pr = zo;
+r(yo, "defaultBytesPerFrame", 12 * 1024 * 1024);
+let pr = yo;
 function Of(t) {
   return Math.ceil(t / 4) * 4;
 }
@@ -27540,8 +27540,8 @@ function Pf(t, A, e, i, s, n, o) {
     let I = !0, c = !0, M = !0, m = !0, B = !0, C = !1, w = 1 / 0, d = -1 / 0, h = 1 / 0, u = -1 / 0;
     for (let Z = 0; Z < 8; Z++) {
       for (let J = 0; J < 3; J++) {
-        const y = e[J] - A[J], W = Z & 1 << J ? l.boundsMaximum[J] : l.boundsMinimum[J];
-        g[J] = y > 0 ? (W - A[J]) / y : 0;
+        const z = e[J] - A[J], W = Z & 1 << J ? l.boundsMaximum[J] : l.boundsMinimum[J];
+        g[J] = z > 0 ? (W - A[J]) / z : 0;
       }
       const f = i, S = f[0] * g[0] + f[4] * g[1] + f[8] * g[2] + f[12], L = f[1] * g[0] + f[5] * g[1] + f[9] * g[2] + f[13], p = f[2] * g[0] + f[6] * g[1] + f[10] * g[2] + f[14], Q = f[3] * g[0] + f[7] * g[1] + f[11] * g[2] + f[15];
       if (I && (I = S < -Q), c && (c = S > Q), M && (M = L < -Q), m && (m = L > Q), B && (B = p < 0), Q <= 0) {
@@ -28066,7 +28066,7 @@ fn packTriangles(@builtin(workgroup_id) group: vec3u, @builtin(local_invocation_
         culled[destination + 2u] = scratch[source + 2u];
     }
 }
-`, yn = 256, eZ = 65535, $I = 112;
+`, zn = 256, eZ = 65535, $I = 112;
 class iZ {
   constructor(A, e) {
     r(this, "device");
@@ -28118,7 +28118,7 @@ class iZ {
       for (let Y = 0; Y < B; Y++)
         C[Y * 4] = w, C[Y * 4 + 1] = l.runs[Y * 2], C[Y * 4 + 2] = l.runs[Y * 2 + 1], w += l.runs[Y * 2 + 1];
       a.queue.writeBuffer(I.runs, 0, C);
-      const d = Math.ceil(l.triangleCount / yn), h = Math.min(d, eZ), u = Math.ceil(d / h), E = this.stagingF32, x = this.stagingU32;
+      const d = Math.ceil(l.triangleCount / zn), h = Math.min(d, eZ), u = Math.ceil(d / h), E = this.stagingF32, x = this.stagingU32;
       for (let Y = 0; Y < 16; Y++)
         E[Y] = l.model[Y];
       E[16] = i, E[17] = s, E[18] = l.depthBias, x[19] = B, x[20] = l.triangleCount, x[21] = h, E[22] = n.step, E[23] = n.phase, E[24] = om, a.queue.writeBuffer(I.parameters, 0, this.staging), (I.group === void 0 || I.scratchGeneration !== M.generation) && (I.group = this.makeGroup(l.mesh, I, M), I.scratchGeneration = M.generation), g.setBindGroup(0, I.group), g.setPipeline(m.cull), g.dispatchWorkgroups(h, u), g.setPipeline(m.scan), g.dispatchWorkgroups(1), g.setPipeline(m.pack), g.dispatchWorkgroups(h, u);
@@ -28159,7 +28159,7 @@ class iZ {
     const e = this.scratch;
     if (e !== void 0 && e.triangleCapacity >= A)
       return e;
-    const { device: i } = this, s = Math.ceil(Math.max(A, (e == null ? void 0 : e.triangleCapacity) ?? 0) * 1.25 / yn) * yn, n = s / yn, o = GPUBufferUsage.STORAGE;
+    const { device: i } = this, s = Math.ceil(Math.max(A, (e == null ? void 0 : e.triangleCapacity) ?? 0) * 1.25 / zn) * zn, n = s / zn, o = GPUBufferUsage.STORAGE;
     return e !== void 0 && (e.triangles.destroy(), e.counts.destroy(), e.offsets.destroy()), this.scratch = {
       triangles: i.createBuffer({ label: "model tile cull scratch", size: s * 12, usage: o }),
       counts: i.createBuffer({ label: "model tile cull counts", size: (n + 1) * 4, usage: o }),
@@ -28563,7 +28563,7 @@ class IZ {
     i.forEach((o, a) => n[o] = s[a]), this.built ?? (this.built = n);
   }
   descriptors() {
-    const { device: A, colorFormat: e, depthStencilFormat: i, sampleCount: s } = this.context, n = [BM, gn, yt, VM].join(`
+    const { device: A, colorFormat: e, depthStencilFormat: i, sampleCount: s } = this.context, n = [BM, gn, zt, VM].join(`
 `), o = (Z) => CM(n + `
 ` + Z, this.clipDistances), a = o(nZ), g = o(oZ), l = A.createShaderModule({ label: "model tile", code: a }), I = A.createShaderModule({ label: "scene model", code: g }), c = this.standing, M = A.createPipelineLayout({ bindGroupLayouts: [c.standingFrameLayout, c.drawLayout, this.modelTileTextureLayout] }), m = A.createPipelineLayout({ bindGroupLayouts: [c.emptyLayout, c.drawLayout] }), B = A.createPipelineLayout({ bindGroupLayouts: [c.standingFrameLayout, this.sceneModelDrawLayout, this.sceneModelTextureLayout] }), C = A.createPipelineLayout({ bindGroupLayouts: [c.standingFrameLayout, this.sceneModelDrawLayout] }), w = A.createPipelineLayout({ bindGroupLayouts: [c.emptyLayout, this.sceneModelDrawLayout] }), d = { count: s }, h = { topology: "triangle-list", frontFace: "ccw", cullMode: "back" }, u = { topology: "triangle-list", cullMode: "none" }, E = (Z) => ({
       label: `model tile${Z ? " clipped" : ""}`,
@@ -28823,10 +28823,10 @@ function cm(t, A, e = CZ) {
       if (b === p)
         continue;
       p = b;
-      const J = n[b * 3], y = n[b * 3 + 1], W = n[b * 3 + 2];
-      f += J, S += y, L += W;
+      const J = n[b * 3], z = n[b * 3 + 1], W = n[b * 3 + 2];
+      f += J, S += z, L += W;
       const U = d * o[b * 3] + h * o[b * 3 + 1] + u * o[b * 3 + 2];
-      (b === w || U >= e) && (x += J, Y += y, Z += W);
+      (b === w || U >= e) && (x += J, Y += z, Z += W);
     }
     let Q = Math.hypot(x, Y, Z);
     Q > 0 || (x = f, Y = S, Z = L, Q = Math.hypot(x, Y, Z)), Q > 0 ? (B[C * 3] = x / Q, B[C * 3 + 1] = Y / Q, B[C * 3 + 2] = Z / Q) : B[C * 3 + 1] = 1;
@@ -29121,7 +29121,7 @@ function TZ(t, A) {
 function jZ(t) {
   if (t.matrix !== void 0 && t.matrix.length === 16)
     return Float64Array.from(t.matrix);
-  const A = yA(), e = t.rotation;
+  const A = zA(), e = t.rotation;
   e !== void 0 && e.length === 4 && lm(A, [e[0], e[1], e[2], e[3]]);
   const i = t.scale;
   if (i !== void 0 && i.length === 3)
@@ -29172,7 +29172,7 @@ async function JZ(t, A) {
     const L = g[Z];
     if (L === void 0 || S.has(Z))
       throw new jA("meshConversionFailed", e, `node ${Z} is missing or in a cycle`);
-    const p = IA(yA(), f, jZ(L));
+    const p = IA(zA(), f, jZ(L));
     if (L.mesh !== void 0) {
       c.has(L.mesh) || c.set(L.mesh, a.convertMesh(L.mesh));
       const Q = c.get(L.mesh);
@@ -29186,18 +29186,18 @@ async function JZ(t, A) {
   if (g.length === 0)
     for (let Z = 0; Z < (n.meshes ?? []).length; Z++) {
       const f = a.convertMesh(Z);
-      f !== null && M.push({ builder: f, localTransform: yA() });
+      f !== null && M.push({ builder: f, localTransform: zA() });
     }
   else
     for (const Z of l)
-      m(Z, yA(), /* @__PURE__ */ new Set());
+      m(Z, zA(), /* @__PURE__ */ new Set());
   if (M.length === 0) {
     const Z = (n.meshes ?? []).length === 0 ? "unreadableAsset" : "meshConversionFailed";
     throw new jA(Z, e, "no triangle geometry");
   }
   const B = /* @__PURE__ */ new Map(), C = /* @__PURE__ */ new Map(), w = async (Z) => {
-    var J, y;
-    const f = Z === void 0 || (J = n.materials) == null ? void 0 : J[Z], S = f == null ? void 0 : f.pbrMetallicRoughness, L = S == null ? void 0 : S.baseColorFactor, p = L !== void 0 && L.length === 4 ? [L[0], L[1], L[2], L[3]] : [mi[0], mi[1], mi[2], mi[3]], Q = (y = S == null ? void 0 : S.baseColorTexture) == null ? void 0 : y.index, j = Q === void 0 ? void 0 : a.textureImageIndex(Q);
+    var J, z;
+    const f = Z === void 0 || (J = n.materials) == null ? void 0 : J[Z], S = f == null ? void 0 : f.pbrMetallicRoughness, L = S == null ? void 0 : S.baseColorFactor, p = L !== void 0 && L.length === 4 ? [L[0], L[1], L[2], L[3]] : [mi[0], mi[1], mi[2], mi[3]], Q = (z = S == null ? void 0 : S.baseColorTexture) == null ? void 0 : z.index, j = Q === void 0 ? void 0 : a.textureImageIndex(Q);
     let b = null;
     if (j !== void 0) {
       let W = B.get(j);
@@ -29224,7 +29224,7 @@ async function JZ(t, A) {
     bounds: Bm(M.map(({ builder: Z, localTransform: f }) => ({ localTransform: f, minimum: Z.minimum, maximum: Z.maximum })))
   };
 }
-const zZ = Object.freeze({
+const yZ = Object.freeze({
   "-blendu": 1,
   "-blendv": 1,
   "-bm": 1,
@@ -29239,10 +29239,10 @@ const zZ = Object.freeze({
   "-s": 3,
   "-t": 3
 });
-function yZ(t) {
+function zZ(t) {
   let A = 0;
   for (; A < t.length && t[A].startsWith("-"); ) {
-    const i = t[A].toLowerCase(), s = zZ[i] ?? 0;
+    const i = t[A].toLowerCase(), s = yZ[i] ?? 0;
     A += 1;
     const n = i === "-o" || i === "-s" || i === "-t";
     for (let o = 0; o < s && A < t.length && !(n && !Number.isFinite(Number(t[A]))); o++)
@@ -29284,38 +29284,38 @@ function bZ(t, A, e) {
           i.alpha = 1 - Number(s[s.length - 1]);
           break;
         case "map_Kd":
-          i.diffuseMap = yZ(s.slice(1));
+          i.diffuseMap = zZ(s.slice(1));
           break;
       }
   }
 }
 async function DZ(t, A) {
-  const { url: e } = t, i = (y) => {
-    throw new jA("meshConversionFailed", e, y);
+  const { url: e } = t, i = (z) => {
+    throw new jA("meshConversionFailed", e, z);
   }, s = new TextDecoder().decode(t.bytes), n = [], o = [], a = [], g = [], l = [], I = /* @__PURE__ */ new Map();
   let c = 0;
   l.push(null), I.set(null, 0);
-  const M = [], m = [], B = [], C = [], w = (y, W, U) => {
-    if (y === void 0 || y === "")
+  const M = [], m = [], B = [], C = [], w = (z, W, U) => {
+    if (z === void 0 || z === "")
       return -1;
-    const O = Number.parseInt(y, 10);
-    (!Number.isFinite(O) || O === 0) && i(`a face has ${U} index ${y}`);
+    const O = Number.parseInt(z, 10);
+    (!Number.isFinite(O) || O === 0) && i(`a face has ${U} index ${z}`);
     const v = O < 0 ? W + O : O - 1;
-    return (v < 0 || v >= W) && i(`a face's ${U} index ${y} is out of range`), v;
+    return (v < 0 || v >= W) && i(`a face's ${U} index ${z} is out of range`), v;
   };
-  for (const y of hm(s))
-    switch (y[0]) {
+  for (const z of hm(s))
+    switch (z[0]) {
       case "v":
-        n.push(Number(y[1] ?? 0), Number(y[2] ?? 0), Number(y[3] ?? 0));
+        n.push(Number(z[1] ?? 0), Number(z[2] ?? 0), Number(z[3] ?? 0));
         break;
       case "vt":
-        o.push(Number(y[1] ?? 0), Number(y[2] ?? 0));
+        o.push(Number(z[1] ?? 0), Number(z[2] ?? 0));
         break;
       case "vn":
-        a.push(Number(y[1] ?? 0), Number(y[2] ?? 0), Number(y[3] ?? 0));
+        a.push(Number(z[1] ?? 0), Number(z[2] ?? 0), Number(z[3] ?? 0));
         break;
       case "f": {
-        const W = y.slice(1).map((O) => {
+        const W = z.slice(1).map((O) => {
           const v = O.split("/");
           return [
             w(v[0], n.length / 3, "position"),
@@ -29333,79 +29333,79 @@ async function DZ(t, A) {
         break;
       }
       case "usemtl": {
-        const W = y.slice(1).join(" ");
+        const W = z.slice(1).join(" ");
         let U = I.get(W);
         U === void 0 && (U = l.length, l.push(W), I.set(W, U)), c = U;
         break;
       }
       case "mtllib":
-        g.push(...y.slice(1));
+        g.push(...z.slice(1));
         break;
     }
   if (C.length === 0)
     throw new jA("unreadableAsset", e, "no faces");
   const d = [];
-  for (let y = 0; y < C.length; y++)
-    B[y * 3] < 0 && d.push(y);
+  for (let z = 0; z < C.length; z++)
+    B[z * 3] < 0 && d.push(z);
   const h = new Uint32Array(d.length * 3);
-  d.forEach((y, W) => {
+  d.forEach((z, W) => {
     for (let U = 0; U < 3; U++)
-      h[W * 3 + U] = M[y * 3 + U];
+      h[W * 3 + U] = M[z * 3 + U];
   });
   const u = cm(n, h), E = new Int32Array(C.length).fill(-1);
-  d.forEach((y, W) => E[y] = W);
+  d.forEach((z, W) => E[z] = W);
   const x = new Im(), Y = /* @__PURE__ */ new Map(), Z = new Mm(x), f = [0, 0, 0], S = [...new Set(C)];
-  for (const y of S) {
-    x.beginSubmesh(y);
+  for (const z of S) {
+    x.beginSubmesh(z);
     for (let W = 0; W < C.length; W++) {
-      if (C[W] !== y)
+      if (C[W] !== z)
         continue;
       const U = E[W];
       for (let O = 0; O < 3; O++) {
-        const v = W * 3 + O, AA = M[v], z = m[v], V = B[v], _ = n[AA * 3], tA = n[AA * 3 + 1], uA = n[AA * 3 + 2], ZA = z < 0 ? 0 : o[z * 2], LA = z < 0 ? 0 : 1 - o[z * 2 + 1];
+        const v = W * 3 + O, AA = M[v], y = m[v], V = B[v], _ = n[AA * 3], tA = n[AA * 3 + 1], uA = n[AA * 3 + 2], ZA = y < 0 ? 0 : o[y * 2], LA = y < 0 ? 0 : 1 - o[y * 2 + 1];
         if (U < 0) {
-          const P = `${AA}/${z}/${V}`;
+          const P = `${AA}/${y}/${V}`;
           let mA = Y.get(P);
           mA === void 0 && (mm(f, a[V * 3], a[V * 3 + 1], a[V * 3 + 2]), mA = x.addVertex(_, tA, uA, f[0], f[1], f[2], ZA, LA), Y.set(P, mA)), x.indices.push(mA);
         } else {
           const P = (U * 3 + O) * 3;
-          x.indices.push(Z.emit(`${AA}/${z}`, _, tA, uA, u[P], u[P + 1], u[P + 2], ZA, LA));
+          x.indices.push(Z.emit(`${AA}/${y}`, _, tA, uA, u[P], u[P + 1], u[P + 2], ZA, LA));
         }
       }
     }
     x.endSubmesh();
   }
-  const L = /* @__PURE__ */ new Map(), p = await Promise.all(g.map(async (y) => {
+  const L = /* @__PURE__ */ new Map(), p = await Promise.all(g.map(async (z) => {
     try {
-      const W = await ug(y, e, A);
+      const W = await ug(z, e, A);
       return { text: new TextDecoder().decode(W.bytes), url: W.url };
     } catch {
       return null;
     }
   }));
-  for (const y of p)
-    y !== null && bZ(y.text, y.url, L);
-  const Q = /* @__PURE__ */ new Map(), j = await Promise.all(S.map(async (y) => {
-    const W = l[y] ?? null, U = W === null ? void 0 : L.get(W);
+  for (const z of p)
+    z !== null && bZ(z.text, z.url, L);
+  const Q = /* @__PURE__ */ new Map(), j = await Promise.all(S.map(async (z) => {
+    const W = l[z] ?? null, U = W === null ? void 0 : L.get(W);
     if (U === void 0)
       return { baseColor: [mi[0], mi[1], mi[2], mi[3]], baseColorImage: null };
     const O = Number.isFinite(U.alpha) ? Math.min(Math.max(U.alpha, 0), 1) : 1;
     let v = null;
     if (U.diffuseMap !== null) {
-      const z = new URL(U.diffuseMap.replace(/\\/g, "/"), U.baseURL).href;
-      let V = Q.get(z);
-      V === void 0 && (V = wm(A, async () => ({ bytes: await A.fetchBytes(z), mimeType: Cm(z) })), Q.set(z, V)), v = await V;
+      const y = new URL(U.diffuseMap.replace(/\\/g, "/"), U.baseURL).href;
+      let V = Q.get(y);
+      V === void 0 && (V = wm(A, async () => ({ bytes: await A.fetchBytes(y), mimeType: Cm(y) })), Q.set(y, V)), v = await V;
     }
     const AA = U.diffuseMap === null && U.diffuse !== null ? U.diffuse : [1, 1, 1];
     return { baseColor: [AA[0], AA[1], AA[2], O], baseColorImage: v };
-  })), b = new Map(S.map((y, W) => [y, j[W]])), J = yA();
+  })), b = new Map(S.map((z, W) => [z, j[W]])), J = zA();
   return {
     meshes: [
       {
         vertices: x.vertices.toArray(),
         indices: x.indices.toArray(),
         localTransform: J,
-        submeshes: x.submeshes.map((y) => ({ firstIndex: y.firstIndex, indexCount: y.indexCount, material: b.get(y.material) }))
+        submeshes: x.submeshes.map((z) => ({ firstIndex: z.firstIndex, indexCount: z.indexCount, material: b.get(z.material) }))
       }
     ],
     bounds: Bm([{ localTransform: J, minimum: x.minimum, maximum: x.maximum }])
@@ -29994,7 +29994,7 @@ const bn = [0, 0, 0, 0];
 function ac(t, A) {
   return VA(bn, A.globeTransposedRotationMatrix, t[0], t[1], t[2], 0), [bn[0], bn[1], bn[2]];
 }
-const qZ = wi.rotationMatrixX(yA(), Math.PI / 2), _Z = yA(), $Z = yA(), Dn = [0, 0, 0, 0], AS = Object.freeze({
+const qZ = wi.rotationMatrixX(zA(), Math.PI / 2), _Z = zA(), $Z = zA(), Dn = [0, 0, 0, 0], AS = Object.freeze({
   resolveAnchor(t, A, e) {
     const i = XZ.resolve(t.projectionBasis, e), s = t.fitDiameterMeters, n = s !== null && s > 0 ? s / A.maxExtent : 1, o = i.unitsPerMeter * t.scale * n, a = t.altitudeMeters * i.unitsPerMeter, g = i.worldPosition, l = i.up, I = Nc([i.east[0], i.east[1], i.east[2], 0], [i.north[0], i.north[1], i.north[2], 0], [l[0], l[1], l[2], 0], [g[0] + l[0] * a, g[1] + l[1] * a, g[2] + l[2] * a, 1]);
     IA(I, I, lm(_Z, t.orientation)), IA(I, I, qZ), IA(I, I, wi.scaleMatrix($Z, o, o, o));
@@ -30145,8 +30145,8 @@ const qZ = wi.rotationMatrixX(yA(), Math.PI / 2), _Z = yA(), $Z = yA(), Dn = [0,
  * A model smaller than a fingertip cannot be aimed at. Below this size its
  * hit area grows to a touch target, the platform minimum (44 pt).
  */
-r(Ys, "minimumTouchSizePoints", 44), r(Ys, "empty", new Ys(0, 0, 0, yA(), [0, 0, 0], []));
-let yi = Ys;
+r(Ys, "minimumTouchSizePoints", 44), r(Ys, "empty", new Ys(0, 0, 0, zA(), [0, 0, 0], []));
+let zi = Ys;
 function iS(t) {
   return {
     models: t.models,
@@ -30245,7 +30245,7 @@ class tS {
         return;
       const d = { mesh: C, modelMatrix: w.modelMatrix, groundPlane: w.groundPlane, cutsIntoGround: M.cutsIntoGround };
       I !== void 0 && this.shadowFrustum.isSphereVisible(w.boundingSphereCenter, w.boundingSphereRadius) && this.casterItems.push(d), !(!w.passesHorizonGate || !this.frustum.isSphereVisible(w.boundingSphereCenter, w.boundingSphereRadius)) && (this.drawItems.push(d), c.push({ id: M.id, coordinate: M.coordinate, modelMatrix: w.modelMatrix, boundsMin: C.localBounds.minimum, boundsMax: C.localBounds.maximum }));
-    }), n.hasShadowCasters = this.casterItems.length > 0, n.hasMovingShadowCasters = this.casterItems.length > 0, n.hasDrawnModels = this.drawItems.length > 0, this.pickData = new yi(A.frameIndex, A.drawWidth, A.drawHeight, new Float64Array(A.projectionView), A.cameraEye, c), this.reserveRecords();
+    }), n.hasShadowCasters = this.casterItems.length > 0, n.hasMovingShadowCasters = this.casterItems.length > 0, n.hasDrawnModels = this.drawItems.length > 0, this.pickData = new zi(A.frameIndex, A.drawWidth, A.drawHeight, new Float64Array(A.projectionView), A.cameraEye, c), this.reserveRecords();
   }
   contributeAvailability(A) {
     A.sceneModelsEnabled || (A.sceneModelsEnabled = this.drawItems.length > 0);
@@ -30352,23 +30352,23 @@ class sS {
     r(this, "source");
     /** The app's action for a tap on a model, with or without a selection. */
     r(this, "tapAction", null);
-    r(this, "snapshot", yi.empty);
+    r(this, "snapshot", zi.empty);
     this.source = A;
   }
   owns(A) {
     return A === _A.sceneModel;
   }
   updatePickData(A) {
-    A instanceof yi && A.frameIndex >= this.snapshot.frameIndex && (this.snapshot = A);
+    A instanceof zi && A.frameIndex >= this.snapshot.frameIndex && (this.snapshot = A);
   }
   resetPickData() {
-    this.snapshot = yi.empty;
+    this.snapshot = zi.empty;
   }
   hitTest(A, e) {
     const i = this.snapshot;
     if (i.entries.length === 0 || !(i.drawHeight > 0))
       return null;
-    const s = Cg(A, i.drawHeight, e), n = i.hitTest(s.x, s.y, yi.minimumTouchSizePoints * e);
+    const s = Cg(A, i.drawHeight, e), n = i.hitTest(s.x, s.y, zi.minimumTouchSizePoints * e);
     return n === null ? null : { selection: { kind: _A.sceneModel, objectID: n.id }, coordinate: n.coordinate };
   }
   contains(A) {
@@ -31039,7 +31039,7 @@ class Yt {
     r(this, "store");
     r(this, "workingSet");
     /** The archive depths kept across sessions (`TileArchiveDepths`), and the archive's key among them. */
-    r(this, "archiveDepths", new ya());
+    r(this, "archiveDepths", new za());
     r(this, "archiveRevision");
     /** A rebuild of the tiles under a corrected archive depth, while one runs. */
     r(this, "rebuilding");
@@ -31160,8 +31160,8 @@ class Yt {
     }, frameCommitted: () => this.reliefGpu.frameCommitted() }), e.tiles.groundRelief.isEnabled) {
       const p = e.tiles.groundRelief, Q = new Iu(p.source.tileURLTemplate, p.source.encoding, {
         loadTerrain: async (j, b, J) => {
-          const y = await this.workers.loadTerrain(j, { tileURLTemplate: b.tileURLTemplate, encoding: b.encoding }, J);
-          return y.kind === "missing" ? y : { kind: "heights", heights: { size: y.size, halves: y.halves, minMetres: y.minMetres, maxMetres: y.maxMetres } };
+          const z = await this.workers.loadTerrain(j, { tileURLTemplate: b.tileURLTemplate, encoding: b.encoding }, J);
+          return z.kind === "missing" ? z : { kind: "heights", heights: { size: z.size, halves: z.halves, minMetres: z.minMetres, maxMetres: z.maxMetres } };
         }
       });
       this.relief = new Bx(e, Q, this.reliefGpu), this.relief.store.invalidate = () => {
@@ -31297,8 +31297,8 @@ class Yt {
   static async build(A) {
     let e = A.settings ?? Hi.default;
     A.url !== void 0 && (e = e.tileArchive(A.url, e.tiles.network.tileRequestHeaders));
-    const [i, s] = await Promise.all([zd(), hS(), Ow()]), n = s.glyphs;
-    e = e.resolvingArchiveDepth(new ya().maximumZoom(jr(e))), e.tiles.cache.clearDiskCachesOnLaunch && A.offscreen === void 0 && A.isRecreation !== !0 && await Gw();
+    const [i, s] = await Promise.all([yd(), hS(), Ow()]), n = s.glyphs;
+    e = e.resolvingArchiveDepth(new za().maximumZoom(jr(e))), e.tiles.cache.clearDiskCachesOnLaunch && A.offscreen === void 0 && A.isRecreation !== !0 && await Gw();
     const o = Bc(e, n, A.workers ?? mc());
     let a;
     try {
@@ -31588,7 +31588,7 @@ class Yt {
    * uniforms, and the engine encodes and submits the passes.
    */
   drawFrame(A) {
-    var y, W, U;
+    var z, W, U;
     if (this.destroyed)
       return !1;
     const e = performance.now(), { width: i, height: s } = this.canvas;
@@ -31667,7 +31667,7 @@ class Yt {
       projectionView: I.cameraMatrices.projectionView,
       relief: Z
     };
-    const L = I.cameraMatrices.projectionView, p = ((y = this.offscreen) == null ? void 0 : y.pixelsPerPoint) ?? devicePixelRatio;
+    const L = I.cameraMatrices.projectionView, p = ((z = this.offscreen) == null ? void 0 : z.pixelsPerPoint) ?? devicePixelRatio;
     Hw(this.cameraStaging, 0, L, I.cameraEye);
     const Q = h == null ? void 0 : h.centreGroundDepth(L, E, Y.tileZoomLevel, u);
     Ed(this.overviewFadeStaging, p, I.planningZoom, i, s, L, Q);
@@ -31683,7 +31683,7 @@ class Yt {
     const b = {
       ...this.frameSetup,
       availability: { ...this.frameSetup.availability, renderSurfaceMode: g.renderSurfaceMode },
-      clearColor: yd(l, c.presentation, c.scene.space, Bn(c.data.mapStyle.theme).map),
+      clearColor: zd(l, c.presentation, c.scene.space, Bn(c.data.mapStyle.theme).map),
       // The road names hide behind the buildings from their zoom on, on the
       // flat map: the overlay tests them against the world's depth.
       keepsSceneDepth: this.labelGpu !== void 0 && g.renderSurfaceMode === "flat" && I.planningZoom >= c.data.labels.road.hidesBehindBuildingsFromZoom
@@ -32019,7 +32019,7 @@ class xg {
     /** A renderer being built in place of the last, and whether settings changed while it was. */
     r(this, "recreation", null);
     r(this, "destroyed", !1);
-    r(this, "archiveDepths", new ya());
+    r(this, "archiveDepths", new za());
     r(this, "debug");
     r(this, "frameEvents", nt((A, e) => A.onFrame(e)));
     r(this, "tileEvents", nt((A, e) => A.onTileLoaded(e)));
@@ -32342,7 +32342,23 @@ class TS {
       height: Math.round(A.height),
       top: Math.round(A.top),
       left: Math.round(A.left)
-    }), (A.width === 0 || A.height === 0) && (console.warn("[sea-tunnel-atlas] 3D: container has 0 width or height — setting explicit size"), this.container.style.position = "relative", this.container.style.width = "100vw", this.container.style.height = "calc(100vh - 64px)");
+    }), (A.width === 0 || A.height === 0) && (console.warn("[sea-tunnel-atlas] 3D: container has 0 width or height — setting explicit size"), this.container.style.position = "relative", this.container.style.width = "100vw", this.container.style.height = "calc(100vh - 64px)"), console.info("[sea-tunnel-atlas] 3D: testing navigator.gpu.requestAdapter() independently");
+    try {
+      const n = await Promise.race([
+        navigator.gpu.requestAdapter(),
+        new Promise((o, a) => setTimeout(() => a(new Error("requestAdapter timed out after 5s")), 5e3))
+      ]);
+      if (console.info("[sea-tunnel-atlas] 3D: requestAdapter resolved:", !!n), n) {
+        console.info("[sea-tunnel-atlas] 3D: testing adapter.requestDevice() independently");
+        const o = await Promise.race([
+          n.requestDevice(),
+          new Promise((a, g) => setTimeout(() => g(new Error("requestDevice timed out after 5s")), 5e3))
+        ]);
+        console.info("[sea-tunnel-atlas] 3D: requestDevice resolved:", !!o);
+      }
+    } catch (n) {
+      throw console.error("[sea-tunnel-atlas] 3D: WebGPU diagnostic failed:", n.message), n;
+    }
     const e = 15e3;
     console.info("[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with", e / 1e3, "s timeout");
     const i = xg.create({

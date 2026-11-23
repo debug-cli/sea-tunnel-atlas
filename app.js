@@ -2,6 +2,15 @@
 (() => {
   const $ = selector => document.querySelector(selector);
 
+  // Debug instrumentation for 3D view troubleshooting.
+  // Logs every step of the button→3D flow so failures are visible in DevTools.
+  window.addEventListener('error', (e) => {
+    console.error('[sea-tunnel-atlas] Unhandled error:', e.message, 'at', e.filename + ':' + e.lineno);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('[sea-tunnel-atlas] Unhandled promise rejection:', String(e.reason));
+  });
+
   /* ---------- Saved settings ---------- */
 
   const key = 'sea-tunnel-atlas:v1';
@@ -517,19 +526,31 @@
   // Switch from Leaflet to the 3D view. Checks WebGPU first; when it is
   // missing, shows a plain message and stays on Leaflet.
   async function switchTo3D() {
+    console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
+    const mapDiv = $('#map');
+    if (!mapDiv) {
+      console.error('[sea-tunnel-atlas] switchTo3D: #map element not found');
+      return;
+    }
+    console.info('[sea-tunnel-atlas] switchTo3D: #map found, checking WebGPU');
     if (!('gpu' in navigator) || !navigator.gpu.requestAdapter) {
+      console.warn('[sea-tunnel-atlas] switchTo3D: WebGPU NOT available — navigator.gpu=', !!navigator.gpu, 'requestAdapter=', typeof navigator.gpu?.requestAdapter);
       const msg = $('#view-3d-unavailable');
       if (msg) msg.hidden = false;
       setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
       return;
     }
+    console.info('[sea-tunnel-atlas] switchTo3D: WebGPU available, importing 3D module');
     try {
+      console.info('[sea-tunnel-atlas] switchTo3D: starting import(/dist/3d/3d.mjs)');
       const mod = await import('/dist/3d/3d.mjs');
-      const mapDiv = $('#map');
+      console.info('[sea-tunnel-atlas] switchTo3D: 3D module imported, exports=', Object.keys(mod || {}));
       mapDiv.classList.add('view-3d');
+      console.info('[sea-tunnel-atlas] switchTo3D: view-3d class added to #map');
       view3d = new mod.ImmersiveMap3D({
         container: mapDiv,
         onTap: (properties, latlng) => {
+          console.info('[sea-tunnel-atlas] 3D onTap: featureId=', properties.id, 'latlng=', latlng);
           selectRecord(properties.id, latlng);
           // When tapping in 3D, open the record's popup if we return to 2D.
           selectedRecordId = properties.id;
@@ -540,11 +561,14 @@
           map.setView([view.lat, view.lng], view.zoom, { animate: false });
         },
       });
+      console.info('[sea-tunnel-atlas] switchTo3D: ImmersiveMap3D instance created, calling init()');
       await view3d.init();
+      console.info('[sea-tunnel-atlas] switchTo3D: view3d.init() completed');
       view3dActive = true;
 
       // Sync the current Leaflet view into 3D.
       const c = map.getCenter();
+      console.info('[sea-tunnel-atlas] switchTo3D: syncing view to 3D, center=', c.lat, c.lng, 'zoom=', map.getZoom());
       view3d.setView({ lat: c.lat, lng: c.lng, zoom: map.getZoom() });
 
       // If a record is already selected, reflect it in 3D.
@@ -563,7 +587,9 @@
       const b2d = $('#view-2d-toggle');
       if (b3d) b3d.hidden = true;
       if (b2d) b2d.hidden = false;
+      console.info('[sea-tunnel-atlas] switchTo3D: 3D view activated successfully');
     } catch (e) {
+      console.error('[sea-tunnel-atlas] switchTo3D: FAILED:', e);
       const msg = $('#view-3d-unavailable');
       if (msg) { msg.textContent = '3D view failed to start: ' + String(e.message); msg.hidden = false; }
       setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
@@ -602,8 +628,11 @@
   const b3d = $('#view-3d-toggle');
   const b2d = $('#view-2d-toggle');
   if (b3d) {
+    console.info('[sea-tunnel-atlas] 3D toggle button found, wiring click handler');
     b3d.hidden = false;
     b3d.addEventListener('click', switchTo3D);
+  } else {
+    console.error('[sea-tunnel-atlas] 3D toggle button #view-3d-toggle NOT found in DOM');
   }
   if (b2d) {
     b2d.hidden = true;

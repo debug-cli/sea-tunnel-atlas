@@ -53,7 +53,9 @@ const TYPE_STROKE_WIDTH = {
 // WebGPU probe. ImmersiveMap has no WebGL fallback: when false, the 3D
 // button must not be offered, and tapping it shows a plain message.
 export function isWebGPUAvailable() {
-  return !!(navigator.gpu && navigator.gpu.requestAdapter);
+  const available = !!(navigator.gpu && navigator.gpu.requestAdapter);
+  console.info('[sea-tunnel-atlas] 3D: isWebGPUAvailable =', available, '(navigator.gpu=', !!navigator.gpu, ')');
+  return available;
 }
 
 // Parsed features shared with app.js through window.__atlasData. app.js sets
@@ -76,14 +78,20 @@ export class ImmersiveMap3D {
   }
 
   async init() {
-    if (this.destroyed) return;
+    console.info('[sea-tunnel-atlas] 3D: init() called');
+    if (this.destroyed) {
+      console.warn('[sea-tunnel-atlas] 3D: init() aborted — already destroyed');
+      return;
+    }
     if (!isWebGPUAvailable()) {
       throw new Error('WebGPU is not available in this browser.');
     }
 
+    console.info('[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container})');
     this.map = await ImmersiveMap.create({
       container: this.container,
     });
+    console.info('[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved');
 
     // Forward camera moves so the 2D view can return to the same place.
     this.map.onFrame(() => {
@@ -103,8 +111,11 @@ export class ImmersiveMap3D {
       }
     });
 
+    console.info('[sea-tunnel-atlas] 3D: onFrame and onLayerTap listeners registered');
     this._layerConfigs = this._defaultLayerConfigs();
+    console.info('[sea-tunnel-atlas] 3D: calling _applyLayers()');
     await this._applyLayers();
+    console.info('[sea-tunnel-atlas] 3D: init() complete');
   }
 
   // Layer configurations, reapplied whenever the confidence filter changes.
@@ -169,11 +180,16 @@ export class ImmersiveMap3D {
   // point can carry its own type colour; other sources are registered by
   // URL from the same data/ files app.js reads.
   async _applyLayers() {
-    if (this.destroyed || !this.map) return;
+    console.info('[sea-tunnel-atlas] 3D: _applyLayers() called, showLower=', this.showLower);
+    if (this.destroyed || !this.map) {
+      console.warn('[sea-tunnel-atlas] 3D: _applyLayers() aborted — destroyed=', this.destroyed, 'map=', !!this.map);
+      return;
+    }
 
     // Egress: build points from shared features, honouring the confidence
     // filter. Medium/low records are white discs with a dark stroke.
     const features = sharedFeatures();
+    console.info('[sea-tunnel-atlas] 3D: _applyLayers: shared features count=', features.length);
     const mapped = features.filter((f) => f.geometry && (this.showLower || f.properties.confidence === 'high'));
     const egressPoints = mapped.map((f) => {
       const p = f.properties;
@@ -222,6 +238,7 @@ export class ImmersiveMap3D {
       isVisible: c.isVisible,
       zoomRange: c.zoomRange,
     })));
+    console.info('[sea-tunnel-atlas] 3D: _applyLayers: layers.set complete, layer count=', this._layerConfigs.length);
   }
 
   // Move the camera to a record. Used when the user selects a record in the

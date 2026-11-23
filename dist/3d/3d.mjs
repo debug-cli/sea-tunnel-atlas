@@ -32318,7 +32318,8 @@ const wc = {
   vent_facility: 1
 };
 function pS() {
-  return !!(navigator.gpu && navigator.gpu.requestAdapter);
+  const t = !!(navigator.gpu && navigator.gpu.requestAdapter);
+  return console.info("[sea-tunnel-atlas] 3D: isWebGPUAvailable =", t, "(navigator.gpu=", !!navigator.gpu, ")"), t;
 }
 function dc() {
   var t;
@@ -32329,21 +32330,23 @@ class TS {
     this.container = A, this.map = null, this.onTap = e, this.onViewChange = i, this.selectedFeatureId = null, this.showLower = !0, this.destroyed = !1, this._layerTapUnsubscribe = null, this._layerConfigs = null;
   }
   async init() {
-    if (!this.destroyed) {
-      if (!pS())
-        throw new Error("WebGPU is not available in this browser.");
-      this.map = await xg.create({
-        container: this.container
-      }), this.map.onFrame(() => {
-        if (this.destroyed || !this.onViewChange) return;
-        const A = this.map.view;
-        this.onViewChange({ lat: A.center[1], lng: A.center[0], zoom: A.zoom });
-      }), this._layerTapUnsubscribe = this.map.onLayerTap((A) => {
-        if (this.destroyed) return;
-        const { layer: e, shapeID: i, coordinate: s } = A, n = dc().find((o) => String(o.id) === String(i));
-        n && this.onTap && this.onTap(n.properties, { lat: s.latitude, lng: s.longitude });
-      }), this._layerConfigs = this._defaultLayerConfigs(), await this._applyLayers();
+    if (console.info("[sea-tunnel-atlas] 3D: init() called"), this.destroyed) {
+      console.warn("[sea-tunnel-atlas] 3D: init() aborted — already destroyed");
+      return;
     }
+    if (!pS())
+      throw new Error("WebGPU is not available in this browser.");
+    console.info("[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container})"), this.map = await xg.create({
+      container: this.container
+    }), console.info("[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved"), this.map.onFrame(() => {
+      if (this.destroyed || !this.onViewChange) return;
+      const A = this.map.view;
+      this.onViewChange({ lat: A.center[1], lng: A.center[0], zoom: A.zoom });
+    }), this._layerTapUnsubscribe = this.map.onLayerTap((A) => {
+      if (this.destroyed) return;
+      const { layer: e, shapeID: i, coordinate: s } = A, n = dc().find((o) => String(o.id) === String(i));
+      n && this.onTap && this.onTap(n.properties, { lat: s.latitude, lng: s.longitude });
+    }), console.info("[sea-tunnel-atlas] 3D: onFrame and onLayerTap listeners registered"), this._layerConfigs = this._defaultLayerConfigs(), console.info("[sea-tunnel-atlas] 3D: calling _applyLayers()"), await this._applyLayers(), console.info("[sea-tunnel-atlas] 3D: init() complete");
   }
   // Layer configurations, reapplied whenever the confidence filter changes.
   _defaultLayerConfigs() {
@@ -32406,8 +32409,13 @@ class TS {
   // point can carry its own type colour; other sources are registered by
   // URL from the same data/ files app.js reads.
   async _applyLayers() {
-    if (this.destroyed || !this.map) return;
-    const i = dc().filter((s) => s.geometry && (this.showLower || s.properties.confidence === "high")).map((s) => {
+    if (console.info("[sea-tunnel-atlas] 3D: _applyLayers() called, showLower=", this.showLower), this.destroyed || !this.map) {
+      console.warn("[sea-tunnel-atlas] 3D: _applyLayers() aborted — destroyed=", this.destroyed, "map=", !!this.map);
+      return;
+    }
+    const A = dc();
+    console.info("[sea-tunnel-atlas] 3D: _applyLayers: shared features count=", A.length);
+    const i = A.filter((s) => s.geometry && (this.showLower || s.properties.confidence === "high")).map((s) => {
       const n = s.properties, o = n.confidence !== "high", a = wc[n.type] || wc.station_egress, g = o ? { r: 0, g: 0, b: 0, a: 1 } : GS[n.type];
       return {
         id: Number(s.id),
@@ -32444,7 +32452,7 @@ class TS {
       ...s.pointStyle ? { pointStyle: s.pointStyle } : s.polylineStyle ? { polylineStyle: s.polylineStyle } : {},
       isVisible: s.isVisible,
       zoomRange: s.zoomRange
-    })));
+    }))), console.info("[sea-tunnel-atlas] 3D: _applyLayers: layers.set complete, layer count=", this._layerConfigs.length);
   }
   // Move the camera to a record. Used when the user selects a record in the
   // left panel from either view.

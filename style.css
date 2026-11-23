@@ -1120,7 +1120,6 @@ dialog .check {
 
 .leaflet-popup-content-wrapper {
   background: var(--map-ui-bg);
-  border: 1px solid var(--map-ui-rule);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-float);
   color: var(--map-ui-ink);

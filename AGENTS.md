@@ -275,7 +275,7 @@ Small behavioral additions in this release, all presentation-level:
 | File | Lines before | Lines after | Change |
 |---|---:|---:|---|
 | `index.html` | 108 | 122 | Astryx links, theme scope, header badge, footer, dialog meta, status state |
-| `style.css` | 1157 | 1396 | Rewritten on Astryx tokens; v1 hex literals and the dark token block removed |
+| `style.css` | 1157 | 1395 | Rewritten on Astryx tokens; v1 hex literals and the dark token block removed |
 | `app.js` | 466 | 492 | `tokenColor()`, selected list state, status states |
 | `AGENTS.md` | 138 | 346 | §7 rule replaced with a dated note; this section added |
 | `README.md` | 62 | 68 | Design section, v2.0.0 changelog line |
@@ -305,7 +305,7 @@ No `package.json`, lockfile, bundler, framework or vendored JavaScript library w
 | `node --test tests/*.test.js` | 5 tests, 5 pass, 0 fail |
 | `python3 -m py_compile tools/gtfs_to_geojson.py` | exit 0 |
 | `git diff --check` | clean, no whitespace errors |
-| `wc -l index.html style.css app.js` | 122, 1396, 492 |
+| `wc -l index.html style.css app.js` | 122, 1395, 492 |
 | `jq '.features \| length' data/egress.geojson` | 18 |
 | `jq '[.features[] \| select(.geometry == null)] \| length' data/egress.geojson` | 3 |
 | `node --check app.js` | exit 0 |
@@ -322,7 +322,7 @@ Not run here, because this environment has no browser: visual layout, dark-mode 
 - The Astryx upload contained five files: `ASTRYX.md`, `reset.css`, `astryx.css`, `theme-neutral.css`, `fonts.css`. The earlier brief named `assets/astryx/AGENTS.md`, `CLAUDE.md`, `README.md`, `tokens.json`, `palette.config.json` and `tailwind-theme.css`; none were in the upload, so none were added, copied or invented. This section is the token reference until those files arrive.
 - `theme-neutral.css` scopes its tokens with `@scope`, which needs Chrome 118+, Safari 17.4+ or Firefox 128+. On an older engine the values fall back to the default Astryx theme declared in `astryx.css` (same component language, blue accent). Not verified in a browser here.
 - The Astryx type scale lowers body text from 16px to 14px and small text from 14px to 12px. Legible in the stylesheet's own terms, but the maintainer should eyeball dense sidebar text at 320px width on the preview.
-- `style.css` is 1,396 lines against v1's 1,157. Astryx tokens carry much of the difference, but the file is still one stylesheet; splitting it was out of scope.
+- `style.css` is 1,395 lines against v1's 1,157. Astryx tokens carry much of the difference, but the file is still one stylesheet; splitting it was out of scope.
 - Pre-existing, not changed here: `DATA_SOURCES.md` says "13 verified seed points" while `data/egress.geojson` holds 18 records (15 points, 3 unmapped). The tree is right.
 - Pre-existing, corrected here: `TECHNICAL.md` said markers are colored by type. Markers are shaped by type with no per-type color, which is what the code does and what the legend shows.
 - Carried forward from §12: the GTFS conversion, route colors, tile endpoints and Overpass behavior in a browser remain unverified in this environment, and `dstt-n00` still cites a Wikipedia URL.

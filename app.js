@@ -632,6 +632,8 @@
 
     mapDiv.classList.add('view-3d');
     deckCanvas.hidden = false;
+    const deckAttr = $('#deck-attribution');
+    if (deckAttr) deckAttr.hidden = false;
 
     // Get current Leaflet view.
     const center = map.getCenter();
@@ -688,6 +690,7 @@
     deckActive = false;
 
     $('#deck-canvas').hidden = true;
+    $('#deck-attribution').hidden = true;
     $('#map').classList.remove('view-3d');
 
     const b3d = $('#view-3d-toggle');

@@ -527,8 +527,22 @@
   };
 
   // Build Deck.gl layers from the same GeoJSON data Leaflet uses.
+  // Tile layer goes first so it renders underneath the data layers.
   function buildDeckLayers() {
     const layers = [];
+
+    // Base map tiles — OpenStreetMap, same source Leaflet uses by default.
+    layers.push(new deck.TileLayer({
+      id: 'base-tiles',
+      tileSize: 256,
+      minZoom: 0,
+      maxZoom: 19,
+      getTileURL: ({ x, y, z }) => {
+        const s = 'abc'[(x + y) % 3];
+        return `https://${s}.tile.openstreetmap.org/${z}/${x}/${y}.png`;
+      },
+      opacity: 1
+    }));
 
     // Egress points from shared features (already parsed by app.js).
     const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];

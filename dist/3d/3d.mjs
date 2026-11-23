@@ -32336,21 +32336,30 @@ class TS {
     }
     if (!pS())
       throw new Error("WebGPU is not available in this browser.");
-    const A = 15e3, e = xg.create({
+    const A = this.container.getBoundingClientRect();
+    console.info("[sea-tunnel-atlas] 3D: container rect before create() =", {
+      width: Math.round(A.width),
+      height: Math.round(A.height),
+      top: Math.round(A.top),
+      left: Math.round(A.left)
+    }), (A.width === 0 || A.height === 0) && (console.warn("[sea-tunnel-atlas] 3D: container has 0 width or height — setting explicit size"), this.container.style.position = "relative", this.container.style.width = "100vw", this.container.style.height = "calc(100vh - 64px)");
+    const e = 15e3;
+    console.info("[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with", e / 1e3, "s timeout");
+    const i = xg.create({
       container: this.container
-    }), i = new Promise((s, n) => {
+    }), s = new Promise((n, o) => {
       setTimeout(() => {
-        n(new Error(`ImmersiveMap.create() timed out after ${A / 1e3}s — WebGPU adapter or canvas initialization did not complete.`));
-      }, A);
+        o(new Error(`ImmersiveMap.create() timed out after ${e / 1e3}s — WebGPU adapter or canvas initialization did not complete.`));
+      }, e);
     });
-    console.info("[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with", A / 1e3, "s timeout"), this.map = await Promise.race([e, i]), console.info("[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved"), this.map.onFrame(() => {
+    this.map = await Promise.race([i, s]), console.info("[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved"), this.map.onFrame(() => {
       if (this.destroyed || !this.onViewChange) return;
-      const s = this.map.view;
-      this.onViewChange({ lat: s.center[1], lng: s.center[0], zoom: s.zoom });
-    }), this._layerTapUnsubscribe = this.map.onLayerTap((s) => {
+      const n = this.map.view;
+      this.onViewChange({ lat: n.center[1], lng: n.center[0], zoom: n.zoom });
+    }), this._layerTapUnsubscribe = this.map.onLayerTap((n) => {
       if (this.destroyed) return;
-      const { layer: n, shapeID: o, coordinate: a } = s, g = dc().find((l) => String(l.id) === String(o));
-      g && this.onTap && this.onTap(g.properties, { lat: a.latitude, lng: a.longitude });
+      const { layer: o, shapeID: a, coordinate: g } = n, l = dc().find((I) => String(I.id) === String(a));
+      l && this.onTap && this.onTap(l.properties, { lat: g.latitude, lng: g.longitude });
     }), console.info("[sea-tunnel-atlas] 3D: onFrame and onLayerTap listeners registered"), this._layerConfigs = this._defaultLayerConfigs(), console.info("[sea-tunnel-atlas] 3D: calling _applyLayers()"), await this._applyLayers(), console.info("[sea-tunnel-atlas] 3D: init() complete");
   }
   // Layer configurations, reapplied whenever the confidence filter changes.

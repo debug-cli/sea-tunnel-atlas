@@ -1401,6 +1401,11 @@ dialog .check {
 
 #map.view-3d {
   overflow: hidden;
+  /* Ensure the 3D canvas container always has explicit dimensions.
+     On desktop #map is a grid item with min-height: 0 which can collapse;
+     ImmersiveMap needs a non-zero canvas to configure WebGPU. */
+  height: calc(100vh - var(--topbar-h));
+  width: 100%;
 }
 
 #map.view-3d .leaflet-container {

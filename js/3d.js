@@ -89,7 +89,27 @@ export class ImmersiveMap3D {
 
     // Wrap ImmersiveMap.create() in a timeout so a hung WebGPU adapter
     // request doesn't leave the button silently doing nothing forever.
+    // Log container dimensions so we can see if #map is 0x0 when create() is called.
+    const rect = this.container.getBoundingClientRect();
+    console.info('[sea-tunnel-atlas] 3D: container rect before create() =', {
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      top: Math.round(rect.top),
+      left: Math.round(rect.left),
+    });
+
+    // Ensure the container has explicit dimensions before ImmersiveMap creates
+    // a canvas inside it. A 0x0 container causes WebGPU canvas configuration
+    // to hang even when the WebGPU adapter itself is fine.
+    if (rect.width === 0 || rect.height === 0) {
+      console.warn('[sea-tunnel-atlas] 3D: container has 0 width or height — setting explicit size');
+      this.container.style.position = 'relative';
+      this.container.style.width = '100vw';
+      this.container.style.height = 'calc(100vh - 64px)';
+    }
+
     const CREATE_TIMEOUT_MS = 15000;
+    console.info('[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with', CREATE_TIMEOUT_MS / 1000, 's timeout');
     const createPromise = ImmersiveMap.create({
       container: this.container,
     });
@@ -98,7 +118,6 @@ export class ImmersiveMap3D {
         reject(new Error(`ImmersiveMap.create() timed out after ${CREATE_TIMEOUT_MS / 1000}s — WebGPU adapter or canvas initialization did not complete.`));
       }, CREATE_TIMEOUT_MS);
     });
-    console.info('[sea-tunnel-atlas] 3D: calling ImmersiveMap.create({container}) with', CREATE_TIMEOUT_MS / 1000, 's timeout');
     this.map = await Promise.race([createPromise, timeoutPromise]);
     console.info('[sea-tunnel-atlas] 3D: ImmersiveMap.create() resolved');
 

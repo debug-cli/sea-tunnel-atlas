@@ -1393,3 +1393,50 @@ dialog .check {
     font-size: 0.625rem;
   }
 }
+
+/* 14. Optional 3D view --------------------------------------------------
+   When the 3D view is active, ImmersiveMap draws a canvas inside #map.
+   Leaflet's container is hidden, the canvas fills #map, and the header,
+   safety warning, panel and buttons stay visible at every width. */
+
+#map.view-3d {
+  overflow: hidden;
+}
+
+#map.view-3d .leaflet-container {
+  display: none !important;
+}
+
+#map.view-3d canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* The 3D view and 2D map buttons toggle each other. Only one is visible. */
+#view-3d-toggle:not([hidden]) ~ #view-2d-toggle:not([hidden]),
+#view-2d-toggle:not([hidden]) ~ #view-3d-toggle:not([hidden]) {
+  /* Both visible only during transition; normally one is hidden. */
+}
+
+.view-3d-message {
+  padding: var(--space-2) var(--space-3);
+  background: var(--warn-bg);
+  border-bottom: 1px solid var(--warn-rule);
+  color: var(--warn-ink);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Mobile: the panel is a bottom sheet over the 3D map, same as Leaflet.
+   Desktop: the panel sits beside the map. Both are unaffected by 3D mode
+   — the canvas draws behind them. */
+
+/* Reduced motion: no camera animations when switching views. */
+@media (prefers-reduced-motion: reduce) {
+  #map.view-3d {
+    transition: none !important;
+  }
+}

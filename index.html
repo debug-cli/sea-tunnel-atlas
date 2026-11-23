@@ -33,7 +33,12 @@
     <div class="header-actions">
       <button id="fullscreen-toggle" class="button" type="button" hidden aria-pressed="false">Full screen</button>
       <button id="settings-open" class="button" type="button">Settings</button>
+      <button id="view-3d-toggle" class="button" type="button" hidden>3D view</button>
+      <button id="view-2d-toggle" class="button" type="button" hidden>2D map</button>
     </div>
+    <p id="view-3d-unavailable" role="alert" hidden>
+      3D view is not available in this browser — WebGPU is required. Staying on the 2D map.
+    </p>
   </header>
 
   <p class="safety" role="note">

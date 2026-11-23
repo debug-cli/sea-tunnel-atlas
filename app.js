@@ -326,6 +326,7 @@
       const kind = text('span', sentence(p.type));
       button.type = 'button';
       button.className = 'record-button';
+      button.dataset.id = p.id;
       kind.className = 'record-kind';
       button.append(text('span', p.name), kind);
 
@@ -333,7 +334,9 @@
         icon: L.divIcon({className: 'record-marker', html: shapeIcon(p.type, dashed), iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -8]}),
         keyboard: true,
         riseOnHover: true
-      }).bindPopup(popupContent(p)).addTo(points);
+      });
+      marker._featureId = p.id;
+      marker.bindPopup(popupContent(p)).addTo(points);
       const icon = marker.getElement();
       if (icon) icon.setAttribute('aria-label', `${p.name}, ${sentence(p.type)}`);
 
@@ -349,6 +352,7 @@
 
       button.addEventListener('click', () => {
         if (mobile.matches) setPanel(false);
+        selectRecord(p.id, marker.getLatLng());
         map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), {animate: false});
         marker.openPopup();
       });
@@ -375,6 +379,7 @@
 
   fetch('data/egress.geojson').then(r => { if (!r.ok) throw Error(r.status); return r.json(); }).then(json => {
     features = json.features;
+    window.__atlasData = { features };
     render();
     renderUnmapped();
     const unmapped = features.filter(f => !f.geometry).length;
@@ -486,5 +491,130 @@
 
   map.on('moveend', () => {
     if (state.rememberView) { const c = map.getCenter(); state.view = [c.lat, c.lng, map.getZoom()]; save(); }
+    // While the 3D view is active, keep its camera in sync with Leaflet's.
+    if (view3dActive && view3d) {
+      const c = map.getCenter();
+      view3d.setView({ lat: c.lat, lng: c.lng, zoom: map.getZoom() });
+    }
+  });
+
+  /* ---------- Optional 3D view (ImmersiveMap, WebGPU) ---------- */
+
+  let view3d = null;
+  let view3dActive = false;
+  let selectedRecordId = null;
+
+  // Select a record in both views: highlight its list entry and centre the
+  // map on it. Called from record buttons and from 3D taps.
+  function selectRecord(featureId, latlng) {
+    selectedRecordId = featureId;
+    document.querySelectorAll('.record-button').forEach(b => b.removeAttribute('aria-current'));
+    const btn = document.querySelector(`.record-button[data-id="${featureId}"]`);
+    if (btn) btn.setAttribute('aria-current', 'true');
+    if (view3dActive && view3d) view3d.selectFeature(featureId, latlng);
+  }
+
+  // Switch from Leaflet to the 3D view. Checks WebGPU first; when it is
+  // missing, shows a plain message and stays on Leaflet.
+  async function switchTo3D() {
+    if (!('gpu' in navigator) || !navigator.gpu.requestAdapter) {
+      const msg = $('#view-3d-unavailable');
+      if (msg) msg.hidden = false;
+      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+      return;
+    }
+    try {
+      const mod = await import('/dist/3d/3d.mjs');
+      const mapDiv = $('#map');
+      mapDiv.classList.add('view-3d');
+      view3d = new mod.ImmersiveMap3D({
+        container: mapDiv,
+        onTap: (properties, latlng) => {
+          selectRecord(properties.id, latlng);
+          // When tapping in 3D, open the record's popup if we return to 2D.
+          selectedRecordId = properties.id;
+        },
+        onViewChange: (view) => {
+          // Keep Leaflet's view in sync so returning to 2D is seamless.
+          if (!view3dActive) return;
+          map.setView([view.lat, view.lng], view.zoom, { animate: false });
+        },
+      });
+      await view3d.init();
+      view3dActive = true;
+
+      // Sync the current Leaflet view into 3D.
+      const c = map.getCenter();
+      view3d.setView({ lat: c.lat, lng: c.lng, zoom: map.getZoom() });
+
+      // If a record is already selected, reflect it in 3D.
+      if (selectedRecordId) {
+        const f = features.find(f => f.id === selectedRecordId);
+        if (f && f.geometry) {
+          view3d.selectFeature(selectedRecordId, {
+            lat: f.geometry.coordinates[1],
+            lng: f.geometry.coordinates[0],
+          });
+        }
+      }
+
+      // Toggle buttons.
+      const b3d = $('#view-3d-toggle');
+      const b2d = $('#view-2d-toggle');
+      if (b3d) b3d.hidden = true;
+      if (b2d) b2d.hidden = false;
+    } catch (e) {
+      const msg = $('#view-3d-unavailable');
+      if (msg) { msg.textContent = '3D view failed to start: ' + String(e.message); msg.hidden = false; }
+      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+    }
+  }
+
+  // Switch from 3D back to Leaflet, keeping the same centre, zoom and
+  // selected record.
+  function switchTo2D() {
+    if (!view3dActive || !view3d) return;
+    const view = view3d.getView();
+    view3d.destroy();
+    view3d = null;
+    view3dActive = false;
+    $('#map').classList.remove('view-3d');
+
+    const b3d = $('#view-3d-toggle');
+    const b2d = $('#view-2d-toggle');
+    if (b3d) b3d.hidden = false;
+    if (b2d) b2d.hidden = true;
+
+    if (view) {
+      map.setView([view.lat, view.lng], view.zoom, { animate: false });
+      if (selectedRecordId) {
+        const f = features.find(f => f.id === selectedRecordId);
+        if (f && f.geometry) {
+          const marker = points.getLayers().find(l => l._featureId === String(selectedRecordId));
+          if (marker) marker.openPopup();
+        }
+      }
+    }
+  }
+
+  // Wire the 3D / 2D buttons once the DOM is up. WebGPU availability is
+  // checked lazily when the button is tapped.
+  const b3d = $('#view-3d-toggle');
+  const b2d = $('#view-2d-toggle');
+  if (b3d) {
+    b3d.hidden = false;
+    b3d.addEventListener('click', switchTo3D);
+  }
+  if (b2d) {
+    b2d.hidden = true;
+    b2d.addEventListener('click', switchTo2D);
+  }
+
+  // Honor the confidence filter in the 3D view too.
+  medium.addEventListener('change', () => {
+    state.showLower = medium.checked;
+    save();
+    render();
+    if (view3dActive && view3d) view3d.setConfidenceFilter(state.showLower);
   });
 })();

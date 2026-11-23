@@ -328,6 +328,130 @@ Not run here, because this environment has no browser: visual layout, dark-mode 
 - Carried forward from §12: the GTFS conversion, route colors, tile endpoints and Overpass behavior in a browser remain unverified in this environment, and `dstt-n00` still cites a Wikipedia URL.
 
 
+## §14 v2.0.0 map change — optional WebGPU 3D view (2026-11-23)
+
+This is the second change in release v2.0.0: an optional 3D map view built on
+ImmersiveMap, presented alongside Leaflet. No data record, source, confidence,
+precision or verification date changed. Leaflet remains the default and opens
+first on every load.
+
+### §14.1 Library and risk
+
+- Library: `@artembobkin/immersive-map` 0.1.1, MIT, single maintainer Artem Bobkin.
+- Repo: https://github.com/artembobkin/ImmersiveMapWeb (created 2026-11-22, 2 stars, last push 2026-11-23).
+- Risk: new library, tested only in Chrome on macOS; other browsers and platforms are not tested. WebGPU required (Chrome/Edge 113+, Chrome for Android 121+, Safari 26+, Firefox 141+ on Windows). No WebGL fallback. Recorded here so the risk is visible, not hidden.
+- `@webgpu/types` >= 0.1.60 is a peer dependency (types only; not a runtime dependency in this plain-JS integration).
+
+### §14.2 Build step decision
+
+- Default path: Vite 6 builds only the 3D module. `js/3d.js` is the entry point; `vite.config.js` builds it to `dist/3d/3d.mjs` (ES module) plus worker chunks in `dist/3d/assets/`.
+- Leaflet path stays no-build: `python3 -m http.server 8000` serves `index.html`, `style.css`, `app.js` and the Astryx assets unchanged. No `npm install` needed for the Leaflet view.
+- `package.json` and `vite.config.js` are committed for the 3D module only. `node_modules` is not committed.
+- Vercel serves static files; the 3D build output is committed and served as-is. No runtime server.
+- The 3D module is imported dynamically (`import('/dist/3d/3d.mjs')`) only when the user taps the 3D view button. The 11 MB bundle is never downloaded unless 3D is requested.
+- Test impact: none. Tests run on Node, not in a browser. `node --test tests/*.test.js` still passes 5/5.
+- If the build step breaks the Leaflet no-build path, stop and report it. Verified: `python3 -m http.server 8000` returns 200 for all Leaflet-path files.
+
+### §14.3 Tile source and attribution
+
+- Default: ImmersiveMap streams OpenStreetMap vector tiles from the author's hosted Cloudflare R2 PMTiles archive (public source for the library). Tiles load over HTTP with range requests, only tiles in view.
+- Config switch: a self-hosted archive can be used by pointing `tileArchiveURL` at any origin serving HTTP range requests (R2, S3, CDN, own server). See `docs/guide/TileSource.md` in the library.
+- Offline path: serve a `.pmtiles` file from your own origin and point the map at it. No planet PMTiles file is committed to this repo.
+- Attribution (required while 3D is on screen; shown by the map's own badge):
+  1. OpenStreetMap (ODbL) — "© OpenStreetMap"
+  2. RESOLVE Ecoregions 2017 (CC BY 4.0) — "Biomes © RESOLVE"
+  3. Mapterhorn (open elevation) — "© Mapterhorn"
+- "Powered by ImmersiveMap" credit is optional, not required.
+
+### §14.4 Layer mapping
+
+| GeoJSON file | Records | ImmersiveMap layer | Zoom rule | Null geometry |
+|---|---|---|---|---|
+| `data/egress.geojson` | 18 records, 15 points | Points layer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
+| `data/link-lines.geojson` | 11 features | Line layer | All zooms | N/A |
+| `data/link-stations.geojson` | 100 features | Points layer | All zooms | N/A |
+| `data/bus-routes.geojson` | 422 routes | Line layer | Zoom 15+ (3D camera) | N/A |
+| `data/bus-stops.geojson` | 6,271 stops | Points layer | Zoom 15+ (3D camera) | N/A |
+
+- Egress points are registered as a shapes source so each point carries its own type colour.
+- Other sources are registered by URL from the same `data/` files app.js reads. No GeoJSON parsing is duplicated: `window.__atlasData` holds the parsed egress features shared between app.js and the 3D module.
+- Detail panel on tap: name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings — same in both views.
+
+### §14.5 Marker shape limit
+
+- ImmersiveMap points are discs only. Leaflet's shape-by-type (square, triangle, circle, arrow) has no equivalent in 3D.
+- Colour by type in 3D: portal (teal), station_egress (blue), station_shaft (orange), vent_facility (yellow). Type is carried in the detail panel and legend instead of shape.
+- Confidence filter: medium/low egress records are white discs with a dark stroke when `showLower` is true; hidden when false — matching Leaflet's behaviour.
+
+### §14.6 Features rebuilt for 3D vs Leaflet-only
+
+Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), tap-to-select, confidence filter, camera sync between views, attribution badge.
+
+Leaflet-only: raster tile layers (OpenStreetMap, Esri imagery, EOX Sentinel-2, CARTO labels), Overpass Places, full-screen control, Leaflet zoom controls. No control visible in 3D view does nothing there.
+
+Dropped in 3D (with reason): marker shape-by-type (ImmersiveMap points are discs only — replaced by colour by type). No features are silently dropped.
+
+### §14.7 Files changed
+
+| File | Lines before | Lines after | Change |
+|---|---:|---:|---|
+| `index.html` | 122 | 127 | 3D view button, 2D map button, unavailable message |
+| `style.css` | 1395 | 1442 | Section 14: 3D view styles, canvas fill, hidden Leaflet container |
+| `app.js` | 490 | 618 | 3D view state, switchTo3D/switchTo2D, selectRecord, camera sync, confidence filter |
+| `js/3d.js` | — | 273 | New: ImmersiveMap3D class, WebGPU check, layer registration, tap handler |
+| `package.json` | — | new | Vite dev deps, ImmersiveMap dependency, build scripts |
+| `vite.config.js` | — | new | Vite config: lib build of js/3d.js to dist/3d/ |
+| `dist/3d/3d.mjs` | — | new | Vite build output: 3D module bundle (~11 MB) |
+| `dist/3d/assets/*.js` | — | new | Vite build output: worker chunks |
+| `AGENTS.md` | 346 | ~460 | This section added |
+| `README.md` | 68 | ~72 | 3D view in quick start, design, credits, badges |
+| `CHANGELOG.md` | 39 | ~65 | v2.0.0 map change entry |
+| `TECHNICAL.md` | 9 | ~12 | 3D view note added |
+| `data/*.geojson` | — | — | Unchanged: 18 records, 15 points, 3 null geometry |
+
+### §14.8 What did not change
+
+- `data/*.geojson`: byte-for-byte identical. 18 records, 15 points, 3 with null geometry.
+- GeoJSON property set, feature `id` = property `id`, confidence, precision, `verified` dates, source titles and URLs.
+- Rule zero, the source ladder, §4 (adding a point), §5 (legal limits).
+- Astryx neutral theme: same tokens, fonts, and `style.css` mappings. The 3D view buttons use Astryx token colours.
+- Settings: key `sea-tunnel-atlas:v1`, schema version 1, acknowledgement not imported.
+- Leaflet 1.9.4, vanilla JS, no build step for the Leaflet path.
+- Safety warning: same wording, visible at every width, in both views and both color schemes.
+- Tests: 5 passing.
+
+### §14.9 Verification (run 2026-11-23)
+
+| Command | Result |
+|---|---|
+| `npm install` | 15 packages added, 0 vulnerabilities |
+| `npx vite build` | dist/3d/3d.mjs + 3 worker chunks, exit 0 |
+| `node --test tests/*.test.js` | 5 tests, 5 pass, 0 fail |
+| `python3 -m py_compile tools/gtfs_to_geojson.py` | exit 0 |
+| `git diff --check` | clean |
+| `wc -l index.html style.css app.js js/3d.js` | 127, 1442, 618, 273 |
+| `jq '.features | length' data/egress.geojson` | 18 |
+| `jq '[.features[] | select(.geometry == null)] | length' data/egress.geojson` | 3 |
+| `node --check app.js` | exit 0 |
+| `python3 -m http.server 8000` → 200 for page, style.css, app.js, 3d.mjs, egress.geojson | all 200 |
+
+Not run here: this VM has no WebGPU-capable browser. Manual checks required on the maintainer's PC (Chrome or Edge with WebGPU):
+- Tap 3D view: confirm tiles load, tap an egress point, confirm detail panel shows the right record
+- Tap 2D map: confirm Leaflet returns with the same centre, zoom and selected record
+- Tap 3D view with WebGPU missing: confirm Leaflet stays and a plain message shows
+- Confirm safety warning visible in both views, at mobile width, in light and dark mode
+- Confirm attribution badge visible in 3D view
+- Check the Vercel preview from the draft PR
+
+### §14.10 Open questions and unverified items
+
+- 3D view was not verified live in this environment: no WebGPU browser in the VM. The maintainer PC check is required before merge.
+- WebGPU availability varies by browser/OS. Safari 26+ and Firefox 141+ on Windows are upcoming; current support is Chrome/Edge 113+.
+- The hosted Cloudflare R2 archive is a third-party dependency. If it goes offline, the 3D view shows no tiles. The self-hosted switch mitigates this but requires the maintainer to host a PMTiles archive.
+- `dist/3d/` build output (~24 MB total) is committed to the repo. This is necessary for Vercel to serve it without a runtime build, but it makes the repo larger. Alternative: let Vercel run `npm run build` at deploy time.
+- `node_modules` is not committed (per constraint). A fresh clone needs `npm install` before `npm run build` can regenerate `dist/3d/`.
+- Figtree woff2 still not shipped (pre-existing, §13.11).
+
 ## Verifying this document
 
 ```sh

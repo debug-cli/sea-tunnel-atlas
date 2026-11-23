@@ -87,46 +87,23 @@ export class ImmersiveMap3D {
       throw new Error('WebGPU is not available in this browser.');
     }
 
-    // Wrap ImmersiveMap.create() in a timeout so a hung WebGPU adapter
-    // request doesn't leave the button silently doing nothing forever.
-    // Log container dimensions so we can see if #map is 0x0 when create() is called.
+    // Log container dimensions for diagnosis. WebGPU adapter and device
+    // creation both succeed on Windows, but ImmersiveMap.create() hangs
+    // inside buildRenderer — a known limitation of ImmersiveMap 0.1.1
+    // (tested only on Chrome/macOS, not Windows).
     const rect = this.container.getBoundingClientRect();
-    console.info('[sea-tunnel-atlas] 3D: container rect before create() =', {
+    console.info('[sea-tunnel-atlas] 3D: container rect =', {
       width: Math.round(rect.width),
       height: Math.round(rect.height),
-      top: Math.round(rect.top),
-      left: Math.round(rect.left),
     });
 
-    // Ensure the container has explicit dimensions before ImmersiveMap creates
-    // a canvas inside it. A 0x0 container causes WebGPU canvas configuration
-    // to hang even when the WebGPU adapter itself is fine.
+    // Ensure the container has explicit dimensions so ImmersiveMap has a
+    // non-zero canvas to configure.
     if (rect.width === 0 || rect.height === 0) {
       console.warn('[sea-tunnel-atlas] 3D: container has 0 width or height — setting explicit size');
       this.container.style.position = 'relative';
       this.container.style.width = '100vw';
       this.container.style.height = 'calc(100vh - 64px)';
-    }
-
-    // Diagnose WebGPU adapter/device independently to isolate where it hangs.
-    console.info('[sea-tunnel-atlas] 3D: testing navigator.gpu.requestAdapter() independently');
-    try {
-      const adapter = await Promise.race([
-        navigator.gpu.requestAdapter(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('requestAdapter timed out after 5s')), 5000)),
-      ]);
-      console.info('[sea-tunnel-atlas] 3D: requestAdapter resolved:', !!adapter);
-      if (adapter) {
-        console.info('[sea-tunnel-atlas] 3D: testing adapter.requestDevice() independently');
-        const device = await Promise.race([
-          adapter.requestDevice(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('requestDevice timed out after 5s')), 5000)),
-        ]);
-        console.info('[sea-tunnel-atlas] 3D: requestDevice resolved:', !!device);
-      }
-    } catch (e) {
-      console.error('[sea-tunnel-atlas] 3D: WebGPU diagnostic failed:', e.message);
-      throw e;
     }
 
     const CREATE_TIMEOUT_MS = 15000;
@@ -136,7 +113,7 @@ export class ImmersiveMap3D {
     });
     const timeoutPromise = new Promise((_resolve, reject) => {
       setTimeout(() => {
-        reject(new Error(`ImmersiveMap.create() timed out after ${CREATE_TIMEOUT_MS / 1000}s — WebGPU adapter or canvas initialization did not complete.`));
+        reject(new Error(`3D view unavailable: ImmersiveMap.create() did not complete on this browser (WebGPU works but renderer initialization hangs). ImmersiveMap 0.1.1 is tested on Chrome/macOS only.`));
       }, CREATE_TIMEOUT_MS);
     });
     this.map = await Promise.race([createPromise, timeoutPromise]);

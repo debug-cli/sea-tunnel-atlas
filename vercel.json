@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "headers": [
     {
-      "source": "/dist/3d/*.mjs",
+      "source": "/dist/3d/**",
       "headers": [
         {
           "key": "Content-Type",

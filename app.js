@@ -282,19 +282,17 @@
     station_shaft: ['path', {d: 'M10 2.5 17.5 10 10 17.5 2.5 10Z'}]
   };
 
+  // Leaflet's divIcon `html` option takes a string, not a DOM node. Return an
+  // HTML string so the SVG is parsed by the browser and the `.shape` CSS rules
+  // (fill/stroke from --marker-fill / --marker-casing) apply to the child shape.
   function shapeIcon(type, dashed) {
-    const svg = document.createElementNS(SVG, 'svg');
     const [tag, attrs] = shapes[type] || shapes.station_egress;
-    const shape = document.createElementNS(SVG, tag);
-    for (const [name, value] of Object.entries(attrs)) shape.setAttribute(name, value);
-    svg.setAttribute('viewBox', '0 0 20 20');
-    svg.setAttribute('width', '20');
-    svg.setAttribute('height', '20');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('focusable', 'false');
-    svg.setAttribute('class', dashed ? 'shape is-dashed' : 'shape');
-    svg.append(shape);
-    return svg;
+    let attrStr = '';
+    for (const [name, value] of Object.entries(attrs)) {
+      attrStr += ` ${name}="${value}"`;
+    }
+    const cls = dashed ? 'shape is-dashed' : 'shape';
+    return `<svg class="${cls}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><${tag}${attrStr}></${tag}></svg>`;
   }
 
   function popupContent(p) {

@@ -5,7 +5,16 @@
   "installCommand": "npm install",
   "headers": [
     {
-      "source": "/dist/3d/**",
+      "source": "/dist/3d/*.mjs",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    },
+    {
+      "source": "/dist/3d/assets/*.js",
       "headers": [
         {
           "key": "Content-Type",

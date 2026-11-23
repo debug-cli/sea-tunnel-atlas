@@ -2,25 +2,5 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".",
   "framework": null,
-  "installCommand": "npm install",
-  "headers": [
-    {
-      "source": "/dist/3d/*.mjs",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        }
-      ]
-    },
-    {
-      "source": "/dist/3d/assets/*.js",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        }
-      ]
-    }
-  ]
+  "installCommand": "npm install"
 }

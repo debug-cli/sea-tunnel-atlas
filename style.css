@@ -1401,6 +1401,10 @@ dialog .check {
 
 #map.view-3d {
   overflow: hidden;
+  /* Use dvh (dynamic viewport height) where supported so mobile browser
+     UI doesn't push the canvas off-screen. JS also sets explicit px
+     dimensions on the deck canvas before Deck.gl initializes. */
+  height: dvh;
   height: calc(100vh - var(--topbar-h));
   width: 100%;
 }

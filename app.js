@@ -607,12 +607,15 @@
   function switchTo3D() {
     if (deckActive) return;
 
+    console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
+
     const mapDiv = $('#map');
     const deckCanvas = $('#deck-canvas');
     if (!mapDiv || !deckCanvas) {
       console.error('[sea-tunnel-atlas] switchTo3D: #map or #deck-canvas not found');
       return;
     }
+    console.info('[sea-tunnel-atlas] switchTo3D: #map and #deck-canvas found');
 
     // Check WebGL availability.
     const probe = document.createElement('canvas');
@@ -620,6 +623,7 @@
       window.WebGLRenderingContext &&
       (probe.getContext('webgl') || probe.getContext('experimental-webgl'))
     );
+    console.info('[sea-tunnel-atlas] switchTo3D: WebGL available =', webgl);
     if (!webgl) {
       const msg = $('#view-3d-unavailable');
       if (msg) {
@@ -630,6 +634,18 @@
       return;
     }
 
+    // Ensure the deck canvas has explicit dimensions before Deck.gl reads them.
+    // CSS viewport units (vh/dvh) can be unreliable on mobile browsers.
+    const rect = mapDiv.getBoundingClientRect();
+    console.info('[sea-tunnel-atlas] switchTo3D: #map rect =', {
+      width: Math.round(rect.width),
+      height: Math.round(rect.height)
+    });
+    if (rect.width > 0 && rect.height > 0) {
+      deckCanvas.style.width = rect.width + 'px';
+      deckCanvas.style.height = rect.height + 'px';
+    }
+
     mapDiv.classList.add('view-3d');
     deckCanvas.hidden = false;
     const deckAttr = $('#deck-attribution');
@@ -638,35 +654,53 @@
     // Get current Leaflet view.
     const center = map.getCenter();
     const zoom = map.getZoom();
+    console.info('[sea-tunnel-atlas] switchTo3D: Leaflet center =', center.lat, center.lng, 'zoom =', zoom);
 
     // Build layers from available data.
     const layers = buildDeckLayers();
+    console.info('[sea-tunnel-atlas] switchTo3D: built', layers.length, 'layers');
 
     // Initialize Deck.gl.
-    deckgl = new deck.Deck({
-      canvas: deckCanvas,
-      controller: true,
-      initialViewState: {
-        longitude: center.lng,
-        latitude: center.lat,
-        zoom: zoom,
-        pitch: 45,
-        bearing: 0
-      },
-      layers: layers,
-      onClick: (info) => {
-        if (info.object && info.object.id !== undefined) {
-          const latlng = { lat: info.coordinate[1], lng: info.coordinate[0] };
-          selectRecord(info.object.id, latlng);
-          selectedRecordId = info.object.id;
+    try {
+      deckgl = new deck.Deck({
+        canvas: deckCanvas,
+        controller: true,
+        initialViewState: {
+          longitude: center.lng,
+          latitude: center.lat,
+          zoom: zoom,
+          pitch: 45,
+          bearing: 0
+        },
+        layers: layers,
+        onClick: (info) => {
+          if (info.object && info.object.id !== undefined) {
+            const latlng = { lat: info.coordinate[1], lng: info.coordinate[0] };
+            selectRecord(info.object.id, latlng);
+            selectedRecordId = info.object.id;
+          }
+        },
+        onViewStateChange: ({ viewState }) => {
+          // Keep Leaflet's view in sync so returning to 2D is seamless.
+          if (!deckActive) return;
+          map.setView([viewState.latitude, viewState.longitude], viewState.zoom, { animate: false });
         }
-      },
-      onViewStateChange: ({ viewState }) => {
-        // Keep Leaflet's view in sync so returning to 2D is seamless.
-        if (!deckActive) return;
-        map.setView([viewState.latitude, viewState.longitude], viewState.zoom, { animate: false });
+      });
+      console.info('[sea-tunnel-atlas] switchTo3D: Deck.gl initialized successfully');
+    } catch (e) {
+      console.error('[sea-tunnel-atlas] switchTo3D: Deck.gl initialization FAILED:', e);
+      const msg = $('#view-3d-unavailable');
+      if (msg) {
+        msg.textContent = '3D view failed to start: ' + String(e.message);
+        msg.hidden = false;
       }
-    });
+      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+      // Clean up CSS state on failure.
+      mapDiv.classList.remove('view-3d');
+      deckCanvas.hidden = true;
+      if (deckAttr) deckAttr.hidden = true;
+      return;
+    }
 
     deckActive = true;
 

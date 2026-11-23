@@ -292,8 +292,9 @@
   };
 
   // Leaflet's divIcon `html` option takes a string, not a DOM node. Return an
-  // HTML string so the SVG is parsed by the browser and the `.shape` CSS rules
-  // (fill/stroke from --marker-fill / --marker-casing) apply to the child shape.
+  // HTML string so the SVG is parsed by the browser. Inline style sets
+  // fill/stroke from CSS variables so icons render correctly even if CSS
+  // inheritance doesn't reach the child SVG elements (e.g. inside divIcon).
   function shapeIcon(type, dashed) {
     const [tag, attrs] = shapes[type] || shapes.station_egress;
     let attrStr = '';
@@ -301,7 +302,10 @@
       attrStr += ` ${name}="${value}"`;
     }
     const cls = dashed ? 'shape is-dashed' : 'shape';
-    return `<svg class="${cls}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><${tag}${attrStr}></${tag}></svg>`;
+    const style = dashed
+      ? 'fill: var(--marker-casing); stroke: var(--marker-fill); stroke-width: 2; stroke-linejoin: round; paint-order: normal;'
+      : 'fill: var(--marker-fill); stroke: var(--marker-casing); stroke-width: 2; stroke-linejoin: round; paint-order: stroke;';
+    return `<svg class="${cls}" style="${style}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><${tag}${attrStr}></${tag}></svg>`;
   }
 
   function popupContent(p) {

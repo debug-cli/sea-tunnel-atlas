@@ -83,6 +83,114 @@
   const mapInk = () => tokenColor('--map-ui-ink', '#000000');
   const mapSurface = () => tokenColor('--map-ui-bg', '#ffffff');
 
+  // Shared state for the single layer tile (same 5 checkboxes in 2D and 3D).
+  const layerTileState = {
+    labels: false,
+    surfaceInfrastructure: true,
+    places: false,
+    metroBus: false,
+    linkLightRail: true
+  };
+
+  // Build the layer tile HTML with exactly 5 checkboxes, in this order:
+  // Labels, Surface Infrastructure, Places (OpenStreetMap), Metro bus,
+  // Link light rail. Each checkbox toggles its layer in the active map.
+  function buildLayerTile() {
+    const container = document.createElement('div');
+    container.className = 'layer-tile leaflet-bar leaflet-control';
+    container.style.background = 'var(--map-ui-bg)';
+    container.style.color = 'var(--map-ui-ink)';
+    container.style.border = '1px solid var(--map-ui-rule)';
+    container.style.borderRadius = 'var(--radius-control)';
+    container.style.padding = 'var(--space-2)';
+    container.style.fontFamily = 'var(--font-ui)';
+    container.style.fontSize = 'var(--text-small)';
+    container.style.lineHeight = '1.4';
+    container.style.boxShadow = 'var(--shadow-chip)';
+
+    const addCheckbox = (checked, label, onChange) => {
+      const row = document.createElement('div');
+      row.style.marginBottom = 'var(--space-1)';
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = checked;
+      cb.style.marginRight = 'var(--space-1)';
+
+      const span = document.createElement('span');
+      span.textContent = label;
+
+      cb.addEventListener('change', () => {
+        onChange(cb.checked);
+      });
+
+      row.appendChild(cb);
+      row.appendChild(span);
+      container.appendChild(row);
+    };
+
+    addCheckbox(layerTileState.labels, 'Labels', (checked) => {
+      layerTileState.labels = checked;
+      if (maplibreActive && maplibre) {
+        const lyr = maplibre.getLayer('osm-labels');
+        if (lyr) maplibre.setLayoutProperty('osm-labels', 'visibility', checked ? 'visible' : 'none');
+      } else {
+        if (checked) { if (!map.hasLayer(labels)) labels.addTo(map); }
+        else { if (map.hasLayer(labels)) map.removeLayer(labels); }
+      }
+    });
+
+    addCheckbox(layerTileState.surfaceInfrastructure, 'Surface Infrastructure', (checked) => {
+      layerTileState.surfaceInfrastructure = checked;
+      if (maplibreActive && maplibre) {
+        ['egress-points-solid', 'egress-points-dashed'].forEach(id => {
+          if (maplibre.getLayer(id)) maplibre.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
+      } else {
+        if (checked) { if (!map.hasLayer(points)) points.addTo(map); }
+        else { if (map.hasLayer(points)) map.removeLayer(points); }
+      }
+    });
+
+    addCheckbox(layerTileState.places, 'Places (OpenStreetMap)', (checked) => {
+      layerTileState.places = checked;
+      if (maplibreActive && maplibre) {
+        // Places in 3D view are not implemented; checkbox preserved for UI parity.
+      } else {
+        if (checked) { if (!map.hasLayer(places)) places.addTo(map); }
+        else { if (map.hasLayer(places)) map.removeLayer(places); }
+      }
+    });
+
+    addCheckbox(layerTileState.metroBus, 'Metro bus (stops at zoom 15+)', (checked) => {
+      layerTileState.metroBus = checked;
+      if (maplibreActive && maplibre) {
+        ['bus-routes', 'bus-stops'].forEach(id => {
+          if (maplibre.getLayer(id)) maplibre.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
+      } else {
+        if (checked) { if (!map.hasLayer(bus)) bus.addTo(map); }
+        else { if (map.hasLayer(bus)) map.removeLayer(bus); }
+      }
+    });
+
+    addCheckbox(layerTileState.linkLightRail, 'Link light rail', (checked) => {
+      layerTileState.linkLightRail = checked;
+      if (maplibreActive && maplibre) {
+        ['link-lines', 'link-stations'].forEach(id => {
+          if (maplibre.getLayer(id)) maplibre.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
+      } else {
+        if (checked) { if (!map.hasLayer(rail)) rail.addTo(map); }
+        else { if (map.hasLayer(rail)) map.removeLayer(rail); }
+      }
+    });
+
+    return container;
+  }
+
   /* ---------- Map ---------- */
 
   const map = L.map('map', {
@@ -107,19 +215,10 @@
   street.addTo(map);
   const points = L.layerGroup().addTo(map);
 
-  // The layer list is open on roomy screens and a 44px button on compact ones.
-  // Leaflet only wires the open/close handlers when the control is created
-  // collapsed, so create it that way and refuse to collapse on roomy screens.
-  const layers = L.control.layers(
-    {'OpenStreetMap': street, 'Esri imagery': esri, 'EOX Sentinel-2 cloudless': eox},
-    {'Labels': labels, 'Surface infrastructure': points},
-    {collapsed: true}
-  );
-  layers.collapse = function () {
-    return compact.matches ? L.Control.Layers.prototype.collapse.call(this) : this;
-  };
-  layers.addTo(map);
-  if (!compact.matches) layers.expand();
+  // Single layer tile: same 5 checkboxes in 2D and 3D, no base-layer radios.
+  const layerTile = L.control({position: 'topright'});
+  layerTile.onAdd = () => buildLayerTile();
+  layerTile.addTo(map);
 
   // The bottom bar can change height when its text wraps; keep Leaflet in sync.
   if ('ResizeObserver' in window) {
@@ -135,7 +234,7 @@
     const topPad = compact.matches && size.y >= 260 ? 64 : 16;
     const maxWidth = Math.max(160, Math.min(320, size.x - 32 - 34));
     const maxHeight = Math.max(96, size.y - topPad - 16 - 56);
-    const controlsWidth = Math.max(layers.getContainer().offsetWidth, placeBox.offsetWidth) + 26;
+    const controlsWidth = 0;
     const rightPad = !compact.matches && size.x - controlsWidth - 16 >= maxWidth + 34 ? controlsWidth : 16;
     const pads = options.autoPanPaddingTopLeft, padsEnd = options.autoPanPaddingBottomRight;
     if (options.maxWidth === maxWidth && options.maxHeight === maxHeight && pads?.y === topPad && padsEnd?.x === rightPad) return;
@@ -193,7 +292,6 @@
       function showStops() { if (!isBus || map.getZoom() >= 15) group.addLayer(stopLayer); else group.removeLayer(stopLayer); }
       map.on('zoomend', showStops);
       showStops();
-      layers.addOverlay(group, isBus ? 'Metro bus (stops at zoom 15+)' : 'Link light rail');
       if (!isBus) { group.addTo(map); showLineLegend(lines); }
     }).catch(() => {
       // The feeds ship in data/. Only mention them when one fails to load.
@@ -230,15 +328,11 @@
   function setPlacesOpen(open) {
     placeOptions.hidden = !open;
     placeToggle.setAttribute('aria-expanded', String(open));
-    if (open && compact.matches) layers.collapse();
   }
   placeToggle.addEventListener('click', () => setPlacesOpen(placeOptions.hidden));
   setPlacesOpen(!compact.matches);
   L.DomEvent.disableClickPropagation(placeBox);
   L.DomEvent.disableScrollPropagation(placeBox);
-  const placeControl = L.control({position: 'topright'});
-  placeControl.onAdd = () => placeBox;
-  placeControl.addTo(map);
 
   function schedulePlaces() {
     clearTimeout(poiTimer);
@@ -277,7 +371,6 @@
       if (e.name !== 'AbortError') setStatus('error', 'Places unavailable; try again later');
     }
   }
-  layers.addOverlay(places, 'Places (OpenStreetMap)');
   map.on('moveend overlayadd overlayremove', schedulePlaces);
 
   /* ---------- Surface records ---------- */
@@ -457,7 +550,6 @@
     setPanel(false);
     map.getContainer().classList.toggle('is-compact', compact.matches);
     zoom.setPosition(compact.matches ? 'topleft' : 'bottomright');
-    if (compact.matches) layers.collapse(); else layers.expand();
     setPlacesOpen(!compact.matches);
   }
   mobile.addEventListener('change', onLayoutChange);
@@ -548,52 +640,118 @@ const OSM_STYLE = {
       tileSize: 256,
       maxzoom: 19,
       attribution: '© OpenStreetMap contributors'
+    },
+    labels: {
+      type: 'raster',
+      tiles: ['https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© OpenStreetMap contributors © CARTO'
     }
   },
   layers: [{
     id: 'osm-raster',
     type: 'raster',
     source: 'osm'
+  }, {
+    id: 'osm-labels',
+    type: 'raster',
+    source: 'labels',
+    layout: { visibility: 'visible' }
   }]
 };
 
 // Draw a marker shape on an offscreen canvas. type: portal | station_egress |
 // station_shaft | vent_facility. solid=true: type color fill + white stroke
-// (high confidence). solid=false: white fill + type color stroke (medium /
-// low confidence, dashed appearance). Returns an HTMLCanvasElement for
+// (high confidence). solid=false: white fill + type color stroke with a real
+// dashed outline (medium / low confidence). Returns ImageData for
 // maplibre.addImage().
 function drawMarkerShape(type, solid) {
   const canvas = document.createElement('canvas');
-  canvas.width = 48;
-  canvas.height = 48;
+  canvas.width = 24;
+  canvas.height = 24;
   const ctx = canvas.getContext('2d');
   const fill = solid ? TYPE_COLOR_3D[type] : '#ffffff';
   const stroke = solid ? '#ffffff' : TYPE_COLOR_3D[type];
 
-  ctx.clearRect(0, 0, 48, 48);
+  ctx.clearRect(0, 0, 24, 24);
   ctx.beginPath();
   if (type === 'portal') {
-    ctx.rect(12, 12, 24, 24);
+    ctx.rect(6, 6, 12, 12);
   } else if (type === 'vent_facility') {
-    ctx.moveTo(24, 8);
-    ctx.lineTo(40, 40);
-    ctx.lineTo(8, 40);
+    ctx.moveTo(12, 4);
+    ctx.lineTo(20, 20);
+    ctx.lineTo(4, 20);
     ctx.closePath();
   } else if (type === 'station_egress') {
-    ctx.arc(24, 24, 16, 0, 2 * Math.PI);
+    ctx.arc(12, 12, 8, 0, 2 * Math.PI);
   } else if (type === 'station_shaft') {
-    ctx.moveTo(24, 8);
-    ctx.lineTo(40, 24);
-    ctx.lineTo(24, 40);
-    ctx.lineTo(8, 24);
+    ctx.moveTo(12, 4);
+    ctx.lineTo(20, 12);
+    ctx.lineTo(12, 20);
+    ctx.lineTo(4, 12);
     ctx.closePath();
   }
   ctx.fillStyle = fill;
   ctx.fill();
   ctx.strokeStyle = stroke;
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 2;
+  if (!solid) {
+    ctx.setLineDash([4, 3]);
+  }
   ctx.stroke();
-  return ctx.getImageData(0, 0, 48, 48);
+  if (!solid) {
+    ctx.setLineDash([]);
+  }
+  return ctx.getImageData(0, 0, 24, 24);
+}
+
+// Add 3D buildings from demotiles vector tiles (openmaptiles schema).
+// Reads tiles.json first to discover the building source, source-layer, and
+// height property. Drawn as fill-extrusion below markers and lines.
+async function addBuildings() {
+  try {
+    const tilesRes = await fetch('https://demotiles.maplibre.org/tiles/tiles.json');
+    if (!tilesRes.ok) throw Error(`tiles.json: ${tilesRes.status}`);
+    const tiles = await tilesRes.json();
+
+    // Discover the building vector tile URL from tiles.json sources.
+    let buildingTileUrl = null;
+    if (tiles.sources) {
+      for (const [name, src] of Object.entries(tiles.sources)) {
+        if (src.type === 'vector' && Array.isArray(src.tiles) && src.tiles.length > 0) {
+          buildingTileUrl = src.tiles[0];
+          break;
+        }
+      }
+    }
+    if (!buildingTileUrl) {
+      buildingTileUrl = 'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf';
+    }
+
+    maplibre.addSource('buildings', {
+      type: 'vector',
+      tiles: [buildingTileUrl],
+      maxzoom: 16
+    });
+
+    // Use a fixed modest height if the source has no height values.
+    maplibre.addLayer({
+      id: 'buildings-fill-extrusion',
+      type: 'fill-extrusion',
+      source: 'buildings',
+      'source-layer': 'building',
+      filter: ['==', ['geometry'], 'polygon'],
+      paint: {
+        'fill-extrusion-color': '#d9d9d9',
+        'fill-extrusion-height': ['coalesce', ['get', 'height'], 10],
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 0.7
+      }
+    });
+  } catch (e) {
+    console.warn('3D: could not load buildings:', e);
+  }
 }
 
 // Open a MapLibre popup with the same detail content as Leaflet's popup,
@@ -610,54 +768,8 @@ function open3DPopup(featureId, latlng) {
   return popup;
 }
 
-// Add a layer toggle panel to the MapLibre map, visible only in 3D view.
-// Each toggle sets layout visibility on one or more MapLibre layers.
-function add3DLayerPanel() {
-  const container = document.createElement('div');
-  container.className = 'maplibre-layer-panel';
-  container.style.background = 'var(--map-ui-bg)';
-  container.style.color = 'var(--map-ui-ink)';
-  container.style.border = '1px solid var(--map-ui-rule)';
-  container.style.borderRadius = 'var(--radius-control)';
-  container.style.padding = 'var(--space-2)';
-  container.style.fontFamily = 'var(--font-ui)';
-  container.style.fontSize = 'var(--text-small)';
-  container.style.lineHeight = '1.4';
-
-  const toggleLayer = (layerIds, label) => {
-    const row = document.createElement('div');
-    row.style.marginBottom = 'var(--space-1)';
-    row.style.display = 'flex';
-    row.style.alignItems = 'center';
-
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = true;
-    cb.style.marginRight = 'var(--space-1)';
-
-    const span = document.createElement('span');
-    span.textContent = label;
-
-    cb.addEventListener('change', () => {
-      const visible = cb.checked ? 'visible' : 'none';
-      layerIds.forEach(id => {
-        if (maplibre.getLayer(id)) {
-          maplibre.setLayoutProperty(id, 'visibility', visible);
-        }
-      });
-    });
-
-    row.appendChild(cb);
-    row.appendChild(span);
-    container.appendChild(row);
-  };
-
-  toggleLayer(['egress-points-solid', 'egress-points-dashed'], 'Surface infrastructure');
-  toggleLayer(['link-lines', 'link-stations'], 'Link light rail');
-  toggleLayer(['bus-routes', 'bus-stops'], 'Metro bus');
-
-  maplibre.addControl(container, 'top-left');
-}
+// The 3D layer tile uses the shared buildLayerTile() so 2D and 3D show the
+// same five checkboxes. Added in switchTo3D after the map loads.
 
 // Load a GeoJSON file and add it as a MapLibre source + layer.
 // paint values can be MapLibre expressions (arrays).
@@ -730,7 +842,7 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
         filter: ['==', ['get', 'confidence'], 'high'],
         layout: {
           'icon-image': iconImageExpr('solid'),
-          'icon-size': 1,
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 1.0, 18, 1.4],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true
         }
@@ -743,7 +855,7 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
         filter: ['!=', ['get', 'confidence'], 'high'],
         layout: {
           'icon-image': iconImageExpr('dashed'),
-          'icon-size': 1,
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 1.0, 18, 1.4],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true
         }
@@ -877,6 +989,9 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
         });
       });
 
+      // Add 3D buildings below markers and lines.
+      await addBuildings();
+
       await buildMapLibreLayers();
 
       // MapLibre laid out its controls against the container size when the
@@ -888,8 +1003,8 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
       // argument to addControl, not a constructor option.
       maplibre.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 
-      // Add the layer toggle panel (top-left, visible only in 3D).
-      add3DLayerPanel();
+      // Add the shared layer tile (top-left, visible only in 3D).
+      maplibre.addControl(buildLayerTile(), 'top-left');
 
       // Restore scroll position so the top bar stays visible.
       window.scrollTo(0, scrollY);

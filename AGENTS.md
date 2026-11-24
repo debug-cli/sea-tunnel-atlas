@@ -367,38 +367,40 @@ its own basemap, click API, and GeoJSON source support — none of these bugs.
 
 | GeoJSON file | Records | MapLibre layer | Zoom rule | Null geometry |
 |---|---|---|---|---|
-| (base map) | — | Raster tiles via MapLibre style (demotiles.maplibre.org) | All zooms | N/A |
-| `data/egress.geojson` | 18 records, 15 points | Circle layer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
-| `data/link-lines.geojson` | 11 features | Line layer | All zooms | N/A |
+| (base map) | — | Raster tiles via OSM style (tile.openstreetmap.org) | All zooms | N/A |
+| `data/egress.geojson` | 18 records, 15 points | Symbol layer, type-shaped markers | All zooms | 3 records stay in Not mapped list, never on the 3D map |
+| `data/link-lines.geojson` | 11 features | Line layer, data-driven colour | All zooms | N/A |
 | `data/link-stations.geojson` | 100 features | Circle layer | All zooms | N/A |
 | `data/bus-routes.geojson` | 422 routes | Line layer | Zoom 15+ | N/A |
 | `data/bus-stops.geojson` | 6,271 stops | Circle layer | Zoom 15+ | N/A |
 
-- Egress points come from `window.__atlasData.features` (parsed once by app.js).
-- Base map tiles from the MapLibre demo style (OpenStreetMap-based). Attribution shown in 3D view overlay.
+- Egress points come from `window.__atlasData.features` (parsed once by app.js). Four symbol layers (solid for high confidence, dashed for medium/low) use canvas-drawn marker images registered via `map.addImage()`. Shapes: portal (square), station_egress (circle), station_shaft (diamond), vent_facility (triangle). Colours by type: portal teal #08a3a3, station_egress blue #0171e3, station_shaft orange #a13f04, vent_facility yellow #fcec85.
+- Base map tiles from OpenStreetMap raster tiles (tile.openstreetmap.org/{z}/{x}/{y}.png) — same source as the 2D Leaflet OSM layer. Attribution shown in 3D view overlay.
+- Link lines use `['concat', '#', ['get', 'color']]` for data-driven line colour from feature `color` property (1 Line teal 28813F, 2 Line blue 007CAD, T Line orange).
 - Link lines, link stations, bus routes, bus stops fetched from `data/` files as GeoJSON sources.
-- Detail panel on tap: name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings — same in both views.
+- Layer toggle panel (top-left, 3D only): Surface infrastructure, Link light rail, Metro bus. Each toggle shows/hides its MapLibre layers via `setLayoutProperty(..., 'visibility', ...)`.
+- Detail panel on tap: name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings — same in both views. Click any egress point, link station, link line, or bus stop in 3D to open the panel. Click a record name in the left list to open the panel in 3D too.
 
-### §14.4 Marker colour in 3D
+### §14.4 Marker shapes in 3D
 
-- MapLibre circle layers are discs only. Leaflet's shape-by-type (square, triangle, circle, arrow) has no equivalent in 3D.
-- Colour by type in 3D: portal (teal), station_egress (blue), station_shaft (orange), vent_facility (yellow). Type is carried in the detail panel and legend instead of shape.
-- Confidence filter: medium/low egress records use the same colours but can be toggled via the `showLower` setting — matching Leaflet's behaviour.
+- MapLibre circle layers draw discs only, so egress points use symbol layers with canvas-drawn marker images. Four shapes per type (solid for high confidence, dashed outline for medium/low), drawn on an offscreen 48×48 canvas and registered via `map.addImage()`.
+- Colours by type match the Astryx neutral theme: portal (teal), station_egress (blue), station_shaft (orange), vent_facility (yellow).
+- Confidence filter: medium/low egress records use dashed-outline images and can be toggled via the `showLower` setting — matching Leaflet's behaviour.
 
 ### §14.5 Features rebuilt for 3D vs Leaflet-only
 
-Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), tap-to-select via `map.on('click')`, confidence filter, camera sync between views (sync on moveend, not every frame), attribution badge.
+Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), tap-to-select via `map.on('click')` with MapLibre popups, confidence filter, camera sync between views (sync on moveend, not every frame), attribution badge, layer toggle panel.
 
 Leaflet-only: raster tile layers (OpenStreetMap, Esri imagery, EOX Sentinel-2, CARTO labels), Overpass Places, full-screen control, Leaflet zoom controls. No control visible in 3D view does nothing there.
 
-Dropped in 3D (with reason): marker shape-by-type (MapLibre circle layers are discs only — replaced by colour by type). No features are silently dropped.
+Dropped in 3D (with reason): marker circle-only rendering (replaced by symbol layers with type-shaped marker images). No features are silently dropped.
 
 ### §14.6 Basemap, terrain, buildings, attribution
 
-- Basemap style: https://demotiles.maplibre.org/style.json — demo style, no API key, no token, OpenStreetMap-based vector tiles.
-- Offline behaviour: if the demo style host is unreachable, the 3D view shows no basemap tiles. Data layers still load but float on a blank background. Add a config switch for a self-hosted style.json if needed.
-- Terrain: not added. No raster-dem source in the demo style; do not invent a terrain source.
-- Buildings: not added. No building source layer in the demo style; do not invent a building source. No fill-extrusion.
+- Basemap: OpenStreetMap raster tiles (https://tile.openstreetmap.org/{z}/{x}/{y}.png), same source as the 2D Leaflet OSM layer. No API key, no token. Roads and labels visible at every zoom.
+- Offline behaviour: if tile.openstreetmap.org is unreachable, the 3D view shows no basemap tiles. Data layers still load but float on a blank background.
+- Terrain: not added. No raster-dem source; do not invent a terrain source.
+- Buildings: not added. No building source layer; do not invent a building source. No fill-extrusion.
 - Attribution: OpenStreetMap attribution visible in 3D view via MapLibre's attribution control, styled with Astryx tokens. Credits: OpenStreetMap contributors (ODbL).
 
 ### §14.7 Files changed

@@ -62,7 +62,7 @@ Added 2026-11-23: an optional WebGL 3D view using MapLibre GL JS 5.7.3 (BSD-3-Cl
 
 ## Credits
 
-Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. Optional 3D view: [MapLibre GL JS](https://maplibre.org/) 5.7.3 (BSD-3-Clause), vendored locally. Basemap style: https://demotiles.maplibre.org/style.json (no API key, no token). Design tokens: [Astryx](https://github.com/meta/astryx) neutral theme, MIT, from local copies in `assets/astryx/`. See [DATA_SOURCES.md](DATA_SOURCES.md).
+Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. Optional 3D view: [MapLibre GL JS](https://maplibre.org/) 5.7.3 (BSD-3-Clause), vendored locally. Basemap: OpenStreetMap raster tiles (https://tile.openstreetmap.org/{z}/{x}/{y}.png), same source as the 2D Leaflet OSM layer. No API key, no token. Design tokens: [Astryx](https://github.com/meta/astryx) neutral theme, MIT, from local copies in `assets/astryx/`. See [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## License
 

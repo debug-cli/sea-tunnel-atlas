@@ -366,8 +366,13 @@
       button.addEventListener('click', () => {
         if (mobile.matches) setPanel(false);
         selectRecord(p.id, marker.getLatLng());
-        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), {animate: false});
-        marker.openPopup();
+        if (maplibreActive && maplibre) {
+          // In 3D view, open a MapLibre popup at the marker location.
+          open3DPopup(p.id, marker.getLatLng());
+        } else {
+          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), {animate: false});
+          marker.openPopup();
+        }
       });
       item.append(button);
       mappedList.append(item);
@@ -531,12 +536,132 @@
     vent_facility: '#fcec85' // yellow
   };
 
-  // MapLibre style URL — demo style, no API key, no token.
-  // Documented in AGENTS.md §14: host, what it serves, offline behaviour.
-  const MAPLIBRE_STYLE = 'https://demotiles.maplibre.org/style.json';
+// Custom OSM raster tile style for MapLibre — same tiles as the 2D Leaflet
+// OSM layer. Public source, no API key, no token. Roads and labels visible
+// at every zoom.
+const OSM_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }
+  },
+  layers: [{
+    id: 'osm-raster',
+    type: 'raster',
+    source: 'osm'
+  }]
+};
 
-  // Load a GeoJSON file and add it as a MapLibre source + layer.
-  async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
+// Draw a marker shape on an offscreen canvas. type: portal | station_egress |
+// station_shaft | vent_facility. solid=true: type color fill + white stroke
+// (high confidence). solid=false: white fill + type color stroke (medium /
+// low confidence, dashed appearance). Returns an HTMLCanvasElement for
+// maplibre.addImage().
+function drawMarkerShape(type, solid) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 48;
+  canvas.height = 48;
+  const ctx = canvas.getContext('2d');
+  const fill = solid ? TYPE_COLOR_3D[type] : '#ffffff';
+  const stroke = solid ? '#ffffff' : TYPE_COLOR_3D[type];
+
+  ctx.clearRect(0, 0, 48, 48);
+  ctx.beginPath();
+  if (type === 'portal') {
+    ctx.rect(12, 12, 24, 24);
+  } else if (type === 'vent_facility') {
+    ctx.moveTo(24, 8);
+    ctx.lineTo(40, 40);
+    ctx.lineTo(8, 40);
+    ctx.closePath();
+  } else if (type === 'station_egress') {
+    ctx.arc(24, 24, 16, 0, 2 * Math.PI);
+  } else if (type === 'station_shaft') {
+    ctx.moveTo(24, 8);
+    ctx.lineTo(40, 24);
+    ctx.lineTo(24, 40);
+    ctx.lineTo(8, 24);
+    ctx.closePath();
+  }
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  return canvas;
+}
+
+// Open a MapLibre popup with the same detail content as Leaflet's popup,
+// at the given location. Used by 3D taps and by record list buttons in 3D.
+function open3DPopup(featureId, latlng) {
+  const f = features.find(f => f.id === featureId);
+  if (!f || !maplibre) return;
+  const p = f.properties;
+  const el = popupContent(p);
+  const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+    .setLngLat([latlng.lng, latlng.lat])
+    .setHTML(el.outerHTML)
+    .addTo(maplibre);
+  return popup;
+}
+
+// Add a layer toggle panel to the MapLibre map, visible only in 3D view.
+// Each toggle sets layout visibility on one or more MapLibre layers.
+function add3DLayerPanel() {
+  const container = document.createElement('div');
+  container.className = 'maplibre-layer-panel';
+  container.style.background = 'var(--map-ui-bg)';
+  container.style.color = 'var(--map-ui-ink)';
+  container.style.border = '1px solid var(--map-ui-rule)';
+  container.style.borderRadius = 'var(--radius-control)';
+  container.style.padding = 'var(--space-2)';
+  container.style.fontFamily = 'var(--font-ui)';
+  container.style.fontSize = 'var(--text-small)';
+  container.style.lineHeight = '1.4';
+
+  const toggleLayer = (layerIds, label) => {
+    const row = document.createElement('div');
+    row.style.marginBottom = 'var(--space-1)';
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.style.marginRight = 'var(--space-1)';
+
+    const span = document.createElement('span');
+    span.textContent = label;
+
+    cb.addEventListener('change', () => {
+      const visible = cb.checked ? 'visible' : 'none';
+      layerIds.forEach(id => {
+        if (maplibre.getLayer(id)) {
+          maplibre.setLayoutProperty(id, 'visibility', visible);
+        }
+      });
+    });
+
+    row.appendChild(cb);
+    row.appendChild(span);
+    container.appendChild(row);
+  };
+
+  toggleLayer(['egress-points-solid', 'egress-points-dashed'], 'Surface infrastructure');
+  toggleLayer(['link-lines', 'link-stations'], 'Link light rail');
+  toggleLayer(['bus-routes', 'bus-stops'], 'Metro bus');
+
+  maplibre.addControl(container, 'top-left');
+}
+
+// Load a GeoJSON file and add it as a MapLibre source + layer.
+// paint values can be MapLibre expressions (arrays).
+async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
     try {
       const response = await fetch(path);
       if (!response.ok) throw Error(`${path}: ${response.status}`);
@@ -558,7 +683,17 @@
   // Build all MapLibre layers from the data files. Egress points come from
   // window.__atlasData (already parsed by app.js); the rest are fetched.
   async function buildMapLibreLayers() {
+    // Register marker shape images for symbol layers (one per type, solid +
+    // dashed). MapLibre circle layers can only draw discs, so we use symbol
+    // layers with canvas-drawn images to show the four shapes in type color.
+    const types = ['portal', 'station_egress', 'station_shaft', 'vent_facility'];
+    types.forEach(type => {
+      maplibre.addImage(`${type}-solid`, drawMarkerShape(type, true));
+      maplibre.addImage(`${type}-dashed`, drawMarkerShape(type, false));
+    });
+
     // Egress points from shared features, honoring the confidence filter.
+    // Two symbol layers: solid for high confidence, dashed for medium/low.
     const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
     const egressPoints = egressFeatures.filter(
       f => f.geometry && f.geometry.type === 'Point' &&
@@ -569,23 +704,40 @@
         type: 'geojson',
         data: { type: 'FeatureCollection', features: egressPoints }
       });
+
+      const iconImageExpr = (suffix) => [
+        'match',
+        ['get', 'type'],
+        'portal', `portal-${suffix}`,
+        'station_egress', `station_egress-${suffix}`,
+        'station_shaft', `station_shaft-${suffix}`,
+        'vent_facility', `vent_facility-${suffix}`,
+        `station_egress-${suffix}`
+      ];
+
       maplibre.addLayer({
-        id: 'egress-points',
+        id: 'egress-points-solid',
         source: 'egress-points',
-        type: 'circle',
-        paint: {
-          'circle-radius': 7,
-          'circle-color': [
-            'match',
-            ['get', 'type'],
-            'portal', TYPE_COLOR_3D.portal,
-            'station_egress', TYPE_COLOR_3D.station_egress,
-            'station_shaft', TYPE_COLOR_3D.station_shaft,
-            'vent_facility', TYPE_COLOR_3D.vent_facility,
-            TYPE_COLOR_3D.station_egress
-          ],
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': 1
+        type: 'symbol',
+        filter: ['==', ['get', 'confidence'], 'high'],
+        layout: {
+          'icon-image': iconImageExpr('solid'),
+          'icon-size': 1,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true
+        }
+      });
+
+      maplibre.addLayer({
+        id: 'egress-points-dashed',
+        source: 'egress-points',
+        type: 'symbol',
+        filter: ['!=', ['get', 'confidence'], 'high'],
+        layout: {
+          'icon-image': iconImageExpr('dashed'),
+          'icon-size': 1,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true
         }
       });
     }
@@ -593,7 +745,7 @@
     // Other GeoJSON layers from data/ files.
     await addGeoJsonLayer(
       'link-lines', '/data/link-lines.geojson', 'line',
-      { 'line-color': TYPE_COLOR_3D.portal, 'line-width': 3 }
+      { 'line-color': ['concat', '#', ['get', 'color']], 'line-width': 3 }
     );
     await addGeoJsonLayer(
       'link-stations', '/data/link-stations.geojson', 'circle',
@@ -683,7 +835,7 @@
 
       maplibre = new maplibregl.Map({
         container: maplibreContainer,
-        style: MAPLIBRE_STYLE,
+        style: OSM_STYLE,
         center: [center.lng, center.lat],
         zoom: zoom,
         pitch: 45,
@@ -724,9 +876,12 @@
       // resize so controls sit against the final container size.
       maplibre.resize();
 
-      // Add MapLibre's own zoom + compass control, bottom-right. It is the
-      // only zoom control in 3D view; Leaflet's zoom control is hidden by CSS.
-      maplibre.addControl(new maplibregl.NavigationControl({position: 'bottom-right'}));
+      // Add MapLibre's own zoom + compass control. Position is the second
+      // argument to addControl, not a constructor option.
+      maplibre.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+
+      // Add the layer toggle panel (top-left, visible only in 3D).
+      add3DLayerPanel();
 
       // Restore scroll position so the top bar stays visible.
       window.scrollTo(0, scrollY);
@@ -737,18 +892,28 @@
         const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
         selectRecord(feature.id, latlng);
         selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
       });
       maplibre.on('click', 'link-stations', (e) => {
         const feature = e.features[0];
         const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
         selectRecord(feature.id, latlng);
         selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
       });
       maplibre.on('click', 'bus-stops', (e) => {
         const feature = e.features[0];
         const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
         selectRecord(feature.id, latlng);
         selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+      maplibre.on('click', 'link-lines', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
       });
 
       // Sync view once when MapLibre moves — sync on switch is enough for
@@ -850,45 +1015,22 @@
     b2d.addEventListener('click', switchTo2D);
   }
 
-  // Honor the confidence filter in the 3D view too — rebuild egress layer
-  // when the checkbox changes.
-  medium.addEventListener('change', async () => {
-    state.showLower = medium.checked;
-    save();
-    render();
-    if (maplibreActive && maplibre) {
-      const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
-      const egressPoints = egressFeatures.filter(
-        f => f.geometry && f.geometry.type === 'Point' &&
-          (state.showLower || f.properties.confidence === 'high')
-      );
-      if (maplibre.getSource('egress-points')) {
+    // Honor the confidence filter in the 3D view too — rebuild egress layer
+    // when the checkbox changes. Both egress-points-solid and
+    // egress-points-dashed share the egress-points source, so setData updates
+    // both layers; each layer's filter (confidence == high vs != high)
+    // selects which features render.
+    medium.addEventListener('change', async () => {
+      state.showLower = medium.checked;
+      save();
+      render();
+      if (maplibreActive && maplibre && maplibre.getSource('egress-points')) {
+        const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
+        const egressPoints = egressFeatures.filter(
+          f => f.geometry && f.geometry.type === 'Point' &&
+            (state.showLower || f.properties.confidence === 'high')
+        );
         maplibre.getSource('egress-points').setData({ type: 'FeatureCollection', features: egressPoints });
-      } else {
-        maplibre.addSource('egress-points', {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features: egressPoints }
-        });
-        maplibre.addLayer({
-          id: 'egress-points',
-          source: 'egress-points',
-          type: 'circle',
-          paint: {
-            'circle-radius': 7,
-            'circle-color': [
-              'match',
-              ['get', 'type'],
-              'portal', TYPE_COLOR_3D.portal,
-              'station_egress', TYPE_COLOR_3D.station_egress,
-              'station_shaft', TYPE_COLOR_3D.station_shaft,
-              'vent_facility', TYPE_COLOR_3D.vent_facility,
-              TYPE_COLOR_3D.station_egress
-            ],
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 1
-          }
-        });
       }
-    }
-  });
+    });
 })();

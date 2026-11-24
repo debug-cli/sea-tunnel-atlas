@@ -437,6 +437,53 @@ main {
     visibility 0s;
 }
 
+/* Sidebar collapse (desktop, 2D only). Slides the panel out to the left
+   so the map fills the space. About 225 ms, ease. */
+#panel.collapsed {
+  transform: translateX(-100%);
+  transition: transform 225ms ease;
+}
+
+/* Reopen button at the left edge, visible only in 2D when sidebar is closed. */
+#panel-reopen {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-panel);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: var(--space-1) var(--space-2);
+  background: var(--map-ui-bg);
+  color: var(--map-ui-ink);
+  border: 1px solid var(--map-ui-rule);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  box-shadow: var(--shadow-chip);
+  font-size: var(--text-small);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 225ms ease, visibility 225ms ease;
+}
+#panel-reopen:not([hidden]) {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Hide collapse controls in 3D view. */
+#map.view-3d #panel-close,
+#map.view-3d #panel-reopen {
+  display: none !important;
+}
+
+/* Show the 3D note only in 3D view. */
+#map.view-3d #panel-3d-note {
+  display: block;
+}
+#map:not(.view-3d) #panel-3d-note {
+  display: none;
+}
+
 .panel:focus-visible {
   outline-offset: -3px;
   box-shadow: none;

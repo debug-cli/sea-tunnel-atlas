@@ -52,8 +52,10 @@
   </div>
 
   <main id="main">
+    <button id="panel-reopen" class="button panel-reopen" type="button" aria-label="Open sidebar" hidden>≡</button>
     <aside id="panel" class="panel" aria-label="Legend and records" tabindex="-1">
       <h2>Infrastructure at the surface</h2>
+      <button id="panel-close" class="button panel-close" type="button" aria-label="Close sidebar" hidden>✕</button>
       <p class="panel-lede">A map of publicly documented portals, vents, shafts and station egress. Locations may be approximate.</p>
 
       <h3>Reading the map</h3>
@@ -71,6 +73,9 @@
         <ul id="line-list" class="legend"></ul>
       </section>
 
+      <p id="panel-3d-note" class="panel-3d-note" hidden>
+        In 3D view, click a mapped record name in this list to open its details. Clicking a marker dot on the map does not open details.
+      </p>
       <section id="mapped" hidden>
         <h3>Mapped records</h3>
         <ul id="mapped-list" class="record-list"></ul>

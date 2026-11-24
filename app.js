@@ -14,7 +14,7 @@
   /* ---------- Saved settings ---------- */
 
   const key = 'sea-tunnel-atlas:v1';
-  const defaults = {version: 1, acknowledged: false, showLower: true, rememberView: false, view: null};
+  const defaults = {version: 1, acknowledged: false, showLower: true, rememberView: false, view: null, sidebarOpen: true};
   let state;
   try { state = {...defaults, ...JSON.parse(localStorage.getItem(key) || '{}')}; } catch { state = {...defaults}; }
   if (state.version !== 1) state = {...defaults};
@@ -533,6 +533,57 @@
   /* ---------- Bottom sheet (below 760px) ---------- */
 
   const panel = $('#panel'), panelToggle = $('#panel-toggle'), panelLabel = $('#panel-toggle-label');
+  const panelClose = $('#panel-close');
+  const panelReopen = $('#panel-reopen');
+  const panel3dNote = $('#panel-3d-note');
+
+  // Sidebar open/close state for 2D view. Default opened. Persisted in
+  // the same settings localStorage record as the other preferences.
+  let sidebarOpen = state.sidebarOpen;
+
+  // Apply the current sidebar state to the panel and reopen button.
+  function applySidebarState() {
+    if (sidebarOpen) {
+      panel.classList.remove('collapsed');
+      panelReopen.hidden = true;
+    } else {
+      panel.classList.add('collapsed');
+      panelReopen.hidden = false;
+    }
+  }
+
+  // Toggle the sidebar open/closed in 2D view only. In 3D the sidebar
+  // always stays open.
+  function toggleSidebar() {
+    if (maplibreActive) return;
+    sidebarOpen = !sidebarOpen;
+    applySidebarState();
+    save();
+  }
+
+  // Close button inside the panel header — 2D view only.
+  panelClose.addEventListener('click', () => {
+    if (maplibreActive) return;
+    sidebarOpen = false;
+    applySidebarState();
+    save();
+  });
+
+  // Reopen button at the left edge — 2D view only, visible when closed.
+  panelReopen.addEventListener('click', () => {
+    if (maplibreActive) return;
+    sidebarOpen = true;
+    applySidebarState();
+    save();
+  });
+
+  // Initialize sidebar state on page load. Close button and reopen button
+  // are managed by switchTo3D/switchTo2D; here we just set the initial
+  // collapsed class based on saved state.
+  applySidebarState();
+  panelClose.hidden = !sidebarOpen;
+  panelReopen.hidden = sidebarOpen;
+
   function setPanel(open) {
     panel.classList.toggle('is-open', open);
     panelToggle.setAttribute('aria-expanded', String(open));
@@ -592,8 +643,8 @@
       const file = e.target.files[0];
       if (!file || file.size > 10000) throw Error();
       const d = JSON.parse(await file.text());
-      if (d.version !== 1 || typeof d.showLower !== 'boolean' || typeof d.rememberView !== 'boolean' || typeof d.acknowledged !== 'boolean' || !(d.view === null || (Array.isArray(d.view) && d.view.length === 3 && d.view.every(Number.isFinite) && Math.abs(d.view[0]) <= 90 && Math.abs(d.view[1]) <= 180 && d.view[2] >= 0 && d.view[2] <= 19))) throw Error();
-      state = {version: 1, acknowledged: state.acknowledged, showLower: d.showLower, rememberView: d.rememberView, view: d.view};
+      if (d.version !== 1 || typeof d.showLower !== 'boolean' || typeof d.rememberView !== 'boolean' || typeof d.acknowledged !== 'boolean' || typeof d.sidebarOpen !== 'boolean' || !(d.view === null || (Array.isArray(d.view) && d.view.length === 3 && d.view.every(Number.isFinite) && Math.abs(d.view[0]) <= 90 && Math.abs(d.view[1]) <= 180 && d.view[2] >= 0 && d.view[2] <= 19))) throw Error();
+      state = {version: 1, acknowledged: state.acknowledged, showLower: d.showLower, rememberView: d.rememberView, view: d.view, sidebarOpen: d.sidebarOpen};
       medium.checked = state.showLower;
       remember.checked = state.rememberView;
       save();
@@ -1092,6 +1143,28 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
         map.setView([c.lat, c.lng], z, { animate: false });
       });
 
+      // In 3D: force the sidebar open so mapped records are visible — they
+      // are the only way to open detail popups in 3D. Do NOT call save():
+      // the forced-open 3D state is temporary and must not overwrite the
+      // saved 2D state in localStorage.
+      if (!sidebarOpen) {
+        sidebarOpen = true;
+        applySidebarState();
+      }
+      panelClose.hidden = true;
+      panelReopen.hidden = true;
+      panel3dNote.hidden = false;
+
+      // Clicking the 3D map canvas reopens the sidebar if it was closed.
+      maplibre.getContainer().addEventListener('click', () => {
+        if (!maplibreActive) return;
+        if (!sidebarOpen) {
+          sidebarOpen = true;
+          applySidebarState();
+          save();
+        }
+      });
+
       maplibreActive = true;
       console.info('[sea-tunnel-atlas] switchTo3D: MapLibre 3D view activated');
     } catch (e) {
@@ -1148,6 +1221,14 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
     map.touchZoom.enable();
     map.keyboard.enable();
     map.invalidateSize();
+
+    // Restore the saved 2D sidebar state. The forced-open 3D state is
+    // temporary and must not overwrite what the user saved in 2D.
+    sidebarOpen = state.sidebarOpen;
+    applySidebarState();
+    panelClose.hidden = !sidebarOpen || maplibreActive;
+    panelReopen.hidden = sidebarOpen || maplibreActive;
+    panel3dNote.hidden = true;
 
     const b3d = $('#view-3d-toggle');
     const b2d = $('#view-2d-toggle');

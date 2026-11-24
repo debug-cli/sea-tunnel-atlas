@@ -381,13 +381,19 @@ a:hover {
 main {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 300px) 1fr;
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
 }
 
+/* When the sidebar is closed, the panel column collapses to 0 so the map
+   fills the full width with no black void. */
+#main.sidebar-closed {
+  grid-template-columns: 0 1fr;
+}
+
 #map {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 1;
   z-index: var(--z-map);
   isolation: isolate;
@@ -405,6 +411,7 @@ main {
   grid-column: 1;
   grid-row: 1;
   align-self: end;
+  min-width: 0;
   z-index: var(--z-panel);
   max-height: calc(100% - var(--space-5));
   padding: var(--space-4) var(--space-3);
@@ -437,13 +444,60 @@ main {
     visibility 0s;
 }
 
+/* Sidebar collapse (desktop, 2D only). Slides the panel out to the left
+   so the map fills the space. About 225 ms, ease. */
+#panel.collapsed {
+  transform: translateX(-100%);
+  transition: transform 225ms ease;
+}
+
+/* Reopen button at the left edge, visible only in 2D when sidebar is closed. */
+#panel-reopen {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-panel);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: var(--space-1) var(--space-2);
+  background: var(--map-ui-bg);
+  color: var(--map-ui-ink);
+  border: 1px solid var(--map-ui-rule);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  box-shadow: var(--shadow-chip);
+  font-size: var(--text-small);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 225ms ease, visibility 225ms ease;
+}
+#panel-reopen:not([hidden]) {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Hide collapse controls in 3D view. */
+#map.view-3d #panel-close,
+#map.view-3d #panel-reopen {
+  display: none !important;
+}
+
+/* Show the 3D note only in 3D view. */
+#map.view-3d #panel-3d-note {
+  display: block;
+}
+#map:not(.view-3d) #panel-3d-note {
+  display: none;
+}
+
 .panel:focus-visible {
   outline-offset: -3px;
   box-shadow: none;
 }
 
 .panel-bar {
-  grid-column: 1;
+  grid-column: 1 / span 2;
   grid-row: 2;
   position: relative;
   z-index: var(--z-panel);
@@ -1391,5 +1445,101 @@ dialog .check {
 
   .leaflet-control-attribution {
     font-size: 0.625rem;
+  }
+}
+
+/* 14. Optional 3D view --------------------------------------------------
+   When the 3D view is active, MapLibre draws inside #maplibre-map.
+   Leaflet's container is hidden, the header, safety warning, panel and
+   buttons stay visible at every width. The map container never covers
+   the topbar; zoom controls stay above the map canvas and clickable. */
+
+#map.view-3d {
+  overflow: hidden;
+  /* On mobile #map is position: absolute; inset: 0 which fills the whole
+     viewport including under the topbar. Constrain height so the canvas
+     starts below the topbar. dvh for mobile browser UI, calc fallback. */
+  height: calc(100vh - var(--topbar-h));
+  width: 100%;
+  /* Keep the header and safety warning above the 3D canvas. */
+  z-index: var(--z-map);
+}
+
+/* When the 3D view is active, stop the page from scrolling so the top bar
+   and safety warning stay visible on desktop. Mobile already has
+   overflow: hidden on body. html is included because overflow: hidden on
+   body alone does not always prevent scrolling on all browsers. */
+html.atlas-3d-active,
+body.atlas-3d-active {
+  overflow: hidden;
+}
+
+/* Mobile: start the map below the topbar instead of at top: 0 (which is
+   where inset: 0 puts it). The topbar covers the top portion otherwise. */
+@media (max-width: 759.98px) {
+  #map.view-3d {
+    top: var(--topbar-h);
+    height: auto;
+  }
+}
+
+#map.view-3d.leaflet-container .leaflet-pane,
+#map.view-3d.leaflet-container .leaflet-control-container {
+  display: none !important;
+}
+
+/* MapLibre container fills #map but never covers the header. */
+#map.view-3d #maplibre-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* MapLibre attribution badge stays visible in 3D view. */
+#map.view-3d .maplibregl-ctrl-attrib {
+  background: var(--map-ui-bg) !important;
+  border: 1px solid var(--map-ui-rule) !important;
+  color: var(--map-ui-ink) !important;
+  border-radius: var(--radius-control) !important;
+  font-size: 0.75rem !important;
+  line-height: 1.5 !important;
+  padding: 0 var(--space-2) !important;
+  z-index: 10 !important;
+}
+
+/* Zoom controls stay above the map canvas and clickable at every width. */
+#map.view-3d .leaflet-control-zoom,
+#map.view-3d .leaflet-control-zoom a {
+  z-index: 50 !important;
+  position: relative !important;
+}
+
+/* The 3D view and 2D map buttons toggle each other. Only one is visible. */
+#view-3d-toggle:not([hidden]) ~ #view-2d-toggle:not([hidden]),
+#view-2d-toggle:not([hidden]) ~ #view-3d-toggle:not([hidden]) {
+  /* Both visible only during transition; normally one is hidden. */
+}
+
+.view-3d-message {
+  padding: var(--space-2) var(--space-3);
+  background: var(--warn-bg);
+  border-bottom: 1px solid var(--warn-rule);
+  color: var(--warn-ink);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Mobile: the panel is a bottom sheet over the 3D map, same as Leaflet.
+   Desktop: the panel sits beside the map. Both are unaffected by 3D mode
+   — the canvas draws behind them. */
+
+/* Reduced motion: no camera animations when switching views. */
+@media (prefers-reduced-motion: reduce) {
+  #map.view-3d {
+    transition: none !important;
   }
 }

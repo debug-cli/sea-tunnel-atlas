@@ -14,8 +14,12 @@
   <link rel="stylesheet" href="assets/astryx/theme-neutral.css">
   <link rel="stylesheet" href="assets/astryx/fonts.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="assets/maplibre/maplibre-gl.css">
   <link rel="stylesheet" href="style.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="assets/maplibre/maplibre-gl.js"
+          onerror="window.__maplibreLoadError = true; console.error('[sea-tunnel-atlas] MapLibre script failed to load: assets/maplibre/maplibre-gl.js');"
+          onload="window.__maplibreLoaded = true;"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -33,7 +37,12 @@
     <div class="header-actions">
       <button id="fullscreen-toggle" class="button" type="button" hidden aria-pressed="false">Full screen</button>
       <button id="settings-open" class="button" type="button">Settings</button>
+      <button id="view-3d-toggle" class="button" type="button" hidden>3D view</button>
+      <button id="view-2d-toggle" class="button" type="button" hidden>2D map</button>
     </div>
+    <p id="view-3d-unavailable" role="alert" class="view-3d-message" hidden>
+      3D view is not available in this browser — WebGL is required. Staying on the 2D map.
+    </p>
   </header>
 
   <p class="safety" role="note">
@@ -43,8 +52,10 @@
   </div>
 
   <main id="main">
+    <button id="panel-reopen" class="button panel-reopen" type="button" aria-label="Open sidebar" hidden>≡</button>
     <aside id="panel" class="panel" aria-label="Legend and records" tabindex="-1">
       <h2>Infrastructure at the surface</h2>
+      <button id="panel-close" class="button panel-close" type="button" aria-label="Close sidebar" hidden>✕</button>
       <p class="panel-lede">A map of publicly documented portals, vents, shafts and station egress. Locations may be approximate.</p>
 
       <h3>Reading the map</h3>
@@ -62,6 +73,9 @@
         <ul id="line-list" class="legend"></ul>
       </section>
 
+      <p id="panel-3d-note" class="panel-3d-note" hidden>
+        In 3D view, click a mapped record name in this list to open its details. Clicking a marker dot on the map does not open details.
+      </p>
       <section id="mapped" hidden>
         <h3>Mapped records</h3>
         <ul id="mapped-list" class="record-list"></ul>
@@ -81,7 +95,9 @@
       </footer>
     </aside>
 
-    <div id="map" role="region" aria-label="Map of public surface infrastructure"></div>
+    <div id="map" role="region" aria-label="Map of public surface infrastructure">
+      <div id="maplibre-map" hidden style="width: 100%; height: 100%; position: absolute; inset: 0; z-index: 1;"></div>
+    </div>
 
     <div class="panel-bar">
       <button id="panel-toggle" class="button panel-toggle" type="button" aria-expanded="false" aria-controls="panel">

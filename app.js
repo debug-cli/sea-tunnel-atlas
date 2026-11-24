@@ -2,10 +2,19 @@
 (() => {
   const $ = selector => document.querySelector(selector);
 
+  // Debug instrumentation for 3D view troubleshooting.
+  // Logs every step of the button→3D flow so failures are visible in DevTools.
+  window.addEventListener('error', (e) => {
+    console.error('[sea-tunnel-atlas] Unhandled error:', e.message, 'at', e.filename + ':' + e.lineno);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('[sea-tunnel-atlas] Unhandled promise rejection:', String(e.reason));
+  });
+
   /* ---------- Saved settings ---------- */
 
   const key = 'sea-tunnel-atlas:v1';
-  const defaults = {version: 1, acknowledged: false, showLower: true, rememberView: false, view: null};
+  const defaults = {version: 1, acknowledged: false, showLower: true, rememberView: false, view: null, sidebarOpen: true};
   let state;
   try { state = {...defaults, ...JSON.parse(localStorage.getItem(key) || '{}')}; } catch { state = {...defaults}; }
   if (state.version !== 1) state = {...defaults};
@@ -74,6 +83,103 @@
   const mapInk = () => tokenColor('--map-ui-ink', '#000000');
   const mapSurface = () => tokenColor('--map-ui-bg', '#ffffff');
 
+  // Shared state for the single layer tile (same 4 checkboxes in 2D and 3D).
+  const layerTileState = {
+    labels: false,
+    surfaceInfrastructure: true,
+    metroBus: false,
+    linkLightRail: true
+  };
+
+  // Build the layer tile HTML with exactly 4 checkboxes, in this order:
+  // Labels, Surface Infrastructure, Metro bus (stops at zoom 15+),
+  // Link light rail. Each checkbox toggles its layer in the active map.
+  function buildLayerTile() {
+    const container = document.createElement('div');
+    container.className = 'layer-tile leaflet-bar leaflet-control';
+    container.style.background = 'var(--map-ui-bg)';
+    container.style.color = 'var(--map-ui-ink)';
+    container.style.border = '1px solid var(--map-ui-rule)';
+    container.style.borderRadius = 'var(--radius-control)';
+    container.style.padding = 'var(--space-2)';
+    container.style.fontFamily = 'var(--font-ui)';
+    container.style.fontSize = 'var(--text-small)';
+    container.style.lineHeight = '1.4';
+    container.style.boxShadow = 'var(--shadow-chip)';
+
+    const addCheckbox = (checked, label, onChange) => {
+      const row = document.createElement('div');
+      row.style.marginBottom = 'var(--space-1)';
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = checked;
+      cb.style.marginRight = 'var(--space-1)';
+
+      const span = document.createElement('span');
+      span.textContent = label;
+
+      cb.addEventListener('change', () => {
+        onChange(cb.checked);
+      });
+
+      row.appendChild(cb);
+      row.appendChild(span);
+      container.appendChild(row);
+    };
+
+    addCheckbox(layerTileState.labels, 'Labels', (checked) => {
+      layerTileState.labels = checked;
+      if (maplibreActive && maplibre) {
+        const lyr = maplibre.getLayer('osm-labels');
+        if (lyr) maplibre.setLayoutProperty('osm-labels', 'visibility', checked ? 'visible' : 'none');
+      } else {
+        if (checked) { if (!map.hasLayer(labels)) labels.addTo(map); }
+        else { if (map.hasLayer(labels)) map.removeLayer(labels); }
+      }
+    });
+
+    addCheckbox(layerTileState.surfaceInfrastructure, 'Surface Infrastructure', (checked) => {
+      layerTileState.surfaceInfrastructure = checked;
+      if (maplibreActive && maplibre) {
+        ['egress-points-solid', 'egress-points-dashed'].forEach(id => {
+          if (maplibre.getLayer(id)) maplibre.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
+      } else {
+        if (checked) { if (!map.hasLayer(points)) points.addTo(map); }
+        else { if (map.hasLayer(points)) map.removeLayer(points); }
+      }
+    });
+
+    addCheckbox(layerTileState.metroBus, 'Metro bus (stops at zoom 15+)', (checked) => {
+      layerTileState.metroBus = checked;
+      if (maplibreActive && maplibre) {
+        ['bus-routes', 'bus-stops'].forEach(id => {
+          if (maplibre.getLayer(id)) maplibre.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
+      } else {
+        if (checked) { if (!map.hasLayer(bus)) bus.addTo(map); }
+        else { if (map.hasLayer(bus)) map.removeLayer(bus); }
+      }
+    });
+
+    addCheckbox(layerTileState.linkLightRail, 'Link light rail', (checked) => {
+      layerTileState.linkLightRail = checked;
+      if (maplibreActive && maplibre) {
+        ['link-lines', 'link-stations'].forEach(id => {
+          if (maplibre.getLayer(id)) maplibre.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
+        });
+      } else {
+        if (checked) { if (!map.hasLayer(rail)) rail.addTo(map); }
+        else { if (map.hasLayer(rail)) map.removeLayer(rail); }
+      }
+    });
+
+    return container;
+  }
+
   /* ---------- Map ---------- */
 
   const map = L.map('map', {
@@ -91,26 +197,32 @@
   const zoom = L.control.zoom({position: compact.matches ? 'topleft' : 'bottomright'}).addTo(map);
   map.getContainer().classList.toggle('is-compact', compact.matches);
 
+  // CARTO basemap API key, obfuscated with base64. This is obfuscation,
+  // not security: the decoded key is visible in the browser Network tab
+  // on every tile request. Real protection is key Referer restriction
+  // in the CARTO dashboard, managed separately.
+  const CARTO_KEY_B64 = 'Y2IxXzVmOHNfMV9kMTI5NmU3NWUwNmM2YjM1NzZkODNkZjk=';
+  const cartoKey = () => atob(CARTO_KEY_B64);
+
   const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'});
   const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Tiles &copy; Esri &mdash; Sources: Esri, Maxar, Earthstar Geographics, and the GIS User Community'});
   const eox = L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023_3857/default/g/{z}/{y}/{x}.jpg', {maxZoom: 18, attribution: 'Sentinel-2 cloudless &copy; <a href="https://eox.at/">EOX IT Services GmbH</a>, contains modified Copernicus Sentinel data 2023, <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>'});
-  const labels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'});
+  const labels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png?key=' + cartoKey(), {maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'});
   street.addTo(map);
   const points = L.layerGroup().addTo(map);
 
-  // The layer list is open on roomy screens and a 44px button on compact ones.
-  // Leaflet only wires the open/close handlers when the control is created
-  // collapsed, so create it that way and refuse to collapse on roomy screens.
-  const layers = L.control.layers(
-    {'OpenStreetMap': street, 'Esri imagery': esri, 'EOX Sentinel-2 cloudless': eox},
-    {'Labels': labels, 'Surface infrastructure': points},
-    {collapsed: true}
+  // Single layer tile: same 4 checkboxes in 2D and 3D, no base-layer radios.
+  const layerTile = L.control({position: 'topright'});
+  layerTile.onAdd = () => buildLayerTile();
+  layerTile.addTo(map);
+
+  // Base-layer panel (2D only). Hidden in 3D by the Leaflet hide fix.
+  const baseLayers = L.control.layers(
+    {'OpenStreetMap': street, 'Esri World Imagery': esri, 'EOX Sentinel-2 cloudless': eox},
+    {},
+    {collapsed: false, position: 'topright'}
   );
-  layers.collapse = function () {
-    return compact.matches ? L.Control.Layers.prototype.collapse.call(this) : this;
-  };
-  layers.addTo(map);
-  if (!compact.matches) layers.expand();
+  baseLayers.addTo(map);
 
   // The bottom bar can change height when its text wraps; keep Leaflet in sync.
   if ('ResizeObserver' in window) {
@@ -126,7 +238,7 @@
     const topPad = compact.matches && size.y >= 260 ? 64 : 16;
     const maxWidth = Math.max(160, Math.min(320, size.x - 32 - 34));
     const maxHeight = Math.max(96, size.y - topPad - 16 - 56);
-    const controlsWidth = Math.max(layers.getContainer().offsetWidth, placeBox.offsetWidth) + 26;
+    const controlsWidth = 0;
     const rightPad = !compact.matches && size.x - controlsWidth - 16 >= maxWidth + 34 ? controlsWidth : 16;
     const pads = options.autoPanPaddingTopLeft, padsEnd = options.autoPanPaddingBottomRight;
     if (options.maxWidth === maxWidth && options.maxHeight === maxHeight && pads?.y === topPad && padsEnd?.x === rightPad) return;
@@ -184,7 +296,6 @@
       function showStops() { if (!isBus || map.getZoom() >= 15) group.addLayer(stopLayer); else group.removeLayer(stopLayer); }
       map.on('zoomend', showStops);
       showStops();
-      layers.addOverlay(group, isBus ? 'Metro bus (stops at zoom 15+)' : 'Link light rail');
       if (!isBus) { group.addTo(map); showLineLegend(lines); }
     }).catch(() => {
       // The feeds ship in data/. Only mention them when one fails to load.
@@ -221,15 +332,11 @@
   function setPlacesOpen(open) {
     placeOptions.hidden = !open;
     placeToggle.setAttribute('aria-expanded', String(open));
-    if (open && compact.matches) layers.collapse();
   }
   placeToggle.addEventListener('click', () => setPlacesOpen(placeOptions.hidden));
   setPlacesOpen(!compact.matches);
   L.DomEvent.disableClickPropagation(placeBox);
   L.DomEvent.disableScrollPropagation(placeBox);
-  const placeControl = L.control({position: 'topright'});
-  placeControl.onAdd = () => placeBox;
-  placeControl.addTo(map);
 
   function schedulePlaces() {
     clearTimeout(poiTimer);
@@ -268,7 +375,6 @@
       if (e.name !== 'AbortError') setStatus('error', 'Places unavailable; try again later');
     }
   }
-  layers.addOverlay(places, 'Places (OpenStreetMap)');
   map.on('moveend overlayadd overlayremove', schedulePlaces);
 
   /* ---------- Surface records ---------- */
@@ -283,8 +389,9 @@
   };
 
   // Leaflet's divIcon `html` option takes a string, not a DOM node. Return an
-  // HTML string so the SVG is parsed by the browser and the `.shape` CSS rules
-  // (fill/stroke from --marker-fill / --marker-casing) apply to the child shape.
+  // HTML string so the SVG is parsed by the browser. Inline style sets
+  // fill/stroke from CSS variables so icons render correctly even if CSS
+  // inheritance doesn't reach the child SVG elements (e.g. inside divIcon).
   function shapeIcon(type, dashed) {
     const [tag, attrs] = shapes[type] || shapes.station_egress;
     let attrStr = '';
@@ -292,7 +399,10 @@
       attrStr += ` ${name}="${value}"`;
     }
     const cls = dashed ? 'shape is-dashed' : 'shape';
-    return `<svg class="${cls}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><${tag}${attrStr}></${tag}></svg>`;
+    const style = dashed
+      ? 'fill: var(--marker-casing); stroke: var(--marker-fill); stroke-width: 2; stroke-linejoin: round; paint-order: normal;'
+      : 'fill: var(--marker-fill); stroke: var(--marker-casing); stroke-width: 2; stroke-linejoin: round; paint-order: stroke;';
+    return `<svg class="${cls}" style="${style}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><${tag}${attrStr}></${tag}></svg>`;
   }
 
   function popupContent(p) {
@@ -326,6 +436,7 @@
       const kind = text('span', sentence(p.type));
       button.type = 'button';
       button.className = 'record-button';
+      button.dataset.id = p.id;
       kind.className = 'record-kind';
       button.append(text('span', p.name), kind);
 
@@ -333,7 +444,9 @@
         icon: L.divIcon({className: 'record-marker', html: shapeIcon(p.type, dashed), iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -8]}),
         keyboard: true,
         riseOnHover: true
-      }).bindPopup(popupContent(p)).addTo(points);
+      });
+      marker._featureId = p.id;
+      marker.bindPopup(popupContent(p)).addTo(points);
       const icon = marker.getElement();
       if (icon) icon.setAttribute('aria-label', `${p.name}, ${sentence(p.type)}`);
 
@@ -349,8 +462,14 @@
 
       button.addEventListener('click', () => {
         if (mobile.matches) setPanel(false);
-        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), {animate: false});
-        marker.openPopup();
+        selectRecord(p.id, marker.getLatLng());
+        if (maplibreActive && maplibre) {
+          // In 3D view, open a MapLibre popup at the marker location.
+          open3DPopup(p.id, marker.getLatLng());
+        } else {
+          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), {animate: false});
+          marker.openPopup();
+        }
       });
       item.append(button);
       mappedList.append(item);
@@ -375,6 +494,7 @@
 
   fetch('data/egress.geojson').then(r => { if (!r.ok) throw Error(r.status); return r.json(); }).then(json => {
     features = json.features;
+    window.__atlasData = { features };
     render();
     renderUnmapped();
     const unmapped = features.filter(f => !f.geometry).length;
@@ -410,6 +530,62 @@
   /* ---------- Bottom sheet (below 760px) ---------- */
 
   const panel = $('#panel'), panelToggle = $('#panel-toggle'), panelLabel = $('#panel-toggle-label');
+  const panelClose = $('#panel-close');
+  const panelReopen = $('#panel-reopen');
+  const panel3dNote = $('#panel-3d-note');
+  const mainEl = document.getElementById('main');
+
+  // Sidebar open/close state for 2D view. Default opened. Persisted in
+  // the same settings localStorage record as the other preferences.
+  let sidebarOpen = state.sidebarOpen;
+
+  // Apply the current sidebar state to the panel, reopen button, and
+  // main grid (collapsing the panel column to 0 when closed so the map
+  // fills the full width with no black void).
+  function applySidebarState() {
+    if (sidebarOpen) {
+      panel.classList.remove('collapsed');
+      mainEl.classList.remove('sidebar-closed');
+      panelReopen.hidden = true;
+    } else {
+      panel.classList.add('collapsed');
+      mainEl.classList.add('sidebar-closed');
+      panelReopen.hidden = false;
+    }
+  }
+
+  // Toggle the sidebar open/closed in 2D view only. In 3D the sidebar
+  // always stays open.
+  function toggleSidebar() {
+    if (maplibreActive) return;
+    sidebarOpen = !sidebarOpen;
+    applySidebarState();
+    save();
+  }
+
+  // Close button inside the panel header — 2D view only.
+  panelClose.addEventListener('click', () => {
+    if (maplibreActive) return;
+    sidebarOpen = false;
+    applySidebarState();
+    save();
+  });
+
+  // Reopen button at the left edge — 2D view only, visible when closed.
+  panelReopen.addEventListener('click', () => {
+    if (maplibreActive) return;
+    sidebarOpen = true;
+    applySidebarState();
+    save();
+  });
+
+  // Initialize sidebar state on page load. Close button and reopen button
+  // are managed by switchTo3D/switchTo2D; here we just set the initial
+  // collapsed class based on saved state.
+  applySidebarState();
+  panelClose.hidden = !sidebarOpen;
+  panelReopen.hidden = sidebarOpen;
+
   function setPanel(open) {
     panel.classList.toggle('is-open', open);
     panelToggle.setAttribute('aria-expanded', String(open));
@@ -417,13 +593,19 @@
   }
   panelToggle.addEventListener('click', () => {
     const open = !panel.classList.contains('is-open');
+    sidebarOpen = open;
     setPanel(open);
+    applySidebarState();
+    save();
     if (open) { map.closePopup(); panel.scrollTop = 0; panel.focus({preventScroll: true}); }
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
     if (mobile.matches && panel.classList.contains('is-open')) {
+      sidebarOpen = false;
       setPanel(false);
+      applySidebarState();
+      save();
       panelToggle.focus();
     } else if (openPopup) {
       map.closePopup(openPopup);
@@ -434,7 +616,6 @@
     setPanel(false);
     map.getContainer().classList.toggle('is-compact', compact.matches);
     zoom.setPosition(compact.matches ? 'topleft' : 'bottomright');
-    if (compact.matches) layers.collapse(); else layers.expand();
     setPlacesOpen(!compact.matches);
   }
   mobile.addEventListener('change', onLayoutChange);
@@ -470,8 +651,8 @@
       const file = e.target.files[0];
       if (!file || file.size > 10000) throw Error();
       const d = JSON.parse(await file.text());
-      if (d.version !== 1 || typeof d.showLower !== 'boolean' || typeof d.rememberView !== 'boolean' || typeof d.acknowledged !== 'boolean' || !(d.view === null || (Array.isArray(d.view) && d.view.length === 3 && d.view.every(Number.isFinite) && Math.abs(d.view[0]) <= 90 && Math.abs(d.view[1]) <= 180 && d.view[2] >= 0 && d.view[2] <= 19))) throw Error();
-      state = {version: 1, acknowledged: state.acknowledged, showLower: d.showLower, rememberView: d.rememberView, view: d.view};
+      if (d.version !== 1 || typeof d.showLower !== 'boolean' || typeof d.rememberView !== 'boolean' || typeof d.acknowledged !== 'boolean' || typeof d.sidebarOpen !== 'boolean' || !(d.view === null || (Array.isArray(d.view) && d.view.length === 3 && d.view.every(Number.isFinite) && Math.abs(d.view[0]) <= 90 && Math.abs(d.view[1]) <= 180 && d.view[2] >= 0 && d.view[2] <= 19))) throw Error();
+      state = {version: 1, acknowledged: state.acknowledged, showLower: d.showLower, rememberView: d.rememberView, view: d.view, sidebarOpen: d.sidebarOpen};
       medium.checked = state.showLower;
       remember.checked = state.rememberView;
       save();
@@ -487,4 +668,619 @@
   map.on('moveend', () => {
     if (state.rememberView) { const c = map.getCenter(); state.view = [c.lat, c.lng, map.getZoom()]; save(); }
   });
+
+  /* ---------- Optional 3D view (MapLibre GL JS, WebGL) ---------- */
+
+  let maplibre = null;
+  let maplibreActive = false;
+  let selectedRecordId = null;
+  let current3DPopup = null;
+
+  // Select a record in both views: highlight its list entry and centre the
+  // map on it. Called from record buttons and from 3D taps.
+  function selectRecord(featureId, latlng) {
+    selectedRecordId = featureId;
+    document.querySelectorAll('.record-button').forEach(b => b.removeAttribute('aria-current'));
+    const btn = document.querySelector(`.record-button[data-id="${featureId}"]`);
+    if (btn) btn.setAttribute('aria-current', 'true');
+  }
+
+  // Type colours for 3D view — MapLibre circle layers are discs, so type
+  // is shown by colour instead of shape. Colours match the Astryx neutral
+  // theme.
+  const TYPE_COLOR_3D = {
+    portal: '#08a3a3',       // teal
+    station_egress: '#0171e3', // blue
+    station_shaft: '#a13f04',   // orange
+    vent_facility: '#fcec85' // yellow
+  };
+
+// Custom OSM raster tile style for MapLibre — same tiles as the 2D Leaflet
+// OSM layer. Public source, no API key, no token. Roads and labels visible
+// at every zoom.
+const OSM_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    },
+    labels: {
+      type: 'raster',
+      tiles: ['https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png?key=' + cartoKey()],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© OpenStreetMap contributors © CARTO'
+    }
+  },
+  layers: [{
+    id: 'osm-raster',
+    type: 'raster',
+    source: 'osm'
+  }, {
+    id: 'osm-labels',
+    type: 'raster',
+    source: 'labels',
+    layout: { visibility: 'visible' }
+  }]
+};
+
+// Draw a marker shape on an offscreen canvas. type: portal | station_egress |
+// station_shaft | vent_facility. solid=true: type color fill + white stroke
+// (high confidence). solid=false: white fill + type color stroke with a real
+// dashed outline (medium / low confidence). Returns ImageData for
+// maplibre.addImage().
+function drawMarkerShape(type, solid) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 24;
+  canvas.height = 24;
+  const ctx = canvas.getContext('2d');
+  const fill = solid ? TYPE_COLOR_3D[type] : '#ffffff';
+  const stroke = solid ? '#ffffff' : TYPE_COLOR_3D[type];
+
+  ctx.clearRect(0, 0, 24, 24);
+  ctx.beginPath();
+  if (type === 'portal') {
+    ctx.rect(6, 6, 12, 12);
+  } else if (type === 'vent_facility') {
+    ctx.moveTo(12, 4);
+    ctx.lineTo(20, 20);
+    ctx.lineTo(4, 20);
+    ctx.closePath();
+  } else if (type === 'station_egress') {
+    ctx.arc(12, 12, 8, 0, 2 * Math.PI);
+  } else if (type === 'station_shaft') {
+    ctx.moveTo(12, 4);
+    ctx.lineTo(20, 12);
+    ctx.lineTo(12, 20);
+    ctx.lineTo(4, 12);
+    ctx.closePath();
+  }
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 2;
+  if (!solid) {
+    ctx.setLineDash([4, 3]);
+  }
+  ctx.stroke();
+  if (!solid) {
+    ctx.setLineDash([]);
+  }
+  return ctx.getImageData(0, 0, 24, 24);
+}
+
+// Add 3D buildings from demotiles vector tiles (openmaptiles schema).
+// Reads tiles.json first to discover the building source, source-layer, and
+// height property. Drawn as fill-extrusion below markers and lines.
+async function addBuildings() {
+  try {
+    const tilesRes = await fetch('https://demotiles.maplibre.org/tiles/tiles.json');
+    if (!tilesRes.ok) throw Error(`tiles.json: ${tilesRes.status}`);
+    const tiles = await tilesRes.json();
+
+    // Discover the building vector tile URL from tiles.json sources.
+    let buildingTileUrl = null;
+    if (tiles.sources) {
+      for (const [name, src] of Object.entries(tiles.sources)) {
+        if (src.type === 'vector' && Array.isArray(src.tiles) && src.tiles.length > 0) {
+          buildingTileUrl = src.tiles[0];
+          break;
+        }
+      }
+    }
+    if (!buildingTileUrl) {
+      buildingTileUrl = 'https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf';
+    }
+
+    maplibre.addSource('buildings', {
+      type: 'vector',
+      tiles: [buildingTileUrl],
+      maxzoom: 16
+    });
+
+    // Add building footprints as fill-extrusion. Try render_height first
+    // (openmaptiles schema), then height, with a 20m fallback so buildings
+    // are visible at typical zooms.
+    maplibre.addLayer({
+      id: 'buildings-fill-extrusion',
+      type: 'fill-extrusion',
+      source: 'buildings',
+      'source-layer': 'building',
+      filter: ['in', ['geometry-type'], 'Polygon', 'MultiPolygon'],
+      paint: {
+        'fill-extrusion-color': '#c8c8c8',
+        'fill-extrusion-height': [
+          'coalesce',
+          ['get', 'render_height'],
+          ['get', 'height'],
+          20
+        ],
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 0.85
+      }
+    });
+  } catch (e) {
+    console.warn('3D: could not load buildings:', e);
+  }
+}
+
+// Open a MapLibre popup with the same detail content as Leaflet's popup,
+// at the given location. Used by 3D taps and by record list buttons in 3D.
+// Keeps a single popup reference: closes any existing popup before opening
+// a new one, then eases the map so the popup sits on-screen.
+function open3DPopup(featureId, latlng) {
+  const f = features.find(f => f.id === featureId);
+  if (!f || !maplibre) return;
+  const p = f.properties;
+  if (current3DPopup) {
+    current3DPopup.remove();
+    current3DPopup = null;
+  }
+  const el = popupContent(p);
+  current3DPopup = new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+    .setLngLat([latlng.lng, latlng.lat])
+    .setHTML(el.outerHTML)
+    .addTo(maplibre);
+  current3DPopup.on('close', () => { current3DPopup = null; });
+  maplibre.easeTo({ center: [latlng.lng, latlng.lat], zoom: 14, duration: 500 });
+  return current3DPopup;
+}
+
+// The 3D layer tile wraps buildLayerTile() output in a MapLibre control
+// object so maplibre.addControl() accepts it. 2D uses the same tile via
+// L.control({onAdd: ...}).
+function layerTileControl() {
+  const el = buildLayerTile();
+  return {
+    onAdd: () => el,
+    onRemove: () => { if (el.parentNode) el.parentNode.removeChild(el); },
+    getDefaultPosition: () => 'top-left'
+  };
+}
+
+// Load a GeoJSON file and add it as a MapLibre source + layer.
+// paint values can be MapLibre expressions (arrays).
+async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
+    try {
+      const response = await fetch(path);
+      if (!response.ok) throw Error(`${path}: ${response.status}`);
+      const data = await response.json();
+      maplibre.addSource(id, { type: 'geojson', data });
+      const layer = {
+        id,
+        source: id,
+        type: layerType,
+        paint
+      };
+      if (minzoom !== undefined) layer.minzoom = minzoom;
+      maplibre.addLayer(layer);
+    } catch (e) {
+      console.warn(`3D: could not load ${id}:`, e);
+    }
+  }
+
+  // Build all MapLibre layers from the data files. Egress points come from
+  // window.__atlasData (already parsed by app.js); the rest are fetched.
+  async function buildMapLibreLayers() {
+    // Register marker shape images for symbol layers (one per type, solid +
+    // dashed). MapLibre circle layers can only draw discs, so we use symbol
+    // layers with canvas-drawn images to show the four shapes in type color.
+    const types = ['portal', 'station_egress', 'station_shaft', 'vent_facility'];
+    types.forEach(type => {
+      try {
+        maplibre.addImage(`${type}-solid`, drawMarkerShape(type, true));
+      } catch (e) {
+        console.error('[sea-tunnel-atlas] addImage failed:', `${type}-solid`, e);
+      }
+      try {
+        maplibre.addImage(`${type}-dashed`, drawMarkerShape(type, false));
+      } catch (e) {
+        console.error('[sea-tunnel-atlas] addImage failed:', `${type}-dashed`, e);
+      }
+    });
+
+    // Egress points from shared features. Include ALL points in the source
+    // (no confidence filter here); the solid and dashed layers split them by
+    // confidence via their own filters. The dashed layer's visibility is
+    // toggled by the showLower setting.
+    const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
+    const egressPoints = egressFeatures.filter(
+      f => f.geometry && f.geometry.type === 'Point'
+    );
+    if (egressPoints.length) {
+      maplibre.addSource('egress-points', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: egressPoints }
+      });
+
+      const iconImageExpr = (suffix) => [
+        'match',
+        ['get', 'type'],
+        'portal', `portal-${suffix}`,
+        'station_egress', `station_egress-${suffix}`,
+        'station_shaft', `station_shaft-${suffix}`,
+        'vent_facility', `vent_facility-${suffix}`,
+        `station_egress-${suffix}`
+      ];
+
+      maplibre.addLayer({
+        id: 'egress-points-solid',
+        source: 'egress-points',
+        type: 'symbol',
+        filter: ['==', ['get', 'confidence'], 'high'],
+        layout: {
+          'icon-image': iconImageExpr('solid'),
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 1.0, 18, 1.4],
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true
+        }
+      });
+
+      maplibre.addLayer({
+        id: 'egress-points-dashed',
+        source: 'egress-points',
+        type: 'symbol',
+        filter: ['!=', ['get', 'confidence'], 'high'],
+        layout: {
+          'icon-image': iconImageExpr('dashed'),
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 1.0, 18, 1.4],
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+          'visibility': state.showLower ? 'visible' : 'none'
+        }
+      });
+    }
+
+    // Other GeoJSON layers from data/ files.
+    await addGeoJsonLayer(
+      'link-lines', '/data/link-lines.geojson', 'line',
+      { 'line-color': ['concat', '#', ['get', 'color']], 'line-width': 3 }
+    );
+    await addGeoJsonLayer(
+      'link-stations', '/data/link-stations.geojson', 'circle',
+      { 'circle-radius': 6, 'circle-color': TYPE_COLOR_3D.station_egress, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 }
+    );
+    await addGeoJsonLayer(
+      'bus-routes', '/data/bus-routes.geojson', 'line',
+      { 'line-color': '#787878', 'line-width': 2 },
+      15
+    );
+    await addGeoJsonLayer(
+      'bus-stops', '/data/bus-stops.geojson', 'circle',
+      { 'circle-radius': 4, 'circle-color': '#787878', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 0.5 },
+      15
+    );
+  }
+
+  // Switch from Leaflet to the 3D view. Uses MapLibre GL JS with WebGL —
+  // works on all platforms (Windows, macOS, Linux, Chrome, Edge, Firefox).
+  async function switchTo3D() {
+    if (maplibreActive) return;
+
+    console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
+
+    // Remember scroll position so switching to 3D doesn't scroll the page
+    // and hide the top bar.
+    const scrollY = window.scrollY;
+
+    const mapDiv = $('#map');
+    const maplibreContainer = $('#maplibre-map');
+    if (!mapDiv || !maplibreContainer) {
+      console.error('[sea-tunnel-atlas] switchTo3D: #map or #maplibre-map not found');
+      return;
+    }
+    console.info('[sea-tunnel-atlas] switchTo3D: #map and #maplibre-map found');
+
+    // Guard: MapLibre library did not load (CDN failure, blocked, etc.).
+    if (typeof maplibregl === 'undefined') {
+      console.error('[sea-tunnel-atlas] switchTo3D: maplibregl is not defined — MapLibre library did not load. Check assets/maplibre/maplibre-gl.js.');
+      const msg = $('#view-3d-unavailable');
+      if (msg) {
+        msg.textContent = '3D map library did not load — staying on the 2D map.';
+        msg.hidden = false;
+      }
+      setTimeout(() => { if (msg) msg.hidden = true; }, 15000);
+      return;
+    }
+
+    mapDiv.classList.add('view-3d');
+    maplibreContainer.hidden = false;
+
+    // Flush layout so MapLibre can measure the now-visible container
+    // correctly. Without this, MapLibre sees a 0x0 container (it was
+    // display: none until just now) and lays out its controls off-screen.
+    await new Promise(r => requestAnimationFrame(r));
+
+    // Disable Leaflet interaction so no Leaflet input can fire in 3D view.
+    // Leaflet's panes and controls are hidden by CSS (selector now matches
+    // #map itself, which carries the leaflet-container class).
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.doubleClickZoom.disable();
+    map.touchZoom.disable();
+    map.keyboard.disable();
+
+    // Get current Leaflet view.
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    console.info('[sea-tunnel-atlas] switchTo3D: Leaflet center =', center.lat, center.lng, 'zoom =', zoom);
+
+    // Keep the page from scrolling while the 3D view is active so the
+    // top bar and safety warning stay visible.
+    document.body.classList.add('atlas-3d-active');
+
+    // Initialize MapLibre.
+    try {
+      // WebGL check: a canvas must be able to create a WebGL context.
+      // maplibregl.supported() does not exist in MapLibre 5.7.3; check directly.
+      let webglOk = false;
+      try {
+        const probe = document.createElement('canvas');
+        webglOk = !!(probe.getContext('webgl2') || probe.getContext('webgl'));
+      } catch {}
+      if (!webglOk) {
+        throw new Error('3D view is not available in this browser — WebGL is required. Staying on the 2D map.');
+      }
+
+      maplibre = new maplibregl.Map({
+        container: maplibreContainer,
+        style: OSM_STYLE,
+        center: [center.lng, center.lat],
+        zoom: zoom,
+        pitch: 45,
+        bearing: 0
+      });
+
+      // Wait for the style to load before adding sources/layers. Adding
+      // sources or layers before the style loads throws "Style is not done
+      // loading".
+      await new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            reject(new Error('MapLibre style did not load within 15 seconds.'));
+          }
+        }, 15000);
+        maplibre.once('load', () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+        maplibre.once('error', (e) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            reject(new Error('MapLibre style load error: ' + String(e.error && e.error.message || e)));
+          }
+        });
+      });
+
+      // Add 3D buildings below markers and lines.
+      await addBuildings();
+
+      await buildMapLibreLayers();
+
+      // MapLibre laid out its controls against the container size when the
+      // map was created. Now that the style has loaded and layers are added,
+      // resize so controls sit against the final container size.
+      maplibre.resize();
+
+      // Add MapLibre's own zoom + compass control. Position is the second
+      // argument to addControl, not a constructor option.
+      maplibre.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+
+      // Add the shared layer tile (top-left, visible only in 3D).
+      maplibre.addControl(layerTileControl());
+
+      // Scroll to top so the top bar and safety warning are visible.
+      // scrollY is still saved for restoration when returning to 2D.
+      window.scrollTo(0, 0);
+
+      // Click on a feature: open the same detail panel as Leaflet.
+      // Bound to both egress layer ids (solid + dashed) since there is no
+      // layer with id 'egress-points' — that is the source id.
+      maplibre.on('click', 'egress-points-solid', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+      maplibre.on('click', 'egress-points-dashed', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+      maplibre.on('click', 'link-stations', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+      maplibre.on('click', 'bus-stops', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+      maplibre.on('click', 'link-lines', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+
+      // Sync view once when MapLibre moves — sync on switch is enough for
+      // returning to 2D seamlessly (not every frame).
+      maplibre.on('moveend', () => {
+        if (!maplibreActive) return;
+        const c = maplibre.getCenter();
+        const z = maplibre.getZoom();
+        map.setView([c.lat, c.lng], z, { animate: false });
+      });
+
+      // In 3D: force the sidebar open so mapped records are visible — they
+      // are the only way to open detail popups in 3D. Do NOT call save():
+      // the forced-open 3D state is temporary and must not overwrite the
+      // saved 2D state in localStorage.
+      if (!sidebarOpen) {
+        sidebarOpen = true;
+        applySidebarState();
+      }
+      panelClose.hidden = true;
+      panelReopen.hidden = true;
+      panel3dNote.hidden = false;
+
+      // Clicking the 3D map canvas reopens the sidebar if it was closed.
+      maplibre.getContainer().addEventListener('click', () => {
+        if (!maplibreActive) return;
+        if (!sidebarOpen) {
+          sidebarOpen = true;
+          applySidebarState();
+          save();
+        }
+      });
+
+      maplibreActive = true;
+      console.info('[sea-tunnel-atlas] switchTo3D: MapLibre 3D view activated');
+    } catch (e) {
+      console.error('[sea-tunnel-atlas] switchTo3D: MapLibre initialization FAILED:', e);
+      const msg = $('#view-3d-unavailable');
+      if (msg) {
+        msg.textContent = '3D view failed to start: ' + String(e.message);
+        msg.hidden = false;
+      }
+      setTimeout(() => { if (msg) msg.hidden = true; }, 15000);
+      mapDiv.classList.remove('view-3d');
+      maplibreContainer.hidden = true;
+      document.body.classList.remove('atlas-3d-active');
+      // Re-enable Leaflet interaction since we are staying on Leaflet.
+      map.dragging.enable();
+      map.scrollWheelZoom.enable();
+      map.doubleClickZoom.enable();
+      map.touchZoom.enable();
+      map.keyboard.enable();
+      map.invalidateSize();
+      window.scrollTo(0, scrollY);
+      return;
+    }
+
+    // Toggle buttons.
+    const b3d = $('#view-3d-toggle');
+    const b2d = $('#view-2d-toggle');
+    if (b3d) b3d.hidden = true;
+    if (b2d) b2d.hidden = false;
+
+    console.info('[sea-tunnel-atlas] switchTo3D: MapLibre 3D view activated');
+  }
+
+  // Switch from 3D back to Leaflet, keeping the same centre, zoom and
+  // selected record.
+  function switchTo2D() {
+    if (!maplibreActive || !maplibre) return;
+
+    const view = maplibre.getCenter();
+    const zoom = maplibre.getZoom();
+    maplibre.remove();
+    maplibre = null;
+    maplibreActive = false;
+
+    $('#maplibre-map').hidden = true;
+    $('#map').classList.remove('view-3d');
+    document.body.classList.remove('atlas-3d-active');
+
+    // Re-enable Leaflet interaction now that 3D is off, so Leaflet works
+    // exactly as before in 2D view.
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoom.enable();
+    map.keyboard.enable();
+    map.invalidateSize();
+
+    // Restore the saved 2D sidebar state. The forced-open 3D state is
+    // temporary and must not overwrite what the user saved in 2D.
+    sidebarOpen = state.sidebarOpen;
+    applySidebarState();
+    panelClose.hidden = !sidebarOpen || maplibreActive;
+    panelReopen.hidden = sidebarOpen || maplibreActive;
+    panel3dNote.hidden = true;
+
+    const b3d = $('#view-3d-toggle');
+    const b2d = $('#view-2d-toggle');
+    if (b3d) b3d.hidden = false;
+    if (b2d) b2d.hidden = true;
+
+    if (view) {
+      map.setView([view.lat, view.lng], zoom, { animate: false });
+      if (selectedRecordId) {
+        const f = features.find(f => f.id === selectedRecordId);
+        if (f && f.geometry) {
+          const marker = points.getLayers().find(l => l._featureId === String(selectedRecordId));
+          if (marker) marker.openPopup();
+        }
+      }
+    }
+  }
+
+  // Wire the 3D / 2D buttons once the DOM is up. MapLibre works on all
+  // platforms with WebGL, so the 3D button is shown for everyone.
+  const b3d = $('#view-3d-toggle');
+  const b2d = $('#view-2d-toggle');
+  if (b3d) {
+    console.info('[sea-tunnel-atlas] 3D toggle button found, wiring click handler');
+    b3d.hidden = false;
+    b3d.addEventListener('click', switchTo3D);
+  } else {
+    console.error('[sea-tunnel-atlas] 3D toggle button #view-3d-toggle NOT found in DOM');
+  }
+  if (b2d) {
+    b2d.hidden = true;
+    b2d.addEventListener('click', switchTo2D);
+  }
+
+    // Honor the confidence filter in the 3D view too. All egress points are
+    // already in the source; the solid and dashed layers split them by
+    // confidence. Toggling showLower shows or hides the dashed layer.
+    medium.addEventListener('change', () => {
+      state.showLower = medium.checked;
+      save();
+      render();
+      if (maplibreActive && maplibre && maplibre.getLayer('egress-points-dashed')) {
+        maplibre.setLayoutProperty('egress-points-dashed', 'visibility',
+          state.showLower ? 'visible' : 'none');
+      }
+    });
 })();

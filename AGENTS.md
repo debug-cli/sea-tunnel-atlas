@@ -24,6 +24,14 @@ Nothing here is aspirational. Every claim was checked against the files at the c
 4. Do not claim a feature, feed, source verification, test, license, or deployment that does not exist.
 5. Preserve the seed files unless a reviewed change meets §4.
 
+### Anti-slop rules (govern every section that follows)
+
+- No invented data, coordinates, dates, or version numbers. Every number in this document (byte counts, line counts, commit hashes, test counts) must be verified against the tree or the git log, never guessed. If a number here disagrees with the tree, the tree is right.
+- No unverified claims. A fix is not "done" until a test or a preview check confirms it. A claim that a check passed must name the check and the result.
+- No filler, placeholder, or boilerplate prose. No duplicate sections. No generic AI phrasing. Short sentences, active voice.
+- No silently dropped features. If a change removes a control or a layer, the doc says what was removed, why, and what replaces it.
+- Every commit that changes behavior updates AGENTS.md and CHANGELOG.md in the same commit, or the commit message says the docs follow in the next commit.
+
 ## §1 Mental model
 
 ```text
@@ -118,7 +126,7 @@ Serve over HTTP, not `file:`. External tiles, Leaflet and Overpass require netwo
 
 ## §11 Review checklist
 
-Check sources and quotations, privacy and SSI, coordinate precision, attribution and license, keyboard controls, mobile display, tests, `git diff --check`, and claims against the actual tree. Do not infer source verification from a green test.
+Check sources and quotations, privacy and SSI, coordinate precision, attribution and license, keyboard controls, mobile display, tests, `git diff --check`, and claims against the actual tree. Do not infer source verification from a green test. Apply the anti-slop rules in §0: no invented numbers, no unverified claims, no filler, no silently dropped features, and docs updates in the same commit as behavior changes.
 
 ## §12 Open questions and unverified items
 
@@ -327,6 +335,152 @@ Not run here, because this environment has no browser: visual layout, dark-mode 
 - Pre-existing, corrected here: `TECHNICAL.md` said markers are colored by type. Markers are shaped by type with no per-type color, which is what the code does and what the legend shows.
 - Carried forward from §12: the GTFS conversion, route colors, tile endpoints and Overpass behavior in a browser remain unverified in this environment, and `dstt-n00` still cites a Wikipedia URL.
 
+
+## §14 v2.0.0 map change — optional WebGL 3D view (2026-11-23)
+
+This is the second change in release v2.0.0: an optional 3D map view built on
+MapLibre GL JS, presented alongside Leaflet. No data record, source, confidence,
+precision or verification date changed. Leaflet remains the default and opens
+first on every load.
+
+Deck.gl was replaced by MapLibre GL JS because Deck.gl had unresolved bugs:
+TileLayer lives in `@deck.gl/geo-layers` not `@deck.gl/layers` (undefined
+constructor), canvas was a div not a canvas element, only egress data was loaded,
+LineLayer math assumed LineString coordinates were two endpoints, CDN scripts used
+`@latest` (version drift), view-state sync fought the controller on every frame,
+confidence filter did not filter in 3D, no pixel floors on radius/width, click
+handling had id type mismatches. MapLibre GL JS is a complete map renderer with
+its own basemap, click API, and GeoJSON source support — none of these bugs.
+
+### §14.1 Library and risk
+
+- Library: `maplibre-gl` 5.7.3 (BSD-3-Clause), vendored locally at `assets/maplibre/`. No npm install, no bundler, no build step.
+- Repo: https://github.com/maplibre/maplibre-gl-js — fork of Mapbox GL JS 1.13, community governed, actively maintained.
+- Risk: low. MapLibre uses WebGL (not WebGPU) and works on all modern browsers including Windows, macOS, and Linux. No WebGPU dependency.
+- Vendored: `assets/maplibre/maplibre-gl.js` (941,827 bytes, UMD build) and `assets/maplibre/maplibre-gl.css` (69,430 bytes). Loaded via `<script defer>` and `<link>` tags in `index.html`. No unpkg CDN dependency for the 3D library.
+- Version 6.19.0 was dropped: it ships no `dist/maplibre-gl.js` (ESM only), so `maplibregl` is never defined in a `<script>` tag. Version 5.7.3 was chosen because it ships a working UMD `dist/maplibre-gl.js`.
+- No build step required: MapLibre UMD build loads via `<script>` tags in `index.html`.
+
+### §14.2 Build step decision
+
+- No build step at all. Leaflet path stays no-build: `python3 -m http.server 8000` serves `index.html`, `style.css`, `app.js` and the Astryx assets unchanged.
+- MapLibre loads from local `assets/maplibre/` files. No `package.json`, no `vite.config.js`, no `node_modules`, no unpkg dependency for the 3D library.
+- Leaflet still loads from unpkg CDN (verified working).
+- Vercel serves static files only. No runtime server.
+- MapLibre scripts are loaded with `defer` in `index.html`, parsed before `app.js` runs.
+- Test impact: none. Tests run on Node, not in a browser. `node --test tests/*.test.js` still passes 5/5.
+- If anything breaks the Leaflet no-build path, stop and report it. Verified: `python3 -m http.server 8000` returns 200 for all Leaflet-path files.
+
+### §14.3 Layer mapping
+
+| GeoJSON file | Records | MapLibre layer | Zoom rule | Null geometry |
+|---|---|---|---|---|
+| (base map) | — | Raster tiles via OSM style (tile.openstreetmap.org) | All zooms | N/A |
+| `data/egress.geojson` | 18 records, 15 points | Symbol layer, type-shaped markers | All zooms | 3 records stay in Not mapped list, never on the 3D map |
+| `data/link-lines.geojson` | 11 features | Line layer, data-driven colour | All zooms | N/A |
+| `data/link-stations.geojson` | 100 features | Circle layer | All zooms | N/A |
+| `data/bus-routes.geojson` | 422 routes | Line layer | Zoom 15+ | N/A |
+| `data/bus-stops.geojson` | 6,271 stops | Circle layer | Zoom 15+ | N/A |
+
+- Egress points come from `window.__atlasData.features` (parsed once by app.js). Four symbol layers (solid for high confidence, dashed for medium/low) use canvas-drawn marker images registered via `map.addImage()`. Shapes: portal (square), station_egress (circle), station_shaft (diamond), vent_facility (triangle). Colours by type: portal teal #08a3a3, station_egress blue #0171e3, station_shaft orange #a13f04, vent_facility yellow #fcec85.
+- Base map tiles from OpenStreetMap raster tiles (tile.openstreetmap.org/{z}/{x}/{y}.png) — same source as the 2D Leaflet OSM layer. Attribution shown in 3D view overlay.
+- Link lines use `['concat', '#', ['get', 'color']]` for data-driven line colour from feature `color` property (1 Line teal 28813F, 2 Line blue 007CAD, T Line orange).
+- Link lines, link stations, bus routes, bus stops fetched from `data/` files as GeoJSON sources.
+- Layer toggle panel (top-left, 3D only): Labels, Surface Infrastructure, Metro bus (stops at zoom 15+), Link light rail. Each toggle shows/hides its MapLibre layers via `setLayoutProperty(..., 'visibility', ...)`. The Places checkbox was removed from both 2D and 3D because places still render on the OSM raster tiles when zooming in — the checkbox was useless. The Places POI layerGroup code stays in app.js, off by default.
+- Detail panel in 3D: click a mapped record name in the left list to open the panel with name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings. Clicking a marker dot on the 3D map opens nothing (known limitation, §14.5).
+
+### §14.4 Marker shapes in 3D
+
+- MapLibre circle layers draw discs only, so egress points use symbol layers with canvas-drawn marker images. Four shapes per type (solid for high confidence, dashed outline for medium/low), drawn on an offscreen 24×24 canvas and registered via `map.addImage()`.
+- Colours by type match the Astryx neutral theme: portal (teal), station_egress (blue), station_shaft (orange), vent_facility (yellow).
+- Confidence filter: medium/low egress records use dashed-outline images and can be toggled via the `showLower` setting — matching Leaflet's behaviour.
+- Marker size: 24×24 px canvas per marker image, zoom-scaled with an `icon-size` interpolation expression (0.6 at zoom 10, 1.0 at zoom 14, 1.4 at zoom 18). Dashed outlines use `ctx.setLineDash([4, 3])` for real dashed borders on medium and low confidence records.
+
+### §14.5 Features rebuilt for 3D vs Leaflet-only
+
+Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), click handlers on MapLibre layers, confidence filter, camera sync between views (sync on moveend, not every frame), attribution badge, layer toggle panel, single on-screen MapLibre popup with zoom-to-feature, scroll lock while 3D is active.
+
+Leaflet-only: raster tile layers (OpenStreetMap, Esri imagery, EOX Sentinel-2, CARTO labels), Overpass Places, full-screen control, Leaflet zoom controls, base-layer panel (top-right). No control visible in 3D view does nothing there.
+
+3D click limitation (by design, maintainer decision 2026-11-24): clicking a marker dot on the 3D map opens nothing. Clicking a mapped record name in the left list opens the detail panel with name, type, tunnel, owner, public location, confidence, verified date, and source. A left-panel note says so. This is a known limitation, not a bug to fix.
+
+Dropped in 3D (with reason): marker circle-only rendering (replaced by symbol layers with type-shaped marker images). No features are silently dropped.
+
+### §14.6 Basemap, terrain, buildings, attribution
+
+- Basemap: custom MapLibre style with two raster sources — OpenStreetMap tiles (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`, same source as the 2D Leaflet OSM layer) and CARTO labels (`https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png`). No API key needed for OSM. CARTO labels use an API key passed as a `?key=` query parameter; the key is base64-obfuscated in `app.js` (`CARTO_KEY_B64`) and decoded at runtime with `atob()`. This is obfuscation, not security — the decoded key is visible in the browser Network tab on every tile request. Real protection is key Referer restriction in the CARTO dashboard and a future Vercel serverless proxy. The raw key never appears in the repo.
+- MapLibre URL fix: the CARTO labels URL uses only `{x}`, `{y}`, `{z}` — MapLibre-supported placeholders. The Leaflet copy keeps `{s}` and `{r}` which Leaflet expands itself. The old `{s}` placeholder in the MapLibre style caused a DNS failure (`{s}.basemaps.cartocdn.com` is not a resolvable host) and blocked the 3D view entirely (commit d93d43d).
+- Offline behaviour: if tile.openstreetmap.org or basemaps.cartocdn.com is unreachable, the 3D view shows no basemap tiles. Data layers still load but float on a blank background.
+- Terrain: not added. No raster-dem source; do not invent a terrain source.
+- Buildings: added via `addBuildings()` (commit 684d6ba). The function fetches `https://demotiles.maplibre.org/tiles/tiles.json` to discover the vector tile source, then adds a `fill-extrusion` layer with source-layer `building`, filter `['in', ['geometry-type'], 'Polygon', 'MultiPolygon']`, and height `['coalesce', ['get', 'render_height'], ['get', 'height'], 20]`. Buildings render below markers and lines at modest height. The demotiles buildings dependency remains a third-party dependency — if it goes offline, buildings simply don't render.
+- Attribution: OpenStreetMap attribution visible in 3D view via MapLibre's attribution control, styled with Astryx tokens. Credits: OpenStreetMap contributors (ODbL). CARTO attribution is included on the labels source.
+
+### §14.7 Files changed
+
+| File | Lines before | Lines after | Change |
+|---|---:|---:|---|
+| `index.html` | 135 | 138 | Replaced unpkg MapLibre 6.19.0 CDN with vendored MapLibre 5.7.3 at `assets/maplibre/`; replaced `#deck-canvas`/`#deck-attribution` with `#maplibre-map`; added panel close/reopen buttons and 3D note (commit c4a60fd) |
+| `style.css` | 1448 | 1545 | Section 14 rewritten for MapLibre; Helium layout fixes; sidebar collapse animation and reopen button; two-column grid fix; 3D note styling (commits c4a60fd, 4bee0c0d) |
+| `app.js` | 777 | 1286 | Removed all Deck.gl code; added MapLibre GL JS 3D view; 3D regressions fix (buildings, icons, popups, layer tile, scroll lock); 3D note, collapsible sidebar, two-column grid; base-layer panel in 2D; Places checkbox removal (commits f6b7f2b through 55f568c) |
+| `assets/maplibre/maplibre-gl.js` | — | 941827 bytes | New: vendored MapLibre GL JS 5.7.3 UMD build from npm package |
+| `assets/maplibre/maplibre-gl.css` | — | 69430 bytes | New: vendored MapLibre GL JS 5.7.3 CSS from npm package |
+| `js/3d.js` | — | — | Removed (was ImmersiveMap3D, WebGPU) |
+| `package.json` | — | — | Removed (was Vite build for ImmersiveMap) |
+| `vite.config.js` | — | — | Removed |
+| `dist/3d/` | — | — | Removed (Vite build output) |
+| `AGENTS.md` | — | — | This section rewritten for MapLibre 5.7.3 vendored; anti-slop rules added in §0; v2.0.0 map change updates (commits through c4a60fd) |
+| `README.md` | — | — | MapLibre replaces ImmersiveMap/Deck.gl references; v2 work continued through 2026-11-24 |
+| `CHANGELOG.md` | — | — | v2.0.0 map change entry updated with dated subsections; v1.0.0 entry added |
+| `TECHNICAL.md` | — | — | 3D view note updated |
+| `data/*.geojson` | — | — | Unchanged: 18 records, 15 points, 3 null geometry |
+
+Line counts reflect the tree at 2026-11-24; subsequent commits change them.
+
+### §14.8 What did not change
+
+- `data/*.geojson`: byte-for-byte identical. 18 records, 15 points, 3 with null geometry.
+- GeoJSON property set, feature `id` = property `id`, confidence, precision, `verified` dates, source titles and URLs.
+- Rule zero, the source ladder, §4 (adding a point), §5 (legal limits).
+- Astryx neutral theme: same tokens, fonts, and `style.css` mappings. The 3D view buttons use Astryx token colours.
+- Settings: key `sea-tunnel-atlas:v1`, schema version 1, acknowledgement not imported.
+- Leaflet 1.9.4, vanilla JS, no build step for the Leaflet path.
+- Safety warning: same wording, visible at every width, in both views and both color schemes.
+- Tests: 5 passing.
+- Leaflet divIcon inline fill/stroke fix for SVG icons (kept from Deck.gl patch).
+
+### §14.9 Verification
+
+| Command | Result |
+|---|---|
+| `node --test tests/*.test.js` | 5 tests, 5 pass, 0 fail |
+| `python3 -m py_compile tools/gtfs_to_geojson.py` | exit 0 |
+| `git diff --check` | clean |
+| `wc -l index.html style.css app.js` | 138, 1545, 1286 |
+| `jq '.features | length' data/egress.geojson` | 18 |
+| `jq '[.features[] | select(.geometry == null)] | length' data/egress.geojson` | 3 |
+| `node --check app.js` | exit 0 |
+
+Preview checks ran in a Chrome extension browser on Windows (2026-11-24): CARTO labels render with no "API KEY REQUIRED" watermark in 2D and 3D; "Seattle" label visible; one map on wide zoom out; 2D layer tile works with all four checkboxes; base-layer panel (OpenStreetMap, Esri World Imagery, EOX Sentinel-2 cloudless) toggles correctly in 2D; no satellite imagery in 3D. Manual checks still required on the maintainer's PC: tap 3D view and confirm no console error, tiles load, all four layer tile checkboxes toggle, four marker shapes render with dashed outlines on medium/low confidence, detail popup opens from list click, buildings rise in downtown Seattle, top bar stays visible after zoom out, same at mobile width.
+
+### §14.10 Open questions and unverified items
+
+- WebGL availability varies by browser/OS. The 3D view guard uses a direct WebGL canvas context check (`getContext('webgl2')` or `getContext('webgl')`) — `maplibregl.supported()` does not exist in MapLibre 5.7.3 and was removed (commit f6b7f2b).
+- The demotiles buildings dependency (`https://demotiles.maplibre.org/tiles/tiles.json`) is a third-party dependency for building footprints only. If it goes offline, buildings don't render but basemap and data layers still work. The OSM/CARTO basemap is no longer a third-party dependency beyond OSM tile servers and CARTO.
+- Figtree woff2 still not shipped (pre-existing, §13.11).
+- PR #5 stays draft until the user confirms the 3D view works on PC.
+
+### §14.11 Changes since the initial MapLibre implementation
+
+Changes after commit f6b7f2b (initial MapLibre 3D view, 2026-11-23):
+
+- **addImage fix (commit a0ef087):** `drawMarkerShape()` returns `ImageData` via `ctx.getImageData(0, 0, 24, 24)` — not a raw canvas element, which MapLibre cannot parse. Each `addImage()` call is wrapped in its own try/catch so one bad icon cannot kill the whole 3D view.
+- **Leaflet hide fix (commit 1a2008a):** The CSS selector `#map.view-3d .leaflet-container` matched nothing because `#map` itself carries the `leaflet-container` class. Changed to `#map.view-3d.leaflet-container .leaflet-pane` and `#map.view-3d.leaflet-container .leaflet-control-container`, so Leaflet panes and controls are hidden in 3D.
+- **NavigationControl position fix (commit 1a2008a):** `maplibre.addControl(new maplibregl.NavigationControl(), 'bottom-right')` — position is the second argument to `addControl()`, not a constructor option. MapLibre 5.7.3's `NavigationControl` constructor takes only `visualizePitch`, `showCompass`, and `showZoom`.
+- **3D regressions fix (commit 9716412):** The 3D layer tile is now a proper MapLibre control object (`onAdd`/`onRemove`), not a raw div. All egress points are in the source (no confidence filter at source level); solid and dashed layers split by confidence. Click handlers are bound to the real layer ids (`egress-points-solid`, `egress-points-dashed`), not the source id `egress-points`. Single `current3DPopup` reference — closes any existing popup before opening a new one, eases the map to the feature. Scroll lock uses `html.atlas-3d-active` plus `body.atlas-3d-active`; scroll position is saved on switch and restored on return to 2D.
+- **3D note and collapsible sidebar (commit c4a60fd):** Left panel note visible only in 3D: "In 3D view, click a mapped record name in this list to open its details. Clicking a marker dot on the map does not open details." Collapsible sidebar in 2D only: close button in panel header, reopen button at the left edge, 225 ms slide animation with ease. Sidebar state (`sidebarOpen`) saved in the same `sea-tunnel-atlas:v1` settings record (default opened). Entering 3D forces the sidebar open temporarily without overwriting the saved 2D state. Returning to 2D restores the saved state.
+- **Black-void grid fix (commit 4bee0c0d):** `#main` restructured as a two-column grid — panel column (`minmax(0, 300px)`) + map column (`1fr`). `#main.sidebar-closed` collapses the panel column to 0 so the map fills the full width with no black void. `.panel-bar` spans both columns.
+- **Base-layer panel restore (commit 55f568c):** `L.control.layers` at top-right in 2D only, with OpenStreetMap (default), Esri World Imagery, EOX Sentinel-2 cloudless. Hidden in 3D by the Leaflet hide fix.
+- **Places checkbox removal (commit 55f568c):** Removed from the layer tile in both 2D and 3D — four checkboxes remain (Labels, Surface Infrastructure, Metro bus, Link light rail). Places still render on OSM raster tiles when zooming in; the checkbox was useless. Places POI layerGroup code stays in app.js, off by default.
 
 ## Verifying this document
 

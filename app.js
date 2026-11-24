@@ -208,10 +208,17 @@
   const zoom = L.control.zoom({position: compact.matches ? 'topleft' : 'bottomright'}).addTo(map);
   map.getContainer().classList.toggle('is-compact', compact.matches);
 
+  // CARTO basemap API key, obfuscated with base64. This is obfuscation,
+  // not security: the decoded key is visible in the browser Network tab
+  // on every tile request. Real protection is key Referer restriction
+  // in the CARTO dashboard, managed separately.
+  const CARTO_KEY_B64 = 'Y2IxXzVmOHNfMV9kMTI5NmU3NWUwNmM2YjM1NzZkODNkZjk=';
+  const cartoKey = () => atob(CARTO_KEY_B64);
+
   const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'});
   const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Tiles &copy; Esri &mdash; Sources: Esri, Maxar, Earthstar Geographics, and the GIS User Community'});
   const eox = L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023_3857/default/g/{z}/{y}/{x}.jpg', {maxZoom: 18, attribution: 'Sentinel-2 cloudless &copy; <a href="https://eox.at/">EOX IT Services GmbH</a>, contains modified Copernicus Sentinel data 2023, <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>'});
-  const labels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'});
+  const labels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png?key=' + cartoKey(), {maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'});
   street.addTo(map);
   const points = L.layerGroup().addTo(map);
 
@@ -643,7 +650,7 @@ const OSM_STYLE = {
     },
     labels: {
       type: 'raster',
-      tiles: ['https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png'],
+      tiles: ['https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png?key=' + cartoKey()],
       tileSize: 256,
       maxzoom: 19,
       attribution: '© OpenStreetMap contributors © CARTO'

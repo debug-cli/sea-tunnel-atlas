@@ -643,7 +643,7 @@ const OSM_STYLE = {
     },
     labels: {
       type: 'raster',
-      tiles: ['https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'],
+      tiles: ['https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png'],
       tileSize: 256,
       maxzoom: 19,
       attribution: '© OpenStreetMap contributors © CARTO'

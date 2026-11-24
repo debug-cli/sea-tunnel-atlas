@@ -346,16 +346,18 @@ its own basemap, click API, and GeoJSON source support — none of these bugs.
 
 ### §14.1 Library and risk
 
-- Library: `maplibre-gl` 6.19.0 (BSD-3-Clause), loaded from unpkg CDN. No npm install, no bundler, no build step.
+- Library: `maplibre-gl` 5.7.3 (BSD-3-Clause), vendored locally at `assets/maplibre/`. No npm install, no bundler, no build step.
 - Repo: https://github.com/maplibre/maplibre-gl-js — fork of Mapbox GL JS 1.13, community governed, actively maintained.
 - Risk: low. MapLibre uses WebGL (not WebGPU) and works on all modern browsers including Windows, macOS, and Linux. No WebGPU dependency.
-- CDN: `https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.js` and `maplibre-gl.css`. Version pinned, never `@latest`.
-- No build step required: MapLibre UMD builds load via `<script>` tags in `index.html`.
+- Vendored: `assets/maplibre/maplibre-gl.js` (941,827 bytes, UMD build) and `assets/maplibre/maplibre-gl.css` (69,430 bytes). Loaded via `<script defer>` and `<link>` tags in `index.html`. No unpkg CDN dependency for the 3D library.
+- Version 6.19.0 was dropped: it ships no `dist/maplibre-gl.js` (ESM only), so `maplibregl` is never defined in a `<script>` tag. Version 5.7.3 was chosen because it ships a working UMD `dist/maplibre-gl.js`.
+- No build step required: MapLibre UMD build loads via `<script>` tags in `index.html`.
 
 ### §14.2 Build step decision
 
 - No build step at all. Leaflet path stays no-build: `python3 -m http.server 8000` serves `index.html`, `style.css`, `app.js` and the Astryx assets unchanged.
-- MapLibre loads from unpkg CDN. No `package.json`, no `vite.config.js`, no `node_modules`.
+- MapLibre loads from local `assets/maplibre/` files. No `package.json`, no `vite.config.js`, no `node_modules`, no unpkg dependency for the 3D library.
+- Leaflet still loads from unpkg CDN (verified working).
 - Vercel serves static files only. No runtime server.
 - MapLibre scripts are loaded with `defer` in `index.html`, parsed before `app.js` runs.
 - Test impact: none. Tests run on Node, not in a browser. `node --test tests/*.test.js` still passes 5/5.
@@ -403,14 +405,16 @@ Dropped in 3D (with reason): marker shape-by-type (MapLibre circle layers are di
 
 | File | Lines before | Lines after | Change |
 |---|---:|---:|---|
-| `index.html` | 135 | 133 | Replaced Deck.gl CDN scripts with MapLibre GL JS 6.19.0 CDN; replaced `#deck-canvas`/`#deck-attribution` with `#maplibre-map` |
+| `index.html` | 135 | 133 | Replaced unpkg MapLibre 6.19.0 CDN with vendored MapLibre 5.7.3 at `assets/maplibre/`; replaced `#deck-canvas`/`#deck-attribution` with `#maplibre-map` |
 | `style.css` | 1448 | 1446 | Section 14 rewritten for MapLibre; fixed Helium layout bugs (z-index, canvas positioning) |
-| `app.js` | 777 | 793 | Removed all Deck.gl code; added MapLibre GL JS 3D view; kept inline SVG icon fix; removed extra debug logging |
+| `app.js` | 777 | 793 | Removed all Deck.gl code; added MapLibre GL JS 3D view; added `maplibregl` undefined guard; kept inline SVG icon fix |
+| `assets/maplibre/maplibre-gl.js` | — | 941827 bytes | New: vendored MapLibre GL JS 5.7.3 UMD build from npm package |
+| `assets/maplibre/maplibre-gl.css` | — | 69430 bytes | New: vendored MapLibre GL JS 5.7.3 CSS from npm package |
 | `js/3d.js` | — | — | Removed (was ImmersiveMap3D, WebGPU) |
 | `package.json` | — | — | Removed (was Vite build for ImmersiveMap) |
 | `vite.config.js` | — | — | Removed |
 | `dist/3d/` | — | — | Removed (Vite build output) |
-| `AGENTS.md` | — | — | This section rewritten for MapLibre |
+| `AGENTS.md` | — | — | This section rewritten for MapLibre 5.7.3 vendored |
 | `README.md` | — | — | MapLibre replaces ImmersiveMap/Deck.gl references |
 | `CHANGELOG.md` | — | — | v2.0.0 map change entry updated |
 | `TECHNICAL.md` | — | — | 3D view note updated |

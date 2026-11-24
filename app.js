@@ -628,7 +628,7 @@
 
     // Guard: MapLibre library did not load (CDN failure, blocked, etc.).
     if (typeof maplibregl === 'undefined') {
-      console.error('[sea-tunnel-atlas] switchTo3D: maplibregl is not defined — MapLibre library did not load. Check unpkg CDN request for https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.js');
+      console.error('[sea-tunnel-atlas] switchTo3D: maplibregl is not defined — MapLibre library did not load. Check assets/maplibre/maplibre-gl.js.');
       const msg = $('#view-3d-unavailable');
       if (msg) {
         msg.textContent = '3D map library did not load — staying on the 2D map.';

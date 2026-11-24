@@ -32,10 +32,10 @@ First assigned release. UI overhaul on the Astryx design system's neutral theme.
 
 ### Interface — 3D view (added 2026-11-23)
 
-- Added an optional WebGL 3D view using MapLibre GL JS 6.19.0 (BSD-3-Clause), loaded from unpkg CDN. Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button.
+- Added an optional WebGL 3D view using MapLibre GL JS 5.7.3 (BSD-3-Clause), vendored locally at `assets/maplibre/`. Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button.
 - 3D view button checks WebGL first via `maplibregl.supported()`; when WebGL is missing, Leaflet stays and a plain message shows. A "2D map" button returns to Leaflet with the same centre, zoom and selected record.
 - GeoJSON layers mapped to MapLibre: egress.geojson points (colour by type, discs), link-lines.geojson lines, link-stations.geojson points, bus-routes.geojson lines (zoom 15+), bus-stops.geojson points (zoom 15+). Base map from the MapLibre demo style (demotiles.maplibre.org).
-- MapLibre is loaded from unpkg CDN — no build step, no bundler, no package.json.
+- MapLibre loads from vendored local files — no build step, no bundler, no package.json, no unpkg CDN dependency for the 3D library. Version 6.19.0 was dropped: it ships no `dist/maplibre-gl.js` (ESM only).
 - Safety warning, left panel, legend, mapped list, unmapped list, settings, confidence filter, reduced motion, keyboard controls and dark mode all work in both views.
 - Deck.gl was replaced by MapLibre after unresolved Deck.gl bugs (TileLayer in wrong package, div-as-canvas, missing data layers, LineLayer math, @latest CDN drift, per-frame view sync, confidence filter not filtering, no pixel floors, click id mismatch).
 

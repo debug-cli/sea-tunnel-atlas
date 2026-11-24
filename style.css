@@ -1427,7 +1427,8 @@ body.atlas-3d-active {
   }
 }
 
-#map.view-3d .leaflet-container {
+#map.view-3d.leaflet-container .leaflet-pane,
+#map.view-3d.leaflet-container .leaflet-control-container {
   display: none !important;
 }
 

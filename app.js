@@ -650,6 +650,15 @@
     // display: none until just now) and lays out its controls off-screen.
     await new Promise(r => requestAnimationFrame(r));
 
+    // Disable Leaflet interaction so no Leaflet input can fire in 3D view.
+    // Leaflet's panes and controls are hidden by CSS (selector now matches
+    // #map itself, which carries the leaflet-container class).
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.doubleClickZoom.disable();
+    map.touchZoom.disable();
+    map.keyboard.disable();
+
     // Get current Leaflet view.
     const center = map.getCenter();
     const zoom = map.getZoom();
@@ -715,6 +724,10 @@
       // resize so controls sit against the final container size.
       maplibre.resize();
 
+      // Add MapLibre's own zoom + compass control, bottom-right. It is the
+      // only zoom control in 3D view; Leaflet's zoom control is hidden by CSS.
+      maplibre.addControl(new maplibregl.NavigationControl({position: 'bottom-right'}));
+
       // Restore scroll position so the top bar stays visible.
       window.scrollTo(0, scrollY);
 
@@ -760,6 +773,13 @@
       mapDiv.classList.remove('view-3d');
       maplibreContainer.hidden = true;
       document.body.classList.remove('atlas-3d-active');
+      // Re-enable Leaflet interaction since we are staying on Leaflet.
+      map.dragging.enable();
+      map.scrollWheelZoom.enable();
+      map.doubleClickZoom.enable();
+      map.touchZoom.enable();
+      map.keyboard.enable();
+      map.invalidateSize();
       window.scrollTo(0, scrollY);
       return;
     }
@@ -787,6 +807,15 @@
     $('#maplibre-map').hidden = true;
     $('#map').classList.remove('view-3d');
     document.body.classList.remove('atlas-3d-active');
+
+    // Re-enable Leaflet interaction now that 3D is off, so Leaflet works
+    // exactly as before in 2D view.
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoom.enable();
+    map.keyboard.enable();
+    map.invalidateSize();
 
     const b3d = $('#view-3d-toggle');
     const b2d = $('#view-2d-toggle');

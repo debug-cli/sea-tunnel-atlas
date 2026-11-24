@@ -14,10 +14,10 @@
   <link rel="stylesheet" href="assets/astryx/theme-neutral.css">
   <link rel="stylesheet" href="assets/astryx/fonts.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.css">
   <link rel="stylesheet" href="style.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script defer src="https://unpkg.com/@deck.gl/core@latest/dist.min.js"></script>
-  <script defer src="https://unpkg.com/@deck.gl/layers@latest/dist.min.js"></script>
+  <script defer src="https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -89,10 +89,7 @@
     </aside>
 
     <div id="map" role="region" aria-label="Map of public surface infrastructure">
-      <div id="deck-canvas" hidden style="width: 100%; height: 100%; position: absolute; inset: 0; z-index: 1;"></div>
-      <div id="deck-attribution" hidden class="map-attribution" style="position: absolute; bottom: 8px; right: 8px; z-index: 3;">
-        <span>© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></span>
-      </div>
+      <div id="maplibre-map" hidden style="width: 100%; height: 100%; position: absolute; inset: 0; z-index: 1;"></div>
     </div>
 
     <div class="panel-bar">

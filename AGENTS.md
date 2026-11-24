@@ -331,72 +331,89 @@ Not run here, because this environment has no browser: visual layout, dark-mode 
 ## §14 v2.0.0 map change — optional WebGL 3D view (2026-11-23)
 
 This is the second change in release v2.0.0: an optional 3D map view built on
-Deck.gl, presented alongside Leaflet. No data record, source, confidence,
+MapLibre GL JS, presented alongside Leaflet. No data record, source, confidence,
 precision or verification date changed. Leaflet remains the default and opens
 first on every load.
 
+Deck.gl was replaced by MapLibre GL JS because Deck.gl had unresolved bugs:
+TileLayer lives in `@deck.gl/geo-layers` not `@deck.gl/layers` (undefined
+constructor), canvas was a div not a canvas element, only egress data was loaded,
+LineLayer math assumed LineString coordinates were two endpoints, CDN scripts used
+`@latest` (version drift), view-state sync fought the controller on every frame,
+confidence filter did not filter in 3D, no pixel floors on radius/width, click
+handling had id type mismatches. MapLibre GL JS is a complete map renderer with
+its own basemap, click API, and GeoJSON source support — none of these bugs.
+
 ### §14.1 Library and risk
 
-- Library: `deck.gl` (MIT, Uber), loaded from unpkg CDN. No npm install, no bundler, no build step.
-- Repo: https://github.com/visgl/deck.gl — mature, widely used, actively maintained.
-- Risk: low. Deck.gl uses WebGL (not WebGPU) and works on all modern browsers including Windows, macOS, and Linux. No WebGPU dependency.
-- No build step required: Deck.gl UMD builds load via `<script>` tags in `index.html`.
+- Library: `maplibre-gl` 6.19.0 (BSD-3-Clause), loaded from unpkg CDN. No npm install, no bundler, no build step.
+- Repo: https://github.com/maplibre/maplibre-gl-js — fork of Mapbox GL JS 1.13, community governed, actively maintained.
+- Risk: low. MapLibre uses WebGL (not WebGPU) and works on all modern browsers including Windows, macOS, and Linux. No WebGPU dependency.
+- CDN: `https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.js` and `maplibre-gl.css`. Version pinned, never `@latest`.
+- No build step required: MapLibre UMD builds load via `<script>` tags in `index.html`.
 
 ### §14.2 Build step decision
 
 - No build step at all. Leaflet path stays no-build: `python3 -m http.server 8000` serves `index.html`, `style.css`, `app.js` and the Astryx assets unchanged.
-- Deck.gl loads from unpkg CDN: `@deck.gl/core` and `@deck.gl/layers`. No `package.json`, no `vite.config.js`, no `node_modules`.
+- MapLibre loads from unpkg CDN. No `package.json`, no `vite.config.js`, no `node_modules`.
 - Vercel serves static files only. No runtime server.
-- Deck.gl scripts are loaded with `defer` in `index.html`, parsed before `app.js` runs.
+- MapLibre scripts are loaded with `defer` in `index.html`, parsed before `app.js` runs.
 - Test impact: none. Tests run on Node, not in a browser. `node --test tests/*.test.js` still passes 5/5.
 - If anything breaks the Leaflet no-build path, stop and report it. Verified: `python3 -m http.server 8000` returns 200 for all Leaflet-path files.
 
 ### §14.3 Layer mapping
 
-| GeoJSON file | Records | Deck.gl layer | Zoom rule | Null geometry |
+| GeoJSON file | Records | MapLibre layer | Zoom rule | Null geometry |
 |---|---|---|---|---|
-| (base map) | — | TileLayer (OpenStreetMap) | All zooms | N/A |
-| `data/egress.geojson` | 18 records, 15 points | ScatterplotLayer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
-| `data/link-lines.geojson` | 11 features | LineLayer | All zooms | N/A |
-| `data/link-stations.geojson` | 100 features | ScatterplotLayer | All zooms | N/A |
-| `data/bus-routes.geojson` | 422 routes | LineLayer | Zoom 15+ | N/A |
-| `data/bus-stops.geojson` | 6,271 stops | ScatterplotLayer | Zoom 15+ | N/A |
+| (base map) | — | Raster tiles via MapLibre style (demotiles.maplibre.org) | All zooms | N/A |
+| `data/egress.geojson` | 18 records, 15 points | Circle layer, colour by type | All zooms | 3 records stay in Not mapped list, never on the 3D map |
+| `data/link-lines.geojson` | 11 features | Line layer | All zooms | N/A |
+| `data/link-stations.geojson` | 100 features | Circle layer | All zooms | N/A |
+| `data/bus-routes.geojson` | 422 routes | Line layer | Zoom 15+ | N/A |
+| `data/bus-stops.geojson` | 6,271 stops | Circle layer | Zoom 15+ | N/A |
 
 - Egress points come from `window.__atlasData.features` (parsed once by app.js).
-- Base map tiles from OpenStreetMap via deck.gl TileLayer; attribution shown in 3D view overlay.
-- Other layers come from `window.__atlasData.[layer-id]` if app.js has loaded them.
+- Base map tiles from the MapLibre demo style (OpenStreetMap-based). Attribution shown in 3D view overlay.
+- Link lines, link stations, bus routes, bus stops fetched from `data/` files as GeoJSON sources.
 - Detail panel on tap: name, type, tunnel, owner, public location, visible from street, precision, confidence, source title, source link, verified date, notes, warnings — same in both views.
 
 ### §14.4 Marker colour in 3D
 
-- Deck.gl points are discs only. Leaflet's shape-by-type (square, triangle, circle, arrow) has no equivalent in 3D.
+- MapLibre circle layers are discs only. Leaflet's shape-by-type (square, triangle, circle, arrow) has no equivalent in 3D.
 - Colour by type in 3D: portal (teal), station_egress (blue), station_shaft (orange), vent_facility (yellow). Type is carried in the detail panel and legend instead of shape.
 - Confidence filter: medium/low egress records use the same colours but can be toggled via the `showLower` setting — matching Leaflet's behaviour.
 
-### §14.4 Features rebuilt for 3D vs Leaflet-only
+### §14.5 Features rebuilt for 3D vs Leaflet-only
 
-Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), tap-to-select, confidence filter, camera sync between views, attribution badge.
+Rebuilt for 3D: GeoJSON layers (egress, link lines, stations, bus routes, bus stops), tap-to-select via `map.on('click')`, confidence filter, camera sync between views (sync on moveend, not every frame), attribution badge.
 
 Leaflet-only: raster tile layers (OpenStreetMap, Esri imagery, EOX Sentinel-2, CARTO labels), Overpass Places, full-screen control, Leaflet zoom controls. No control visible in 3D view does nothing there.
 
-Dropped in 3D (with reason): marker shape-by-type (ImmersiveMap points are discs only — replaced by colour by type). No features are silently dropped.
+Dropped in 3D (with reason): marker shape-by-type (MapLibre circle layers are discs only — replaced by colour by type). No features are silently dropped.
+
+### §14.6 Basemap, terrain, buildings, attribution
+
+- Basemap style: https://demotiles.maplibre.org/style.json — demo style, no API key, no token, OpenStreetMap-based vector tiles.
+- Offline behaviour: if the demo style host is unreachable, the 3D view shows no basemap tiles. Data layers still load but float on a blank background. Add a config switch for a self-hosted style.json if needed.
+- Terrain: not added. No raster-dem source in the demo style; do not invent a terrain source.
+- Buildings: not added. No building source layer in the demo style; do not invent a building source. No fill-extrusion.
+- Attribution: OpenStreetMap attribution visible in 3D view via MapLibre's attribution control, styled with Astryx tokens. Credits: OpenStreetMap contributors (ODbL).
 
 ### §14.7 Files changed
 
 | File | Lines before | Lines after | Change |
 |---|---:|---:|---|
-| `index.html` | 122 | 127 | 3D view button, 2D map button, unavailable message |
-| `style.css` | 1395 | 1442 | Section 14: 3D view styles, canvas fill, hidden Leaflet container |
-| `app.js` | 490 | 618 | 3D view state, switchTo3D/switchTo2D, selectRecord, camera sync, confidence filter |
-| `js/3d.js` | — | 273 | New: ImmersiveMap3D class, WebGPU check, layer registration, tap handler |
-| `package.json` | — | new | Vite dev deps, ImmersiveMap dependency, build scripts |
-| `vite.config.js` | — | new | Vite config: lib build of js/3d.js to dist/3d/ |
-| `dist/3d/3d.mjs` | — | new | Vite build output: 3D module bundle (~11 MB) |
-| `dist/3d/assets/*.js` | — | new | Vite build output: worker chunks |
-| `AGENTS.md` | 346 | ~460 | This section added |
-| `README.md` | 68 | ~72 | 3D view in quick start, design, credits, badges |
-| `CHANGELOG.md` | 39 | ~65 | v2.0.0 map change entry |
-| `TECHNICAL.md` | 9 | ~12 | 3D view note added |
+| `index.html` | 135 | 133 | Replaced Deck.gl CDN scripts with MapLibre GL JS 6.19.0 CDN; replaced `#deck-canvas`/`#deck-attribution` with `#maplibre-map` |
+| `style.css` | 1448 | 1446 | Section 14 rewritten for MapLibre; fixed Helium layout bugs (z-index, canvas positioning) |
+| `app.js` | 777 | 793 | Removed all Deck.gl code; added MapLibre GL JS 3D view; kept inline SVG icon fix; removed extra debug logging |
+| `js/3d.js` | — | — | Removed (was ImmersiveMap3D, WebGPU) |
+| `package.json` | — | — | Removed (was Vite build for ImmersiveMap) |
+| `vite.config.js` | — | — | Removed |
+| `dist/3d/` | — | — | Removed (Vite build output) |
+| `AGENTS.md` | — | — | This section rewritten for MapLibre |
+| `README.md` | — | — | MapLibre replaces ImmersiveMap/Deck.gl references |
+| `CHANGELOG.md` | — | — | v2.0.0 map change entry updated |
+| `TECHNICAL.md` | — | — | 3D view note updated |
 | `data/*.geojson` | — | — | Unchanged: 18 records, 15 points, 3 null geometry |
 
 ### §14.8 What did not change
@@ -409,37 +426,38 @@ Dropped in 3D (with reason): marker shape-by-type (ImmersiveMap points are discs
 - Leaflet 1.9.4, vanilla JS, no build step for the Leaflet path.
 - Safety warning: same wording, visible at every width, in both views and both color schemes.
 - Tests: 5 passing.
+- Leaflet divIcon inline fill/stroke fix for SVG icons (kept from Deck.gl patch).
 
 ### §14.9 Verification (run 2026-11-23)
 
 | Command | Result |
 |---|---|
-| `npm install` | 15 packages added, 0 vulnerabilities |
-| `npx vite build` | dist/3d/3d.mjs + 3 worker chunks, exit 0 |
 | `node --test tests/*.test.js` | 5 tests, 5 pass, 0 fail |
 | `python3 -m py_compile tools/gtfs_to_geojson.py` | exit 0 |
 | `git diff --check` | clean |
-| `wc -l index.html style.css app.js js/3d.js` | 127, 1442, 618, 273 |
+| `wc -l index.html style.css app.js` | run `wc -l` |
 | `jq '.features | length' data/egress.geojson` | 18 |
 | `jq '[.features[] | select(.geometry == null)] | length' data/egress.geojson` | 3 |
 | `node --check app.js` | exit 0 |
-| `python3 -m http.server 8000` → 200 for page, style.css, app.js, 3d.mjs, egress.geojson | all 200 |
+| `python3 -m http.server 8000` → 200 for page, style.css, app.js | all 200 |
 
-Not run here: this VM has no WebGPU-capable browser. Manual checks required on the maintainer's PC (Chrome or Edge with WebGPU):
-- Tap 3D view: confirm tiles load, tap an egress point, confirm detail panel shows the right record
+Not run here: this VM has no browser/WebGL. Manual checks required on the maintainer's PC:
+- Tap 3D view: confirm tiles load, confirm all five GeoJSON layers render
+- Tap an egress point: confirm detail panel shows the right record
+- Tap a link line and a station: confirm detail shows
 - Tap 2D map: confirm Leaflet returns with the same centre, zoom and selected record
-- Tap 3D view with WebGPU missing: confirm Leaflet stays and a plain message shows
+- Tap 3D view with WebGL missing: confirm Leaflet stays and a plain message shows
 - Confirm safety warning visible in both views, at mobile width, in light and dark mode
-- Confirm attribution badge visible in 3D view
+- Confirm attribution visible in 3D view
+- Confirm no console errors on load, on switch to 3D, on tap, on switch back to 2D
+- Helium layout bugs: in 3D view, confirm + and - zoom buttons fully visible and clickable, not under margins; click + and -, confirm top bar, title and disclaimer stay visible; confirm same at mobile width
 - Check the Vercel preview from the draft PR
 
 ### §14.10 Open questions and unverified items
 
-- 3D view was not verified live in this environment: no WebGPU browser in the VM. The maintainer PC check is required before merge.
-- WebGPU availability varies by browser/OS. Safari 26+ and Firefox 141+ on Windows are upcoming; current support is Chrome/Edge 113+.
-- The hosted Cloudflare R2 archive is a third-party dependency. If it goes offline, the 3D view shows no tiles. The self-hosted switch mitigates this but requires the maintainer to host a PMTiles archive.
-- `dist/3d/` build output (~24 MB total) is committed to the repo. This is necessary for Vercel to serve it without a runtime build, but it makes the repo larger. Alternative: let Vercel run `npm run build` at deploy time.
-- `node_modules` is not committed (per constraint). A fresh clone needs `npm install` before `npm run build` can regenerate `dist/3d/`.
+- 3D view was not verified live in this environment: no browser/WebGL in the VM. The maintainer PC check is required before merge.
+- WebGL availability varies by browser/OS. MapLibre `supported()` check guards against missing WebGL.
+- The hosted MapLibre demo style is a third-party dependency. If demotiles.maplibre.org goes offline, the 3D view shows no basemap tiles. A config switch for a self-hosted style.json mitigates this.
 - Figtree woff2 still not shipped (pre-existing, §13.11).
 
 ## Verifying this document

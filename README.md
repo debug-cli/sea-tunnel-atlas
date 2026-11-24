@@ -27,7 +27,7 @@
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Tests-5_passing-176d4e.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Tests" src="https://www.shieldcn.dev/badge/Tests-5_passing-176d4e.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Data-GeoJSON-176d4e.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Data" src="https://www.shieldcn.dev/badge/Data-GeoJSON-176d4e.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Map-Leaflet-176d4e.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Map" src="https://www.shieldcn.dev/badge/Map-Leaflet-176d4e.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
-<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Map-Deck.gl-176d4e.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Map" src="https://www.shieldcn.dev/badge/Map-Deck.gl-176d4e.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Map-MapLibre-176d4e.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Map" src="https://www.shieldcn.dev/badge/Map-MapLibre-176d4e.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Basemap-No_API_key-176d4e.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Basemap" src="https://www.shieldcn.dev/badge/Basemap-No_API_key-176d4e.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Agent--friendly-AGENTS.md-D97757.svg?variant=secondary&size=sm&mode=dark&font=jetbrains-mono"><img alt="Agent-friendly" src="https://www.shieldcn.dev/badge/Agent--friendly-AGENTS.md-D97757.svg?variant=secondary&size=sm&mode=light&font=jetbrains-mono"></picture>
 </p>
@@ -40,7 +40,7 @@
 
 Run `python3 -m http.server 8000`, then open `http://localhost:8000`. No build step or API key is required. Leaflet, map tiles and optional places require network access. Select a marker to read its notes and source details.
 
-An optional WebGL 3D view (Deck.gl, MIT) is loaded from a CDN only when you tap the "3D view" button. Leaflet remains the default and opens first on every load. The 3D view works on any browser with WebGL.
+An optional WebGL 3D view (MapLibre GL JS 6.19.0, BSD-3-Clause) is loaded from a CDN only when you tap the "3D view" button. Leaflet remains the default and opens first on every load. The 3D view works on any browser with WebGL.
 
 The GTFS transit layers are not yet populated: the agency hosts were unreachable during development. Run `python3 tools/gtfs_to_geojson.py` from a machine that can access them, after checking agency status pages and any access constraints.
 
@@ -58,11 +58,11 @@ Neutral was picked over the other Astryx themes because color on this page shoul
 
 Current release **v2.0.0**, 2026-11-19: a UI overhaul on the Astryx neutral theme — new tokens for color, type, spacing, radius, shadow and motion; header version badge; version and date in the sidebar footer and in Settings; explicit loading, ready and error status states; selected state for the record whose popup is open. No data, source, confidence or verification-date change.
 
-Added 2026-11-23: an optional WebGL 3D view using Deck.gl (MIT). Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button. Full notes in [CHANGELOG.md](CHANGELOG.md).
+Added 2026-11-23: an optional WebGL 3D view using MapLibre GL JS 6.19.0 (BSD-3-Clause). Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button. Full notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 
-Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. Optional 3D view: [Deck.gl](https://deck.gl/) (MIT, Uber). Design tokens: [Astryx](https://github.com/meta/astryx) neutral theme, MIT, from local copies in `assets/astryx/`. See [DATA_SOURCES.md](DATA_SOURCES.md).
+Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. Optional 3D view: [MapLibre GL JS](https://maplibre.org/) 6.19.0 (BSD-3-Clause). Basemap style: https://demotiles.maplibre.org/style.json (no API key, no token). Design tokens: [Astryx](https://github.com/meta/astryx) neutral theme, MIT, from local copies in `assets/astryx/`. See [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## License
 

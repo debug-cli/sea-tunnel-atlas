@@ -506,10 +506,10 @@
     if (state.rememberView) { const c = map.getCenter(); state.view = [c.lat, c.lng, map.getZoom()]; save(); }
   });
 
-  /* ---------- Optional 3D view (Deck.gl, WebGL) ---------- */
+  /* ---------- Optional 3D view (MapLibre GL JS, WebGL) ---------- */
 
-  let deckgl = null;
-  let deckActive = false;
+  let maplibre = null;
+  let maplibreActive = false;
   let selectedRecordId = null;
 
   // Select a record in both views: highlight its list entry and centre the
@@ -521,114 +521,113 @@
     if (btn) btn.setAttribute('aria-current', 'true');
   }
 
-  // Type colours for 3D view — Deck.gl points are discs, so type is shown
-  // by colour instead of shape. Colours match the Astryx neutral theme.
+  // Type colours for 3D view — MapLibre circle layers are discs, so type
+  // is shown by colour instead of shape. Colours match the Astryx neutral
+  // theme.
   const TYPE_COLOR_3D = {
-    portal: [8, 163, 163],       // #08a3a3 teal
-    station_egress: [1, 113, 227], // #0171e3 blue
-    station_shaft: [161, 63, 4],   // #a13f04 orange
-    vent_facility: [252, 236, 133] // #fcec85 yellow
+    portal: '#08a3a3',       // teal
+    station_egress: '#0171e3', // blue
+    station_shaft: '#a13f04',   // orange
+    vent_facility: '#fcec85' // yellow
   };
 
-  // Build Deck.gl layers from the same GeoJSON data Leaflet uses.
-  // Tile layer goes first so it renders underneath the data layers.
-  function buildDeckLayers() {
-    const layers = [];
+  // MapLibre style URL — demo style, no API key, no token.
+  // Documented in AGENTS.md §14: host, what it serves, offline behaviour.
+  const MAPLIBRE_STYLE = 'https://demotiles.maplibre.org/style.json';
 
-    // Base map tiles — OpenStreetMap, same source Leaflet uses by default.
-    layers.push(new deck.TileLayer({
-      id: 'base-tiles',
-      tileSize: 256,
-      minZoom: 0,
-      maxZoom: 19,
-      getTileURL: ({ x, y, z }) => {
-        const s = 'abc'[(x + y) % 3];
-        return `https://${s}.tile.openstreetmap.org/${z}/${x}/${y}.png`;
-      },
-      opacity: 1
-    }));
-
-    // Egress points from shared features (already parsed by app.js).
-    const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
-    const egressPoints = egressFeatures.filter(f => f.geometry && f.geometry.type === 'Point');
-    if (egressPoints.length) {
-      layers.push(new deck.ScatterplotLayer({
-        id: 'egress-points',
-        data: egressPoints,
-        getPosition: d => [d.geometry.coordinates[0], d.geometry.coordinates[1]],
-        getRadius: d => 2000,
-        getFillColor: d => TYPE_COLOR_3D[d.properties?.type] || TYPE_COLOR_3D.station_egress,
-        getLineColor: [255, 255, 255],
-        getLineWidth: 2,
-        pickable: true,
-        autoHighlight: true
-      }));
+  // Load a GeoJSON file and add it as a MapLibre source + layer.
+  async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
+    try {
+      const response = await fetch(path);
+      if (!response.ok) throw Error(`${path}: ${response.status}`);
+      const data = await response.json();
+      maplibre.addSource(id, { type: 'geojson', data });
+      const layer = {
+        id,
+        source: id,
+        type: layerType,
+        paint
+      };
+      if (minzoom !== undefined) layer.minzoom = minzoom;
+      maplibre.addLayer(layer);
+    } catch (e) {
+      console.warn(`3D: could not load ${id}:`, e);
     }
-
-    // Other layers loaded from data/ files (fetched on demand).
-    const layerSpecs = [
-      { id: 'link-lines', path: '/data/link-lines.geojson', kind: 'line', color: [8, 163, 163], width: 3 },
-      { id: 'link-stations', path: '/data/link-stations.geojson', kind: 'point', color: [1, 113, 227], radius: 1500 },
-      { id: 'bus-routes', path: '/data/bus-routes.geojson', kind: 'line', color: [120, 120, 120], width: 2 },
-      { id: 'bus-stops', path: '/data/bus-stops.geojson', kind: 'point', color: [120, 120, 120], radius: 800 }
-    ];
-
-    layerSpecs.forEach(spec => {
-      try {
-        const data = window.__atlasData?.[spec.id];
-        if (data && data.features) {
-          if (spec.kind === 'line') {
-            layers.push(new deck.LineLayer({
-              id: spec.id,
-              data: data.features,
-              getSourcePosition: d => d.geometry.coordinates[0],
-              getTargetPosition: d => d.geometry.coordinates[1],
-              getColor: spec.color,
-              getWidth: spec.width
-            }));
-          } else {
-            layers.push(new deck.ScatterplotLayer({
-              id: spec.id,
-              data: data.features,
-              getPosition: d => d.geometry.coordinates,
-              getRadius: spec.radius,
-              getFillColor: spec.color,
-              getLineColor: [255, 255, 255],
-              getLineWidth: 1,
-              pickable: true,
-              autoHighlight: true
-            }));
-          }
-        }
-      } catch (e) {
-        console.warn(`3D: could not load ${spec.id}:`, e);
-      }
-    });
-
-    return layers;
   }
 
-  function switchTo3D() {
-    if (deckActive) return;
+  // Build all MapLibre layers from the data files. Egress points come from
+  // window.__atlasData (already parsed by app.js); the rest are fetched.
+  async function buildMapLibreLayers() {
+    // Egress points from shared features, honoring the confidence filter.
+    const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
+    const egressPoints = egressFeatures.filter(
+      f => f.geometry && f.geometry.type === 'Point' &&
+        (state.showLower || f.properties.confidence === 'high')
+    );
+    if (egressPoints.length) {
+      maplibre.addSource('egress-points', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: egressPoints }
+      });
+      maplibre.addLayer({
+        id: 'egress-points',
+        source: 'egress-points',
+        type: 'circle',
+        paint: {
+          'circle-radius': 7,
+          'circle-color': [
+            'match',
+            ['get', 'type'],
+            'portal', TYPE_COLOR_3D.portal,
+            'station_egress', TYPE_COLOR_3D.station_egress,
+            'station_shaft', TYPE_COLOR_3D.station_shaft,
+            'vent_facility', TYPE_COLOR_3D.vent_facility,
+            TYPE_COLOR_3D.station_egress
+          ],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1
+        }
+      });
+    }
+
+    // Other GeoJSON layers from data/ files.
+    await addGeoJsonLayer(
+      'link-lines', '/data/link-lines.geojson', 'line',
+      { 'line-color': TYPE_COLOR_3D.portal, 'line-width': 3 }
+    );
+    await addGeoJsonLayer(
+      'link-stations', '/data/link-stations.geojson', 'circle',
+      { 'circle-radius': 6, 'circle-color': TYPE_COLOR_3D.station_egress, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 }
+    );
+    await addGeoJsonLayer(
+      'bus-routes', '/data/bus-routes.geojson', 'line',
+      { 'line-color': '#787878', 'line-width': 2 },
+      15
+    );
+    await addGeoJsonLayer(
+      'bus-stops', '/data/bus-stops.geojson', 'circle',
+      { 'circle-radius': 4, 'circle-color': '#787878', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 0.5 },
+      15
+    );
+  }
+
+  // Switch from Leaflet to the 3D view. Uses MapLibre GL JS with WebGL —
+  // works on all platforms (Windows, macOS, Linux, Chrome, Edge, Firefox).
+  async function switchTo3D() {
+    if (maplibreActive) return;
 
     console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
 
     const mapDiv = $('#map');
-    const deckCanvas = $('#deck-canvas');
-    if (!mapDiv || !deckCanvas) {
-      console.error('[sea-tunnel-atlas] switchTo3D: #map or #deck-canvas not found');
+    const maplibreContainer = $('#maplibre-map');
+    if (!mapDiv || !maplibreContainer) {
+      console.error('[sea-tunnel-atlas] switchTo3D: #map or #maplibre-map not found');
       return;
     }
-    console.info('[sea-tunnel-atlas] switchTo3D: #map and #deck-canvas found');
+    console.info('[sea-tunnel-atlas] switchTo3D: #map and #maplibre-map found');
 
-    // Check WebGL availability.
-    const probe = document.createElement('canvas');
-    const webgl = !!(
-      window.WebGLRenderingContext &&
-      (probe.getContext('webgl') || probe.getContext('experimental-webgl'))
-    );
-    console.info('[sea-tunnel-atlas] switchTo3D: WebGL available =', webgl);
-    if (!webgl) {
+    // Check WebGL availability via MapLibre.
+    if (!maplibregl.supported()) {
       const msg = $('#view-3d-unavailable');
       if (msg) {
         msg.textContent = '3D view is not available in this browser — WebGL is required. Staying on the 2D map.';
@@ -638,75 +637,70 @@
       return;
     }
 
-    // Ensure the deck canvas has explicit dimensions before Deck.gl reads them.
-    // CSS viewport units (vh/dvh) can be unreliable on mobile browsers.
-    const rect = mapDiv.getBoundingClientRect();
-    console.info('[sea-tunnel-atlas] switchTo3D: #map rect =', {
-      width: Math.round(rect.width),
-      height: Math.round(rect.height)
-    });
-    if (rect.width > 0 && rect.height > 0) {
-      deckCanvas.style.width = rect.width + 'px';
-      deckCanvas.style.height = rect.height + 'px';
-    }
-
     mapDiv.classList.add('view-3d');
-    deckCanvas.hidden = false;
-    const deckAttr = $('#deck-attribution');
-    if (deckAttr) deckAttr.hidden = false;
+    maplibreContainer.hidden = false;
 
     // Get current Leaflet view.
     const center = map.getCenter();
     const zoom = map.getZoom();
     console.info('[sea-tunnel-atlas] switchTo3D: Leaflet center =', center.lat, center.lng, 'zoom =', zoom);
 
-    // Build layers from available data.
-    const layers = buildDeckLayers();
-    console.info('[sea-tunnel-atlas] switchTo3D: built', layers.length, 'layers');
-
-    // Initialize Deck.gl.
+    // Initialize MapLibre.
     try {
-      deckgl = new deck.Deck({
-        canvas: deckCanvas,
-        controller: true,
-        initialViewState: {
-          longitude: center.lng,
-          latitude: center.lat,
-          zoom: zoom,
-          pitch: 45,
-          bearing: 0
-        },
-        layers: layers,
-        onClick: (info) => {
-          if (info.object && info.object.id !== undefined) {
-            const latlng = { lat: info.coordinate[1], lng: info.coordinate[0] };
-            selectRecord(info.object.id, latlng);
-            selectedRecordId = info.object.id;
-          }
-        },
-        onViewStateChange: ({ viewState }) => {
-          // Keep Leaflet's view in sync so returning to 2D is seamless.
-          if (!deckActive) return;
-          map.setView([viewState.latitude, viewState.longitude], viewState.zoom, { animate: false });
-        }
+      maplibre = new maplibregl.Map({
+        container: maplibreContainer,
+        style: MAPLIBRE_STYLE,
+        center: [center.lng, center.lat],
+        zoom: zoom,
+        pitch: 45,
+        bearing: 0
       });
-      console.info('[sea-tunnel-atlas] switchTo3D: Deck.gl initialized successfully');
+
+      await buildMapLibreLayers();
+
+      // Click on a feature: open the same detail panel as Leaflet.
+      maplibre.on('click', 'egress-points', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+      });
+      maplibre.on('click', 'link-stations', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+      });
+      maplibre.on('click', 'bus-stops', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+      });
+
+      // Sync view once when MapLibre moves — sync on switch is enough for
+      // returning to 2D seamlessly (not every frame).
+      maplibre.on('moveend', () => {
+        if (!maplibreActive) return;
+        const c = maplibre.getCenter();
+        const z = maplibre.getZoom();
+        map.setView([c.lat, c.lng], z, { animate: false });
+      });
+
+      maplibreActive = true;
+      console.info('[sea-tunnel-atlas] switchTo3D: MapLibre 3D view activated');
     } catch (e) {
-      console.error('[sea-tunnel-atlas] switchTo3D: Deck.gl initialization FAILED:', e);
+      console.error('[sea-tunnel-atlas] switchTo3D: MapLibre initialization FAILED:', e);
       const msg = $('#view-3d-unavailable');
       if (msg) {
         msg.textContent = '3D view failed to start: ' + String(e.message);
         msg.hidden = false;
       }
       setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
-      // Clean up CSS state on failure.
       mapDiv.classList.remove('view-3d');
-      deckCanvas.hidden = true;
-      if (deckAttr) deckAttr.hidden = true;
+      maplibreContainer.hidden = true;
       return;
     }
-
-    deckActive = true;
 
     // Toggle buttons.
     const b3d = $('#view-3d-toggle');
@@ -714,21 +708,21 @@
     if (b3d) b3d.hidden = true;
     if (b2d) b2d.hidden = false;
 
-    console.info('[sea-tunnel-atlas] switchTo3D: Deck.gl 3D view activated');
+    console.info('[sea-tunnel-atlas] switchTo3D: MapLibre 3D view activated');
   }
 
   // Switch from 3D back to Leaflet, keeping the same centre, zoom and
   // selected record.
   function switchTo2D() {
-    if (!deckActive || !deckgl) return;
+    if (!maplibreActive || !maplibre) return;
 
-    const view = deckgl.getViewState();
-    deckgl.finalize();
-    deckgl = null;
-    deckActive = false;
+    const view = maplibre.getCenter();
+    const zoom = maplibre.getZoom();
+    maplibre.remove();
+    maplibre = null;
+    maplibreActive = false;
 
-    $('#deck-canvas').hidden = true;
-    $('#deck-attribution').hidden = true;
+    $('#maplibre-map').hidden = true;
     $('#map').classList.remove('view-3d');
 
     const b3d = $('#view-3d-toggle');
@@ -737,7 +731,7 @@
     if (b2d) b2d.hidden = true;
 
     if (view) {
-      map.setView([view.latitude, view.longitude], view.zoom, { animate: false });
+      map.setView([view.lat, view.lng], zoom, { animate: false });
       if (selectedRecordId) {
         const f = features.find(f => f.id === selectedRecordId);
         if (f && f.geometry) {
@@ -748,7 +742,7 @@
     }
   }
 
-  // Wire the 3D / 2D buttons once the DOM is up. Deck.gl works on all
+  // Wire the 3D / 2D buttons once the DOM is up. MapLibre works on all
   // platforms with WebGL, so the 3D button is shown for everyone.
   const b3d = $('#view-3d-toggle');
   const b2d = $('#view-2d-toggle');
@@ -764,13 +758,45 @@
     b2d.addEventListener('click', switchTo2D);
   }
 
-  // Honor the confidence filter in the 3D view too.
-  medium.addEventListener('change', () => {
+  // Honor the confidence filter in the 3D view too — rebuild egress layer
+  // when the checkbox changes.
+  medium.addEventListener('change', async () => {
     state.showLower = medium.checked;
     save();
     render();
-    if (deckActive && deckgl) {
-      deckgl.setProps({ layers: buildDeckLayers() });
+    if (maplibreActive && maplibre) {
+      const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
+      const egressPoints = egressFeatures.filter(
+        f => f.geometry && f.geometry.type === 'Point' &&
+          (state.showLower || f.properties.confidence === 'high')
+      );
+      if (maplibre.getSource('egress-points')) {
+        maplibre.getSource('egress-points').setData({ type: 'FeatureCollection', features: egressPoints });
+      } else {
+        maplibre.addSource('egress-points', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: egressPoints }
+        });
+        maplibre.addLayer({
+          id: 'egress-points',
+          source: 'egress-points',
+          type: 'circle',
+          paint: {
+            'circle-radius': 7,
+            'circle-color': [
+              'match',
+              ['get', 'type'],
+              'portal', TYPE_COLOR_3D.portal,
+              'station_egress', TYPE_COLOR_3D.station_egress,
+              'station_shaft', TYPE_COLOR_3D.station_shaft,
+              'vent_facility', TYPE_COLOR_3D.vent_facility,
+              TYPE_COLOR_3D.station_egress
+            ],
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 1
+          }
+        });
+      }
     }
   });
 })();

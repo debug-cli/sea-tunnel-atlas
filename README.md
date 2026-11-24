@@ -60,6 +60,8 @@ Current release **v2.0.0**, 2026-11-19: a UI overhaul on the Astryx neutral them
 
 Added 2026-11-23: an optional WebGL 3D view using MapLibre GL JS 5.7.3 (BSD-3-Clause), vendored locally. Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button. Full notes in [CHANGELOG.md](CHANGELOG.md).
 
+Added 2026-11-24: v2 work continued on the branch — 3D buildings (fill-extrusion from demotiles vector tiles), zoom-scaled type-shaped markers with real dashed outlines, a single four-checkbox layer tile in both modes, a 2D base-layer panel (OpenStreetMap, Esri World Imagery, EOX Sentinel-2 cloudless), a collapsible left sidebar in 2D only with saved state, a 3D note in the left panel, and a two-column grid fix that stops the black void when the sidebar is closed in 2D. Full notes in [CHANGELOG.md](CHANGELOG.md).
+
 ## Credits
 
 Seed data and research report supplied by the project owner. Map: [Leaflet](https://leafletjs.com/), OpenStreetMap contributors, Esri, EOX, and CARTO. Optional 3D view: [MapLibre GL JS](https://maplibre.org/) 5.7.3 (BSD-3-Clause), vendored locally. Basemap: OpenStreetMap raster tiles (https://tile.openstreetmap.org/{z}/{x}/{y}.png), same source as the 2D Leaflet OSM layer. No API key, no token. Design tokens: [Astryx](https://github.com/meta/astryx) neutral theme, MIT, from local copies in `assets/astryx/`. See [DATA_SOURCES.md](DATA_SOURCES.md).

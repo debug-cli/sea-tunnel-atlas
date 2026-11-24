@@ -618,6 +618,10 @@
 
     console.info('[sea-tunnel-atlas] switchTo3D: button clicked');
 
+    // Remember scroll position so switching to 3D doesn't scroll the page
+    // and hide the top bar.
+    const scrollY = window.scrollY;
+
     const mapDiv = $('#map');
     const maplibreContainer = $('#maplibre-map');
     if (!mapDiv || !maplibreContainer) {
@@ -641,10 +645,19 @@
     mapDiv.classList.add('view-3d');
     maplibreContainer.hidden = false;
 
+    // Flush layout so MapLibre can measure the now-visible container
+    // correctly. Without this, MapLibre sees a 0x0 container (it was
+    // display: none until just now) and lays out its controls off-screen.
+    await new Promise(r => requestAnimationFrame(r));
+
     // Get current Leaflet view.
     const center = map.getCenter();
     const zoom = map.getZoom();
     console.info('[sea-tunnel-atlas] switchTo3D: Leaflet center =', center.lat, center.lng, 'zoom =', zoom);
+
+    // Keep the page from scrolling while the 3D view is active so the
+    // top bar and safety warning stay visible.
+    document.body.classList.add('atlas-3d-active');
 
     // Initialize MapLibre.
     try {
@@ -697,6 +710,14 @@
 
       await buildMapLibreLayers();
 
+      // MapLibre laid out its controls against the container size when the
+      // map was created. Now that the style has loaded and layers are added,
+      // resize so controls sit against the final container size.
+      maplibre.resize();
+
+      // Restore scroll position so the top bar stays visible.
+      window.scrollTo(0, scrollY);
+
       // Click on a feature: open the same detail panel as Leaflet.
       maplibre.on('click', 'egress-points', (e) => {
         const feature = e.features[0];
@@ -738,6 +759,8 @@
       setTimeout(() => { if (msg) msg.hidden = true; }, 15000);
       mapDiv.classList.remove('view-3d');
       maplibreContainer.hidden = true;
+      document.body.classList.remove('atlas-3d-active');
+      window.scrollTo(0, scrollY);
       return;
     }
 
@@ -763,6 +786,7 @@
 
     $('#maplibre-map').hidden = true;
     $('#map').classList.remove('view-3d');
+    document.body.classList.remove('atlas-3d-active');
 
     const b3d = $('#view-3d-toggle');
     const b2d = $('#view-2d-toggle');

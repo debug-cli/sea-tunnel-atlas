@@ -1411,6 +1411,22 @@ dialog .check {
   z-index: var(--z-map);
 }
 
+/* When the 3D view is active, stop the page from scrolling so the top bar
+   and safety warning stay visible on desktop. Mobile already has
+   overflow: hidden on body. */
+body.atlas-3d-active {
+  overflow: hidden;
+}
+
+/* Mobile: start the map below the topbar instead of at top: 0 (which is
+   where inset: 0 puts it). The topbar covers the top portion otherwise. */
+@media (max-width: 759.98px) {
+  #map.view-3d {
+    top: var(--topbar-h);
+    height: auto;
+  }
+}
+
 #map.view-3d .leaflet-container {
   display: none !important;
 }

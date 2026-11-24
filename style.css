@@ -1413,7 +1413,9 @@ dialog .check {
 
 /* When the 3D view is active, stop the page from scrolling so the top bar
    and safety warning stay visible on desktop. Mobile already has
-   overflow: hidden on body. */
+   overflow: hidden on body. html is included because overflow: hidden on
+   body alone does not always prevent scrolling on all browsers. */
+html.atlas-3d-active,
 body.atlas-3d-active {
   overflow: hidden;
 }

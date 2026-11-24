@@ -615,6 +615,7 @@
   let maplibre = null;
   let maplibreActive = false;
   let selectedRecordId = null;
+  let current3DPopup = null;
 
   // Select a record in both views: highlight its list entry and centre the
   // map on it. Called from record buttons and from 3D taps.
@@ -742,18 +743,25 @@ async function addBuildings() {
       maxzoom: 16
     });
 
-    // Use a fixed modest height if the source has no height values.
+    // Add building footprints as fill-extrusion. Try render_height first
+    // (openmaptiles schema), then height, with a 20m fallback so buildings
+    // are visible at typical zooms.
     maplibre.addLayer({
       id: 'buildings-fill-extrusion',
       type: 'fill-extrusion',
       source: 'buildings',
       'source-layer': 'building',
-      filter: ['==', ['geometry'], 'polygon'],
+      filter: ['in', ['geometry-type'], 'Polygon', 'MultiPolygon'],
       paint: {
-        'fill-extrusion-color': '#d9d9d9',
-        'fill-extrusion-height': ['coalesce', ['get', 'height'], 10],
+        'fill-extrusion-color': '#c8c8c8',
+        'fill-extrusion-height': [
+          'coalesce',
+          ['get', 'render_height'],
+          ['get', 'height'],
+          20
+        ],
         'fill-extrusion-base': 0,
-        'fill-extrusion-opacity': 0.7
+        'fill-extrusion-opacity': 0.85
       }
     });
   } catch (e) {
@@ -763,20 +771,37 @@ async function addBuildings() {
 
 // Open a MapLibre popup with the same detail content as Leaflet's popup,
 // at the given location. Used by 3D taps and by record list buttons in 3D.
+// Keeps a single popup reference: closes any existing popup before opening
+// a new one, then eases the map so the popup sits on-screen.
 function open3DPopup(featureId, latlng) {
   const f = features.find(f => f.id === featureId);
   if (!f || !maplibre) return;
   const p = f.properties;
+  if (current3DPopup) {
+    current3DPopup.remove();
+    current3DPopup = null;
+  }
   const el = popupContent(p);
-  const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+  current3DPopup = new maplibregl.Popup({ closeButton: true, closeOnClick: true })
     .setLngLat([latlng.lng, latlng.lat])
     .setHTML(el.outerHTML)
     .addTo(maplibre);
-  return popup;
+  current3DPopup.on('close', () => { current3DPopup = null; });
+  maplibre.easeTo({ center: [latlng.lng, latlng.lat], zoom: 14, duration: 500 });
+  return current3DPopup;
 }
 
-// The 3D layer tile uses the shared buildLayerTile() so 2D and 3D show the
-// same five checkboxes. Added in switchTo3D after the map loads.
+// The 3D layer tile wraps buildLayerTile() output in a MapLibre control
+// object so maplibre.addControl() accepts it. 2D uses the same tile via
+// L.control({onAdd: ...}).
+function layerTileControl() {
+  const el = buildLayerTile();
+  return {
+    onAdd: () => el,
+    onRemove: () => { if (el.parentNode) el.parentNode.removeChild(el); },
+    getDefaultPosition: () => 'top-left'
+  };
+}
 
 // Load a GeoJSON file and add it as a MapLibre source + layer.
 // paint values can be MapLibre expressions (arrays).
@@ -819,12 +844,13 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
       }
     });
 
-    // Egress points from shared features, honoring the confidence filter.
-    // Two symbol layers: solid for high confidence, dashed for medium/low.
+    // Egress points from shared features. Include ALL points in the source
+    // (no confidence filter here); the solid and dashed layers split them by
+    // confidence via their own filters. The dashed layer's visibility is
+    // toggled by the showLower setting.
     const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
     const egressPoints = egressFeatures.filter(
-      f => f.geometry && f.geometry.type === 'Point' &&
-        (state.showLower || f.properties.confidence === 'high')
+      f => f.geometry && f.geometry.type === 'Point'
     );
     if (egressPoints.length) {
       maplibre.addSource('egress-points', {
@@ -864,7 +890,8 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
           'icon-image': iconImageExpr('dashed'),
           'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 1.0, 18, 1.4],
           'icon-allow-overlap': true,
-          'icon-ignore-placement': true
+          'icon-ignore-placement': true,
+          'visibility': state.showLower ? 'visible' : 'none'
         }
       });
     }
@@ -1011,13 +1038,23 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
       maplibre.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 
       // Add the shared layer tile (top-left, visible only in 3D).
-      maplibre.addControl(buildLayerTile(), 'top-left');
+      maplibre.addControl(layerTileControl());
 
-      // Restore scroll position so the top bar stays visible.
-      window.scrollTo(0, scrollY);
+      // Scroll to top so the top bar and safety warning are visible.
+      // scrollY is still saved for restoration when returning to 2D.
+      window.scrollTo(0, 0);
 
       // Click on a feature: open the same detail panel as Leaflet.
-      maplibre.on('click', 'egress-points', (e) => {
+      // Bound to both egress layer ids (solid + dashed) since there is no
+      // layer with id 'egress-points' — that is the source id.
+      maplibre.on('click', 'egress-points-solid', (e) => {
+        const feature = e.features[0];
+        const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        selectRecord(feature.id, latlng);
+        selectedRecordId = feature.id;
+        open3DPopup(feature.id, latlng);
+      });
+      maplibre.on('click', 'egress-points-dashed', (e) => {
         const feature = e.features[0];
         const latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
         selectRecord(feature.id, latlng);
@@ -1145,22 +1182,16 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
     b2d.addEventListener('click', switchTo2D);
   }
 
-    // Honor the confidence filter in the 3D view too — rebuild egress layer
-    // when the checkbox changes. Both egress-points-solid and
-    // egress-points-dashed share the egress-points source, so setData updates
-    // both layers; each layer's filter (confidence == high vs != high)
-    // selects which features render.
-    medium.addEventListener('change', async () => {
+    // Honor the confidence filter in the 3D view too. All egress points are
+    // already in the source; the solid and dashed layers split them by
+    // confidence. Toggling showLower shows or hides the dashed layer.
+    medium.addEventListener('change', () => {
       state.showLower = medium.checked;
       save();
       render();
-      if (maplibreActive && maplibre && maplibre.getSource('egress-points')) {
-        const egressFeatures = (window.__atlasData && window.__atlasData.features) || [];
-        const egressPoints = egressFeatures.filter(
-          f => f.geometry && f.geometry.type === 'Point' &&
-            (state.showLower || f.properties.confidence === 'high')
-        );
-        maplibre.getSource('egress-points').setData({ type: 'FeatureCollection', features: egressPoints });
+      if (maplibreActive && maplibre && maplibre.getLayer('egress-points-dashed')) {
+        maplibre.setLayoutProperty('egress-points-dashed', 'visibility',
+          state.showLower ? 'visible' : 'none');
       }
     });
 })();

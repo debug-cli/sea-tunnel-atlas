@@ -536,18 +536,23 @@
   const panelClose = $('#panel-close');
   const panelReopen = $('#panel-reopen');
   const panel3dNote = $('#panel-3d-note');
+  const mainEl = document.getElementById('main');
 
   // Sidebar open/close state for 2D view. Default opened. Persisted in
   // the same settings localStorage record as the other preferences.
   let sidebarOpen = state.sidebarOpen;
 
-  // Apply the current sidebar state to the panel and reopen button.
+  // Apply the current sidebar state to the panel, reopen button, and
+  // main grid (collapsing the panel column to 0 when closed so the map
+  // fills the full width with no black void).
   function applySidebarState() {
     if (sidebarOpen) {
       panel.classList.remove('collapsed');
+      mainEl.classList.remove('sidebar-closed');
       panelReopen.hidden = true;
     } else {
       panel.classList.add('collapsed');
+      mainEl.classList.add('sidebar-closed');
       panelReopen.hidden = false;
     }
   }
@@ -591,13 +596,19 @@
   }
   panelToggle.addEventListener('click', () => {
     const open = !panel.classList.contains('is-open');
+    sidebarOpen = open;
     setPanel(open);
+    applySidebarState();
+    save();
     if (open) { map.closePopup(); panel.scrollTop = 0; panel.focus({preventScroll: true}); }
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
     if (mobile.matches && panel.classList.contains('is-open')) {
+      sidebarOpen = false;
       setPanel(false);
+      applySidebarState();
+      save();
       panelToggle.focus();
     } else if (openPopup) {
       map.closePopup(openPopup);

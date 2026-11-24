@@ -56,11 +56,13 @@ Neutral was picked over the other Astryx themes because color on this page shoul
 
 ## Changelog
 
+v1.0.0, 2026-11-11: Initial release, Leaflet-only static map with 18 surface records (15 points, 3 with null geometry). No assigned version at the time.
+
 Current release **v2.0.0**, 2026-11-19: a UI overhaul on the Astryx neutral theme — new tokens for color, type, spacing, radius, shadow and motion; header version badge; version and date in the sidebar footer and in Settings; explicit loading, ready and error status states; selected state for the record whose popup is open. No data, source, confidence or verification-date change.
 
 Added 2026-11-23: an optional WebGL 3D view using MapLibre GL JS 5.7.3 (BSD-3-Clause), vendored locally. Leaflet remains the default and opens first on every load. The 3D view opens only after the user taps a "3D view" button. Full notes in [CHANGELOG.md](CHANGELOG.md).
 
-Added 2026-11-24: v2 work continued on the branch — 3D buildings (fill-extrusion from demotiles vector tiles), zoom-scaled type-shaped markers with real dashed outlines, a single four-checkbox layer tile in both modes, a 2D base-layer panel (OpenStreetMap, Esri World Imagery, EOX Sentinel-2 cloudless), a collapsible left sidebar in 2D only with saved state, a 3D note in the left panel, and a two-column grid fix that stops the black void when the sidebar is closed in 2D. Full notes in [CHANGELOG.md](CHANGELOG.md).
+Added 2026-11-24: v2 work continued on the branch — 3D buildings (fill-extrusion from demotiles vector tiles), zoom-scaled type-shaped markers with real dashed outlines, a single four-checkbox layer tile in both modes, a 2D base-layer panel (OpenStreetMap, Esri World Imagery, EOX Sentinel-2 cloudless), a collapsible left sidebar in 2D only with saved state, a 3D note in the left panel, a two-column grid fix that stops the black void when the sidebar is closed in 2D, a CARTO labels layer with a base64-obfuscated API key, removal of the Places checkbox, the addImage fix, a 3D regressions fix (layer tile, popups, scroll lock), and anti-slop rules in AGENTS.md §0. Full notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 

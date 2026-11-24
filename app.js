@@ -593,7 +593,7 @@ function drawMarkerShape(type, solid) {
   ctx.strokeStyle = stroke;
   ctx.lineWidth = 4;
   ctx.stroke();
-  return canvas;
+  return ctx.getImageData(0, 0, 48, 48);
 }
 
 // Open a MapLibre popup with the same detail content as Leaflet's popup,
@@ -688,8 +688,16 @@ async function addGeoJsonLayer(id, path, layerType, paint, minzoom) {
     // layers with canvas-drawn images to show the four shapes in type color.
     const types = ['portal', 'station_egress', 'station_shaft', 'vent_facility'];
     types.forEach(type => {
-      maplibre.addImage(`${type}-solid`, drawMarkerShape(type, true));
-      maplibre.addImage(`${type}-dashed`, drawMarkerShape(type, false));
+      try {
+        maplibre.addImage(`${type}-solid`, drawMarkerShape(type, true));
+      } catch (e) {
+        console.error('[sea-tunnel-atlas] addImage failed:', `${type}-solid`, e);
+      }
+      try {
+        maplibre.addImage(`${type}-dashed`, drawMarkerShape(type, false));
+      } catch (e) {
+        console.error('[sea-tunnel-atlas] addImage failed:', `${type}-dashed`, e);
+      }
     });
 
     // Egress points from shared features, honoring the confidence filter.

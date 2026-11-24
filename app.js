@@ -83,17 +83,16 @@
   const mapInk = () => tokenColor('--map-ui-ink', '#000000');
   const mapSurface = () => tokenColor('--map-ui-bg', '#ffffff');
 
-  // Shared state for the single layer tile (same 5 checkboxes in 2D and 3D).
+  // Shared state for the single layer tile (same 4 checkboxes in 2D and 3D).
   const layerTileState = {
     labels: false,
     surfaceInfrastructure: true,
-    places: false,
     metroBus: false,
     linkLightRail: true
   };
 
-  // Build the layer tile HTML with exactly 5 checkboxes, in this order:
-  // Labels, Surface Infrastructure, Places (OpenStreetMap), Metro bus,
+  // Build the layer tile HTML with exactly 4 checkboxes, in this order:
+  // Labels, Surface Infrastructure, Metro bus (stops at zoom 15+),
   // Link light rail. Each checkbox toggles its layer in the active map.
   function buildLayerTile() {
     const container = document.createElement('div');
@@ -151,16 +150,6 @@
       } else {
         if (checked) { if (!map.hasLayer(points)) points.addTo(map); }
         else { if (map.hasLayer(points)) map.removeLayer(points); }
-      }
-    });
-
-    addCheckbox(layerTileState.places, 'Places (OpenStreetMap)', (checked) => {
-      layerTileState.places = checked;
-      if (maplibreActive && maplibre) {
-        // Places in 3D view are not implemented; checkbox preserved for UI parity.
-      } else {
-        if (checked) { if (!map.hasLayer(places)) places.addTo(map); }
-        else { if (map.hasLayer(places)) map.removeLayer(places); }
       }
     });
 
@@ -222,10 +211,18 @@
   street.addTo(map);
   const points = L.layerGroup().addTo(map);
 
-  // Single layer tile: same 5 checkboxes in 2D and 3D, no base-layer radios.
+  // Single layer tile: same 4 checkboxes in 2D and 3D, no base-layer radios.
   const layerTile = L.control({position: 'topright'});
   layerTile.onAdd = () => buildLayerTile();
   layerTile.addTo(map);
+
+  // Base-layer panel (2D only). Hidden in 3D by the Leaflet hide fix.
+  const baseLayers = L.control.layers(
+    {'OpenStreetMap': street, 'Esri World Imagery': esri, 'EOX Sentinel-2 cloudless': eox},
+    {},
+    {collapsed: false, position: 'topright'}
+  );
+  baseLayers.addTo(map);
 
   // The bottom bar can change height when its text wraps; keep Leaflet in sync.
   if ('ResizeObserver' in window) {

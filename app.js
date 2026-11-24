@@ -634,18 +634,7 @@
         msg.textContent = '3D map library did not load — staying on the 2D map.';
         msg.hidden = false;
       }
-      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
-      return;
-    }
-
-    // Check WebGL availability via MapLibre.
-    if (!maplibregl.supported()) {
-      const msg = $('#view-3d-unavailable');
-      if (msg) {
-        msg.textContent = '3D view is not available in this browser — WebGL is required. Staying on the 2D map.';
-        msg.hidden = false;
-      }
-      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+      setTimeout(() => { if (msg) msg.hidden = true; }, 15000);
       return;
     }
 
@@ -659,6 +648,17 @@
 
     // Initialize MapLibre.
     try {
+      // WebGL check: a canvas must be able to create a WebGL context.
+      // maplibregl.supported() does not exist in MapLibre 5.7.3; check directly.
+      let webglOk = false;
+      try {
+        const probe = document.createElement('canvas');
+        webglOk = !!(probe.getContext('webgl2') || probe.getContext('webgl'));
+      } catch {}
+      if (!webglOk) {
+        throw new Error('3D view is not available in this browser — WebGL is required. Staying on the 2D map.');
+      }
+
       maplibre = new maplibregl.Map({
         container: maplibreContainer,
         style: MAPLIBRE_STYLE,
@@ -666,6 +666,33 @@
         zoom: zoom,
         pitch: 45,
         bearing: 0
+      });
+
+      // Wait for the style to load before adding sources/layers. Adding
+      // sources or layers before the style loads throws "Style is not done
+      // loading".
+      await new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            reject(new Error('MapLibre style did not load within 15 seconds.'));
+          }
+        }, 15000);
+        maplibre.once('load', () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+        maplibre.once('error', (e) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            reject(new Error('MapLibre style load error: ' + String(e.error && e.error.message || e)));
+          }
+        });
       });
 
       await buildMapLibreLayers();
@@ -708,7 +735,7 @@
         msg.textContent = '3D view failed to start: ' + String(e.message);
         msg.hidden = false;
       }
-      setTimeout(() => { if (msg) msg.hidden = true; }, 6000);
+      setTimeout(() => { if (msg) msg.hidden = true; }, 15000);
       mapDiv.classList.remove('view-3d');
       maplibreContainer.hidden = true;
       return;
